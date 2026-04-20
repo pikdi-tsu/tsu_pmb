@@ -22,7 +22,6 @@ class PembayaranPMBController extends Controller
 {
     public function index()
     {
-
         $data = array(
             'title' => 'Pembayaran PMB',
             'menu'  => 'Data Pembayaran PMB',
@@ -89,7 +88,8 @@ class PembayaranPMBController extends Controller
                 // PENGAMAN: Cek apakah parameter ada
                 $params1 = Parameter::where('id',1)->first();
                 if($params1){
-                    $linkkhusus = asset('sources/storage/app/'.$params1->bukti_bayar_pendaftaran.'/'.$d->bukti_pembayaran);
+                    //$linkkhusus = asset('sources/storage/app/'.$params1->bukti_bayar_pendaftaran.'/'.$d->bukti_pembayaran);
+		      $linkkhusus = url('admin/file/'.strtoupper($params1->bukti_bayar_pendaftaran).'/'.$d->bukti_pembayaran);
                     $show = '<a href="'.$linkkhusus.'" target="_blank"><i title="Lihat Bukti Pendaftaran" class="fa fa-eye"></i></a>';
                 }
             }

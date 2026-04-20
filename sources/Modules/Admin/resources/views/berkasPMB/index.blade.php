@@ -455,7 +455,7 @@
         e.preventDefault();
         let params = $(this).data('id');
         $('#iddaftar').val(params);
-        
+
         // --- TAMBAHAN RESET FORM ---
         $('#status').val('0').trigger('change'); // Kembalikan ke "-- Pilih Status --"
         $('#keterangan').val('');                // Kosongkan keterangan
@@ -549,16 +549,16 @@
         } else {
             // Jika pilih OK (1) atau reset (0), sembunyikan lagi
             $('#wadah_pindah_jalur').slideUp();
-            
+
             // Hapus centangan dan kembalikan value ke 0 agar tidak ikut tersubmit
-            $('#pindahjalur').prop('checked', false).val(0); 
+            $('#pindahjalur').prop('checked', false).val(0);
         }
     });
 }
 
             $('#modal-approval-item').on('hidden.bs.modal', function() {
 
-                // Secara otomatis mengembalikan class modal-open ke body 
+                // Secara otomatis mengembalikan class modal-open ke body
                 // agar modal pertama di belakangnya bisa di-scroll kembali
                 $('body').addClass('modal-open');
 

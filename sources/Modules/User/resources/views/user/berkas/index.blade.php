@@ -428,7 +428,7 @@
                                 let actionBtn = '';
 
                                 if (b.is_uploaded) {
-                                    let fileUrl = `{!! asset('sources/storage/app/FILE_KHUSUS/') !!}/${b.file_name}`;
+                                    let fileUrl = `{!! url('admin/file/FILE_KHUSUS/') !!}/${b.file_name}`;
                                     actionBtn +=
                                         `<a href="${fileUrl}" target="_blank" class="btn btn-sm btn-outline-info mr-1" style="border-radius: 6px; padding: 4px 10px;" title="Lihat"><i class="fas fa-eye"></i></a>`;
 

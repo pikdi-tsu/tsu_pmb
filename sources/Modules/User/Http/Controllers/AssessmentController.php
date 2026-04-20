@@ -156,7 +156,7 @@ class AssessmentController extends Controller
         $tipeTestId = $request->tipe_test_id;
 
         $testInfo = Assessment_TipeTest::findOrFail($tipeTestId);
-        $durasi = $testInfo->durasi_menit;
+        $durasi = (int) $testInfo->durasi_menit;
 
         $attempt = Assessment_Attempts::where('kodependaftaran', $kodePendaftaran)
             ->where('tipe_test_id', $tipeTestId)

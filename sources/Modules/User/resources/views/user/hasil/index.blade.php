@@ -224,19 +224,19 @@
                                     </tr>
                                     <tr>
                                         <th>
-                                            <code>*Khusus Beasiswa</code>
-                                            <br>
-                                            Berkas Khusus Beasiswa
+                                            <!--<code>*Khusus Beasiswa</code>-->
+                                            <!--<br>-->
+                                            <!--Berkas Khusus Beasiswa-->
                                         </th>
 
                                         <th>
-                                            :
-                                            @if ($berkas_khusus == null)
-                                                <span class="badge bg-warning">Non Beasiswa</span>
-                                            @else
-                                                <a href="{{ $berkas_khusus }}" target="_blank"><span
-                                                        class="badge bg-success">{{ $datadaftar->berkas_khusus }}</span></a>
-                                            @endif
+                                            <!--:-->
+                                            <!--@if ($berkas_khusus == null)-->
+                                            <!--    <span class="badge bg-warning">Non Beasiswa</span>-->
+                                            <!--@else-->
+                                            <!--    <a href="{{ $berkas_khusus }}" target="_blank"><span-->
+                                            <!--            class="badge bg-success">{{ $datadaftar->berkas_khusus }}</span></a>-->
+                                            <!--@endif-->
                                         </th>
                                         <th>Rekomendator</th>
                                         <th colspan="3">: {{ $rekomendator }}</th>
@@ -591,9 +591,9 @@
                                                                     'id',
                                                                     1,
                                                                 )->first();
-                                                                $pathFile = asset(
-                                                                    'sources/storage/app/' .
-                                                                        $parameter->file_umum .
+                                                                $pathFile = url(
+                                                                    'admin/file/' .
+                                                                        strtoupper($parameter->file_umum) .
                                                                         '/' .
                                                                         $fileUploaded->nama_berkas,
                                                                 );

@@ -32,7 +32,7 @@
                     <div class="card card-primary card-outline">
                         <div class="card-body box-profile">
                             <div class="text-center">
-                                <img class="profile-user-img img-fluid img-circle" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #adb5bd;" src="{{url('sources/storage/app/FILE_PHOTOPROFILE/'.photo_profile())}}" alt="User profile picture">
+                                <img class="profile-user-img img-fluid img-circle" style="width: 150px; height: 150px; object-fit: cover; border: 3px solid #adb5bd;" src="{{ url('/admin/file/FILE_PHOTOPROFILE/' . photo_profile()) }}" alt="User profile picture">
                             </div>
 
                             <h3 class="profile-username text-center">{{session('session')['user_nama']}}</h3>
