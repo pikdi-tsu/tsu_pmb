@@ -33,6 +33,8 @@
     use Modules\Admin\Http\Controllers\masterdata\TingkatKejuaraanController;
     use Modules\Admin\Http\Controllers\masterdata\RekomendatorController;
     use Modules\Admin\Http\Controllers\TestPMBController;
+    use Illuminate\Support\Facades\Response;
+    use Symfony\Component\HttpFoundation\StreamedResponse;
 
     /*
     |--------------------------------------------------------------------------
@@ -54,6 +56,60 @@
             Route::post('/NewPasswordAction', [LoginController::class, 'newPasswordAction'])->name('admin.NewPasswordAction');
             Route::get('/checkbirthday', [LoginController::class, 'checkbirthday']);
             Route::post('/logout', [LoginController::class, 'logout'])->name('admin.logout');
+            
+            Route::get('/file/{folder}/{filename}', function ($folder, $filename) {
+
+                $path = storage_path('app/'. $folder.'/'.$filename);
+                abort_unless(file_exists($path), 404);
+                
+                // HAPUS semua output buffer (penting di cPanel)
+                while (ob_get_level()) {
+                    ob_end_clean();
+                }
+        
+                return response()->stream(function () use ($path) {
+                    readfile($path);
+                }, 200, [
+                    'Content-Type' => mime_content_type($path),
+                    'Content-Disposition' => 'inline; filename="'.basename($path).'"',
+                    'Cache-Control' => 'no-cache, no-store, must-revalidate'
+                ]);
+                
+                // return new StreamedResponse(function () use ($path) {
+                //     $stream = fopen($path, 'rb');
+                //     fpassthru($stream);
+                //     fclose($stream);
+                // }, 200, [
+                //     'Content-Type' => mime_content_type($path),
+                //     'Content-Disposition' => 'inline; filename="'.basename($path).'"'
+                // ]);
+
+                // return response()->make(file_get_contents($path), 200, [
+                //     'Content-Type' => mime_content_type($path),
+                //     'Content-Disposition' => 'inline; filename="'.$filename.'"'
+                // ]);
+                // return 'ROUTE MASUK: ' . $filename;
+                // dd([
+                //     'path' => $path,
+                //     'exists' => file_exists($path),
+                //     'mime' => mime_content_type($path)
+                // ]);
+                // return response()->make(file_get_contents($path), 200, [
+                //     'Content-Type' => mime_content_type($path)
+                // ]);
+                //return response()->file($path);
+                // dd([
+                //     'filename' => $filename,
+                //     'path' => $path,
+                //     'exists' => file_exists($path),
+                // ]);
+                //dd($path);
+                // if (!file_exists($path)) {
+                //     abort(404, 'File tidak ditemukan');
+                // }
+        
+                // return response()->file($path);
+            });
 
             //forgot password
             Route::get('/ForgotPassword', [LoginController::class, 'forgotPassword'])->name('admin.ForgotPassword.show');

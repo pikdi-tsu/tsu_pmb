@@ -102,7 +102,8 @@ class PembayaranController extends Controller
             $detail = '<a href="#" data-id="'.$id.'" data-daftarid="'.$daftarId.'" class="btn_detail"><i title="Detail" class="fa fa-info-circle"></i></a>';
             if($d->bukti_pembayaran){
                 $params1 = Parameter::where('id',1)->first();
-                $linkkhusus = asset('sources/storage/app/'.$params1->bukti_bayar_pendaftaran.'/'.$d->bukti_pembayaran);
+                //$linkkhusus = asset('sources/storage/app/'.$params1->bukti_bayar_pendaftaran.'/'.$d->bukti_pembayaran);
+		  $linkkhusus = url('admin/file/'.strtoupper($params1->bukti_bayar_pendaftaran).'/'.$d->bukti_pembayaran);
                 $show = '<a href="'.$linkkhusus.'" target="_blank"><i title="Lihat Bukti Pendaftaran" class="fa fa-eye"></i></a>';
             }
 

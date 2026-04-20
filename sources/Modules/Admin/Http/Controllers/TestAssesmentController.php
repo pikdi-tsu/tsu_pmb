@@ -117,11 +117,19 @@ class TestAssesmentController extends Controller
             })
             ->addColumn('action', function ($d) {
                 $id = encrypt($d->KodePendaftaran);
+                $finishedTests = DB::table('pmb_assessment_attempts')
+                    ->where('kodependaftaran', $d->KodePendaftaran)
+                    ->where('status', 'finished')
+                    ->count();
+                $validasi = $d->validasi_test === null ? '0' : (string)$d->validasi_test;
+                    $reset = '';
                 // Tombol detail selalu muncul (atau bisa dibatasi if $totalAttempts > 0)
                 $detail = '<a href="#" data-id="' . $id . '" class="btn_detail"><i title="Detail Test" class="fa fa-info-circle fa-lg"></i></a>';
-                $reset  = '<a href="#" data-id="' . $id . '" class="btn_reset ml-2"><i title="Reset Ujian" class="fa fa-sync-alt fa-lg text-warning"></i></a>';
-                return $detail . $reset;
-            })
+                if ($finishedTests<3||$validasi == '0') {
+                    $reset  = '<a href="#" data-id="' . $id . '" class="btn_reset ml-2"><i title="Reset Ujian" class="fa fa-sync-alt fa-lg text-warning"></i></a>';
+                }
+                return $detail . $reset;          
+	    })
             ->rawColumns(['action', 'status', 'validator', 'hasil'])
             ->make(true);
     }

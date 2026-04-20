@@ -177,7 +177,8 @@ class BerkasPMBController extends Controller
                     }
 
                     // LOGIKA ACTION
-                    $link = asset('sources/storage/app/' . $folder . '/' . $cek_upload->nama_berkas);
+                    //$link = asset('sources/storage/app/' . $folder . '/' . $cek_upload->nama_berkas);
+		      $link = url('admin/file/' . strtoupper($folder) . '/' . $cek_upload->nama_berkas);
 
                     $action_html = '<a href="' . $link . '" target="_blank" class="btn btn-sm btn-outline-info mb-1 mr-1" style="border-radius: 6px; padding: 4px 10px;" title="Lihat Berkas"><i class="fa fa-eye"></i></a>';
 

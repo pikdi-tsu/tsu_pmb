@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Modules\User\Http\Controllers\AssessmentController;
 use Modules\User\Http\Controllers\BiodataController;
 use Modules\User\Http\Controllers\DaftarRekomendatorController;
@@ -54,6 +55,19 @@ Route::prefix('')->group(function () {
             Route::get('/ChangePassword', [UserController::class, 'edit'])->name('user.ChangePassword');
             Route::post('/ChangePasswordSave', [UserController::class, 'update'])->name('user.ChangePasswordSave');
             Route::post('/logout', [UserController::class, 'logout'])->name('logout');
+
+	    Route::get('/dokumen/lihat/{path}', function($path){
+		$fullPath = storage_path('app/'. $path);
+                if(!file_exists($fullPath)){
+                  abort(404,'File tidak ada');
+                }	
+
+                if(ob_get_length()){
+                  ob_end_clean();
+                }
+                return response()->file($fullPath);
+		
+            })->name('dokumen.show')->where('path','.*');
 
             Route::prefix('Pendaftaran')->group(function () {
                 Route::get('/', [PendaftaranController::class, 'index'])->name('pendaftaran');

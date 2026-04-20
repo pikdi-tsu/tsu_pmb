@@ -81,7 +81,8 @@ class PembayaranUKTController extends Controller
                 $approval = '<a href="#" class="revisi-bayar" data-id="'.$id.'"><i title="Revisi Bukti Pembayaran" class="fa fa-window-close fa-lg text-red"></i></a>
                                     <a href="#" class="approve-bayar" data-id="'.$id.'"><i title="Approve" class="fa fa-check-square fa-lg text-green"></i></a>';
             }else{
-                $approval = '<span class="badge bg-success">'.namaku($d->validator_pembayaran).'</span>' ;
+		$nama = $d->validator_pembayaran==null ? '-' : namaku($d->validator_pembayaran);
+                $approval = '<span class="badge bg-success">'.$nama.'</span>' ;
             }
             return $approval;
         })
@@ -92,7 +93,8 @@ class PembayaranUKTController extends Controller
             $show = '';
             if($d->bukti_pembayaran){
                 $params1 = Parameter::where('id',1)->first();
-                $linkkhusus = asset('sources/storage/app/'.$params1->bukti_bayar_ukt.'/'.$d->bukti_pembayaran);
+                //$linkkhusus = asset('sources/storage/app/'.$params1->bukti_bayar_ukt.'/'.$d->bukti_pembayaran);
+		  $linkkhusus = url('admin/file/'.strtoupper($params1->bukti_bayar_ukt).'/'.$d->bukti_pembayaran);
                 $show = '<a href="'.$linkkhusus.'" target="_blank"><i title="Lihat Bukti Pendaftaran" class="fa fa-eye"></i></a>';
             }
 

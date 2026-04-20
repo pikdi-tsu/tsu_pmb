@@ -579,9 +579,9 @@
                                                                         'id',
                                                                         1,
                                                                     )->first();
-                                                                    $pathFile = asset(
-                                                                        'sources/storage/app/' .
-                                                                            $parameter->file_umum .
+                                                                    $pathFile = url(
+                                                                        'admin/file/' .
+                                                                            strtoupper($parameter->file_umum) .
                                                                             '/' .
                                                                             $fileUploaded->nama_berkas,
                                                                     );

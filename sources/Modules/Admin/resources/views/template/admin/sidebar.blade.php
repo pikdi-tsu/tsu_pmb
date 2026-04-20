@@ -13,7 +13,7 @@
         <!-- Sidebar user panel (optional) -->
         <div class="user-panel mt-3 pb-3 mb-3 d-flex">
             <div class="image">
-                <img src="{{ url('sources/storage/app/FILE_PHOTOPROFILE/' . photo_profile()) }}"
+                <img src="{{ url('admin/file/FILE_PHOTOPROFILE/' . photo_profile()) }}"
                     class="img-circle elevation-2"
                     style="width: 50px; height: 50px; object-fit: cover; border: 1px solid #adb5bd;" alt="User Image">
             </div>
@@ -43,6 +43,7 @@
                     $ukt = checkmenu('Pembayaran', 'Pembayaran UKT');
                     $dttest = checkmenu('Test Online', 'Data Test Online');
                     $dtfinal = checkmenu('Final PMB', 'Data Final PMB');
+                    $generatenim = checkmenu('Generate NIM', 'Generate NIM');
                 @endphp
                 @if ($dtbeasiswa + $dtnonbeasiswa > 0)
                     <li class="nav-item"> {{-- menu-open --}}
@@ -122,6 +123,7 @@
                         <p>Send Email</p>
                     </a>
                 </li>
+                @if($generatenim>0)
                 <li class="nav-item">
                     <a href="{{ route('admin.nim.index') }}"
                         class="nav-link {{ request()->routeIs('admin.nim.*') ? 'active' : '' }}">
@@ -129,6 +131,7 @@
                         <p>Generate NIM</p>
                     </a>
                 </li>
+                @endif
                 @if ($dtfinal > 0)
                     <li class="nav-item">
                         <a href="{{ route('admin.finalpmb.show') }}" class="nav-link">
@@ -137,6 +140,13 @@
                         </a>
                     </li>
                 @endif
+                @php
+                    $asssoal = checkmenu('Assessment','Master Soal');
+                    $asstest = checkmenu('Assessment','Master Test');
+                    $asshasil = checkmenu('Assessment','Hasil Test');
+                    $assmonitoring = checkmenu('Assessment','Monitoring Test');
+                @endphp
+                @if($asssoal+$asstest+$asshasil+$assmonitoring>0)
                 <li class="nav-item">
                     <a href="#" class="nav-link">
                         <i class="nav-icon fa fa-list-ul"></i>
@@ -144,6 +154,7 @@
                             Assessment<i class="right fas fa-angle-left"></i>
                         </p>
                     </a>
+                    @if($asssoal+$asstest>0)
                     <ul class="nav nav-treeview" style="display: none;">
                         <li class="nav-item">
                             <a href="#" class="nav-link">
@@ -154,21 +165,27 @@
                                 </p>
                             </a>
                             <ul class="nav nav-treeview" style="display: none;">
+                                @if($asstest>0)
                                 <li class="nav-item">
                                     <a href="{{ route('admin.mastertest.show') }}" class="nav-link">
                                         <i class="far fa-dot-circle nav-icon"></i>
                                         <p>Master Test</p>
                                     </a>
                                 </li>
+                                @endif
+                                @if($asssoal>0)
                                 <li class="nav-item">
                                     <a href="{{ route('admin.mastersoal.show') }}" class="nav-link">
                                         <i class="far fa-dot-circle nav-icon"></i>
                                         <p>Master Soal</p>
                                     </a>
                                 </li>
+                                @endif
                             </ul>
                         </li>
                     </ul>
+                    @endif
+                    @if($asshasil+$assmonitoring>0)
                     <ul class="nav nav-treeview" style="display: none;">
                         <li class="nav-item">
                             <a href="#" class="nav-link">
@@ -179,29 +196,34 @@
                                 </p>
                             </a>
                             <ul class="nav nav-treeview" style="display: none;">
+                                @if($asshasil>0)
                                 <li class="nav-item">
                                     <a href="{{ route('admin.testassesment.show') }}" class="nav-link">
                                         <i class="far fa-dot-circle nav-icon"></i>
                                         <p>Hasil Test</p>
                                     </a>
                                 </li>
+                                @endif
+                                @if($assmonitoring>0)
                                 <li class="nav-item">
                                     <a href="{{ route('admin.monitoringassesment.show') }}" class="nav-link">
                                         <i class="far fa-dot-circle nav-icon"></i>
                                         <p>Monitoring Test</p>
                                     </a>
                                 </li>
+                                @endif
                             </ul>
                         </li>
                     </ul>
+                    @endif
                 </li>
+                @endif
                 @php
                     $fakultas = checkmenu('Master Data', 'Master Fakultas');
                     $jurusan = checkmenu('Master Data', 'Master Jurusan');
                     $jenisP = checkmenu('Master Data', 'Master Jalur Pendaftaran');
                     $jenjang = checkmenu('Master Data', 'Master Jenjang Pendidikan');
                     $jurusanS = checkmenu('Master Data', 'Master Jurusan Sekolah');
-                    $soal = checkmenu('Master Data', 'Master Soal Test');
                     $content = checkmenu('Master Data', 'Master Content');
                     $batch = checkmenu('Master Data', 'Master Batch Pendaftaran');
                     $berkas = checkmenu('Master Data', 'Master Berkas');
@@ -213,26 +235,9 @@
                     $kecamatan = checkmenu('Master Data', 'Master kecamatan');
                     $kelurahan = checkmenu('Master Data', 'Master Kelurahan');
                     $jenisberkas = checkmenu('Master Data', 'Master Jenis Berkas');
+                    $rekomendator = checkmenu('Master Data', 'Master Rekomendator');
                 @endphp
-                @if (
-                    $fakultas +
-                        $jurusan +
-                        $jenisP +
-                        $jenjang +
-                        $jurusanS +
-                        $soal +
-                        $content +
-                        $batch +
-                        $berkas +
-                        $ukt +
-                        $beasiswa +
-                        $tingkatkejuaraan +
-                        $provinsi +
-                        $kabupaten +
-                        $kecamatan +
-                        $kelurahan +
-                        $jenisberkas >
-                        0)
+                @if ($fakultas+$jurusan+$jenisP+$jenjang+$jurusanS+$content+$batch+$berkas+$ukt+$beasiswa+$tingkatkejuaraan+$provinsi+$kabupaten+$kecamatan+$kelurahan+$jenisberkas+$rekomendator>0)
                     <li class="nav-item"> {{-- menu-open --}}
                         <a href="#" class="nav-link"> {{-- active --}}
                             <i class="nav-icon fas fa-clipboard-list"></i>
@@ -313,12 +318,14 @@
                                     </a>
                                 </li>
                             @endif
+                            @if ($rekomendator > 0)
                             <li class="nav-item">
                                 <a href="{{ route('admin.Rekomendator.show') }}" class="nav-link">
                                     <i class="far fa-circle nav-icon"></i>
                                     Master Rekomendator
                                 </a>
                             </li>
+                            @endif
                             @if ($jenisberkas > 0)
                                 <li class="nav-item">
                                     <a href="{{ route('admin.JenisBerkas.show') }}" class="nav-link">
@@ -367,14 +374,12 @@
                                     </a>
                                 </li>
                             @endif
-                            @if ($soal > 0)
-                                <li class="nav-item">
-                                    <a href="{{ route('admin.Test.show') }}" class="nav-link">
-                                        <i class="far fa-circle nav-icon"></i>
-                                        Master Soal Test
-                                    </a>
-                                </li>
-                            @endif
+                            <li class="nav-item" style="display: none;">
+                                <a href="{{ route('admin.Test.show') }}" class="nav-link">
+                                    <i class="far fa-circle nav-icon"></i>
+                                    Master Soal Test
+                                </a>
+                            </li>
                             @if ($content > 0)
                                 <li class="nav-item">
                                     <a href="{{ route('admin.content.show') }}" class="nav-link">

@@ -407,7 +407,7 @@
                                 @if($fileUploaded)
                                     @php
                                         $parameter = \App\Models\Parameter::where('id', 1)->first();
-                                        $pathFile = asset('sources/storage/app/' . $parameter->file_umum . '/' . $fileUploaded->nama_berkas);
+                                        $pathFile = url('admin/file/' . strtoupper($parameter->file_umum) . '/' . $fileUploaded->nama_berkas);
                                     @endphp
                                     <a href="{{ $pathFile }}" target="_blank" class="badge bg-success" style="text-decoration: none;">
                                         <i class="fa fa-check"></i> Sudah Upload (Lihat)
