@@ -251,7 +251,7 @@ class LoginController extends Controller
         if($cek){
             $email = $cek->email;
             $enc = encrypt($cek->nik);
-            $cek1 = PegawaiModel::where('nik',$cek->nik)->where('email_kampus',$email)->first();
+            $cek1 = PegawaiModel::where('nik',$cek->nik)->where('email',$email)->first();
             UserResetPasswordModel::insert([
                 'email'   => $cek->email,
                 'token'   => $post->_token,
