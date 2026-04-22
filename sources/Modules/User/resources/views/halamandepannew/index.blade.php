@@ -9,7 +9,7 @@
 
         <div class="hero-container">
             <video autoplay="" muted="" loop="" playsinline="" class="video-background">
-                <source src="{{ asset('public/assets/user/img/education/video-2.mp4') }}" type="video/mp4">
+                <source src="{{ asset('public/assets/user/img/education/tsu.mp4') }}" type="video/mp4">
             </video>
             <div class="overlay"></div>
             <div class="container">
