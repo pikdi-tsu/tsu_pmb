@@ -77,19 +77,38 @@ class RekomendatorController extends Controller
     // Ubah parameternya untuk menerima kode_kategori
     private function generateKodeRekomendator($kodeKategori)
     {
-        $kategori = DB::table('pmb_master_kategori_rekomendator')->where('kode_kategori', $kodeKategori)->first();
+        // 1. DETEKSI 005 ATAU 006 (DOSEN / TENDIK)
+        // Menggunakan strpos untuk mendeteksi jika di dalam string $kodeKategori terdapat "005" atau "006"
+        if (strpos($kodeKategori, '005') !== false || strpos($kodeKategori, '006') !== false) {
+            $prefix = 'TSU';
 
-        if (!$kategori) {
-            return 'UNKNOWN0001';
+            // Cari data terakhir dengan awalan TSU
+            $lastData = Master_Rekomendator::where('kode_rekomendator', 'like', $prefix . '%')
+                            ->orderBy('kode_rekomendator', 'desc')
+                            ->first();
+
+            if (!$lastData || empty($lastData->kode_rekomendator)) {
+                $newNumber = 1;
+            } else {
+                $lastKode = $lastData->kode_rekomendator;
+                $lastNumber = (int) substr($lastKode, 3); // Ambil angka setelah 'TSU' (mulai index 3)
+                $newNumber = $lastNumber + 1;
+            }
+
+            // Kembalikan format TSU001 (3 digit angka berurutan)
+            return $prefix . str_pad($newNumber, 3, '0', STR_PAD_LEFT);
         }
+
+        // 2. JIKA BUKAN 005 ATAU 006 (KATEGORI NORMAL LAINNYA)
+        $kategori = DB::table('pmb_master_kategori_rekomendator')->where('kode_kategori', $kodeKategori)->first();
+        if (!$kategori) return 'UNKNOWN0001';
 
         $prefix = $kategori->kode_kategori;
 
-        // PERBAIKAN: Cari murni berdasarkan awalan kode_rekomendator-nya saja (mengabaikan kolom kategori)
-        // dan urutkan berdasarkan kodenya secara menurun (Z-A) agar dapat angka terbesar
-        $lastData = Master_Rekomendator::where('kode_rekomendator', 'like', $prefix . '%')
-            ->orderBy('kode_rekomendator', 'desc')
-            ->first();
+        $lastData = Master_Rekomendator::where('kategori', $kodeKategori)
+                        ->where('kode_rekomendator', 'like', $prefix . '%')
+                        ->orderBy('kode_rekomendator', 'desc')
+                        ->first();
 
         if (!$lastData || empty($lastData->kode_rekomendator)) {
             $newNumber = 1;
@@ -99,44 +118,65 @@ class RekomendatorController extends Controller
             $newNumber = $lastNumber + 1;
         }
 
+        // Kembalikan format 001REKOM0001 (4 digit angka berurutan)
         return $prefix . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }
 
     public function StoreRekomendator(Request $post)
     {
         if ($post->IdRekomendator == null) {
-            // Logika Insert
+            // Logika Insert: Generate Kode Otomatis
             $post->merge([
                 'kode_rekomendator' => $this->generateKodeRekomendator($post->kategori)
             ]);
 
-            return $this->save($post);
-        } else {
-            // Logika Update
-            $id = decrypt($post->IdRekomendator);
-
-            $oldData = Master_Rekomendator::find($id);
-            $kodeRekomendator = $post->kode_rekomendator;
-
-            // Jika kategori diubah, buatkan kode baru
-            if ($oldData && $oldData->kategori != $post->kategori) {
-                $kodeRekomendator = $this->generateKodeRekomendator($post->kategori);
+            $cek = Master_Rekomendator::where('kode_rekomendator', $post->kode_rekomendator)->exists();
+            if ($cek) {
+                return ['title' => 'Error', 'status' => 'error', 'message' => 'Gagal generate, kode ('.$post->kode_rekomendator.') sudah ada.'];
             }
 
+            return $this->save($post);
+        } else {
+            // =========================
+            // LOGIKA UPDATE (EDIT DATA)
+            // =========================
+            $id = decrypt($post->IdRekomendator);
+            $oldData = Master_Rekomendator::find($id);
+
+            // KITA HAPUS: $kodeRekomendator = $post->kode_rekomendator;
+
+            if ($oldData && $oldData->kategori != $post->kategori) {
+
+                // JIKA KATEGORI BERUBAH
+                $isOldTsu = (strpos($oldData->kategori, '005') !== false || strpos($oldData->kategori, '006') !== false);
+                $isNewTsu = (strpos($post->kategori, '005') !== false || strpos($post->kategori, '006') !== false);
+
+                if ($isOldTsu && $isNewTsu) {
+                    // Jika hanya muter-muter antara Dosen dan Tendik
+                    $kodeRekomendator = $oldData->kode_rekomendator;
+                } else {
+                    // Jika berubah lintas jenis
+                    $kodeRekomendator = $this->generateKodeRekomendator($post->kategori);
+                }
+
+            } else {
+
+                // PERBAIKAN UTAMA: JIKA KATEGORI TIDAK BERUBAH (Cuma edit nama/pekerjaan)
+                // Kita ambil kodenya mutlak dari database lama, abaikan apa yang dikirim dari form
+                $kodeRekomendator = $oldData->kode_rekomendator;
+
+            }
+
+            // Masukkan kode ke dalam data post untuk disimpan
             $post->merge(['kode_rekomendator' => $kodeRekomendator]);
 
-            // PERBAIKAN: Hapus pengecekan 'isactive' agar sistem mendeteksi kode yang kembar
-            // baik di data yang aktif maupun yang sudah dinonaktifkan
+            // Cek duplikat (mengabaikan ID miliknya sendiri)
             $cek = Master_Rekomendator::where('id', '!=', $id)
-                ->where('kode_rekomendator', $post->kode_rekomendator)
+                ->where('kode_rekomendator', $kodeRekomendator)
                 ->exists();
 
             if ($cek) {
-                return [
-                    'title' => 'Information',
-                    'status' => 'warning',
-                    'message' => 'Kode Rekomendator (' . $post->kode_rekomendator . ') Sudah Digunakan!'
-                ];
+                return ['title' => 'Peringatan', 'status' => 'warning', 'message' => 'Kode Rekomendator ('.$kodeRekomendator.') Sudah Digunakan!'];
             }
 
             return $this->update($post, $id);
