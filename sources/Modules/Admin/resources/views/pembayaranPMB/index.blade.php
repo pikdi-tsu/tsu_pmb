@@ -125,7 +125,7 @@
                                 <th>UKT Program Studi 1</th>
                                 <th id="o-uktprodi1" class="o-detaildaftar"></th>
                                 <th>Biaya Pendaftaran</th>
-                                <th id="o-biayadaftar" class="o-detaildaftar"></th> 
+                                <th id="o-biayadaftar" class="o-detaildaftar"></th>
                                 {{-- <th>UKT Program Studi 2</th>
                                 <th id="o-uktprodi2" class="o-detaildaftar"></th> --}}
                                 {{-- <th>UKT Program Studi 3</th>
@@ -284,7 +284,7 @@
             function tabelPembayaran()
             {
                 let params = $('#kategori').val();
-                
+
                 let otable = $('#example2').DataTable({
                     destroy: true,
                     processing: true,
@@ -294,7 +294,7 @@
                     scrollCollapse: true,
                     serverSide: true,
                     searchDelay: 500,
-                    responsive: true,
+                    responsive: false,
                     order: [],
                     ajax: {
                         url: '{!! url('admin/PembayaranPMB/TabelPembayaranPMB') !!}',

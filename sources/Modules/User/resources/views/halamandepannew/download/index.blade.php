@@ -85,12 +85,21 @@
         border-radius: 20px;
         padding: 40px;
     }
+
+    .btn-warning {
+        background-color: #f59e0b;
+        border: none;
+    }
+
+    .btn-warning:hover {
+        background-color: #d97706;
+    }
 </style>
 
 <section class="hero-section">
     <div class="container hero-content">
-        <h1>Program Studi</h1>
-        <p>Temukan informasi lengkap mengenai program studi pilihan di Universitas Tiga Serangkai.</p>
+        <h1>Download</h1>
+        <p>Temukan informasi lengkap mengenai download di Universitas Tiga Serangkai.</p>
     </div>
 </section>
 
@@ -98,16 +107,23 @@
     <div class="container">
         <div class="ps-card-wrapper">
             <div class="ps-header">
-                <h3>Informasi Program Studi</h3>
-                <p>Informasi program studi Universitas Tiga Serangkai</p>
+                <h3>Informasi Download</h3>
+                <p>Informasi Download Universitas Tiga Serangkai</p>
             </div>
 
             <div class="border-top pt-2">
-                <div class="card shadow-sm border-0" style="width: 100%;">
-                    <div class="card-body">
-                        <img src="{{ asset('public/assets/img/proditsu.jpg') }}"
-                            class="card-img-top"
-                            alt="gambar">
+                <div class="row mt-2">
+                    <div class="card border-0 shadow-sm text-center p-4">
+                        <h5 class="fw-bold mb-2">Download Brosur</h5>
+                        <p class="text-muted small">Lihat informasi lengkap dalam bentuk PDF</p>
+
+                        <a href="{{ route('getbrowsur') }}"
+                        class="btn btn-warning rounded-pill px-4 mt-2">
+
+                            <i class="bi bi-download me-2"></i>
+                            Download Sekarang
+                        </a>
+
                     </div>
                 </div>
             </div>
@@ -130,40 +146,4 @@
     </div>
 </main>
 
-<script>
-    let jenjangAktif = 'D3';
-
-    function filterData(pilihanJenjang = null, elementBtn = null) {
-        if(pilihanJenjang !== null) {
-            jenjangAktif = pilihanJenjang;
-            document.querySelectorAll('.btn-tab').forEach(btn => btn.classList.remove('active'));
-            if(elementBtn) elementBtn.classList.add('active');
-        }
-
-        let keyword = document.getElementById('inputPencarian').value.toLowerCase();
-        let daftarKartu = document.querySelectorAll('.item-kartu');
-        let jumlahTerlihat = 0;
-
-        daftarKartu.forEach(kartu => {
-            let dataJenjang = kartu.getAttribute('data-jenjang');
-            let dataNama = kartu.getAttribute('data-nama');
-
-            let cocokTab = (dataJenjang === jenjangAktif);
-            let cocokPencarian = dataNama.includes(keyword);
-
-            if (cocokTab && cocokPencarian) {
-                kartu.style.display = 'flex';
-                jumlahTerlihat++;
-            } else {
-                kartu.style.display = 'none';
-            }
-        });
-
-        document.getElementById('pesanKosong').style.display = (jumlahTerlihat === 0) ? 'block' : 'none';
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        filterData('D3');
-    });
-</script>
 @endsection

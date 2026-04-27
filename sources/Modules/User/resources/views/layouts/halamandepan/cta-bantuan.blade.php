@@ -114,9 +114,9 @@
                 <a href="https://wa.me/62895705354767" target="_blank" class="btn-cta-outline">
                     <i class="fab fa-whatsapp"></i> Whatsapp
                 </a>
-                <a href="#" class="btn-cta-outline">
+                {{-- <a href="#" class="btn-cta-outline">
                     Petunjuk Pendaftaran
-                </a>
+                </a> --}}
             </div>
         </div>
     </div>

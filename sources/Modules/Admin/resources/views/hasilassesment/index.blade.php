@@ -144,17 +144,17 @@
                         <h6 class="font-weight-bold mb-1" id="reset-nama-peserta">-</h6>
                         <span class="badge badge-info" id="reset-noreg-peserta">-</span>
                     </div>
-                    
+
                     <p class="mb-3 text-sm">Pilih ujian yang ingin direset:</p>
                     <input type="hidden" id="reset-kodedaftar" value="">
-                    
+
                     <div class="d-flex flex-column align-items-center">
                         <button type="button" id="btn-reset-tpa" class="btn btn-primary btn-block mb-2 btn-aksi-reset" data-jenis="tpa">Reset TPA</button>
                         <button type="button" id="btn-reset-hip" class="btn btn-info btn-block mb-2 btn-aksi-reset" data-jenis="hip">Reset HIP</button>
                         <button type="button" id="btn-reset-disc" class="btn btn-secondary btn-block mb-2 btn-aksi-reset" data-jenis="disc">Reset DISC</button>
-                        
+
                         <div id="divider-semua" class="w-100" style="display: none;"><hr class="mt-2 mb-2"></div>
-                        
+
                         <button type="button" id="btn-reset-semua" class="btn btn-danger btn-block mb-2 btn-aksi-reset" data-jenis="semua">Reset SEMUA Ujian</button>
                     </div>
                 </div>
@@ -205,12 +205,12 @@
                         },
                         success: function(data) {
                             $('#loading').hide();
-                            
+
                             // Sembunyikan semua tombol di awal
                             $('#btn-reset-tpa, #btn-reset-hip, #btn-reset-disc, #btn-reset-semua, #divider-semua').hide();
 
                             if(data.hasil == 1 && data.attempts && data.attempts.length > 0) {
-                                
+
                                 // Tampilkan Nama dan No Registrasi ke dalam Modal
                                 let namaPeserta = data.daftar.biodata ? data.daftar.biodata.nama : 'Nama Tidak Ditemukan';
                                 $('#reset-nama-peserta').text(namaPeserta);
@@ -240,7 +240,7 @@
                                 if(hasTPA) $('#btn-reset-tpa').show();
                                 if(hasHIP) $('#btn-reset-hip').show();
                                 if(hasDISC) $('#btn-reset-disc').show();
-                                
+
                                 // Jika ada lebih dari 1 ujian, tampilkan tombol "Reset Semua"
                                 if(data.attempts.length > 1) {
                                     $('#divider-semua').show();
@@ -285,8 +285,8 @@
                                     jenis: jenis
                                 },
                                 dataType: "JSON",
-                                beforeSend: function() { 
-                                    $('#loading').show(); 
+                                beforeSend: function() {
+                                    $('#loading').show();
                                     $('#modal-reset').modal('hide');
                                 },
                                 success: function(res) {
@@ -299,7 +299,7 @@
                                 },
                                 error: function(xhr, status, error) {
                                     $('#loading').hide();
-                                    
+
                                     // --- MULAI CONSOLE LOG DEBUGGING ---
                                     console.error("=== TERJADI ERROR AJAX ===");
                                     console.log("Status:", status);
@@ -331,7 +331,7 @@
                     scrollX: true,
                     serverSide: true,
                     searchDelay: 500,
-                    responsive: true,
+                    responsive: false,
                     order: [],
                     ajax: {
                         url: '{!! route('admin.testassesment.tabel') !!}',
@@ -794,7 +794,7 @@
                         }]
                     },
                     options: {
-                        responsive: true,
+                        responsive: false,
                         maintainAspectRatio: false,
                         scales: {
                             y: {
@@ -812,10 +812,10 @@
             function lolostest() {
                 $('.lolos').off('click').on('click', function (e) {
                     e.preventDefault();
-                    
+
                     // Gunakan attr('data-id') agar string enkripsi murni tidak dikonversi oleh jQuery
-                    let params = $(this).attr('data-id'); 
-                    
+                    let params = $(this).attr('data-id');
+
                     $.ajax({
                         type: "GET",
                         // Menambahkan encodeURIComponent agar string base64 / karakter unik aman di URL

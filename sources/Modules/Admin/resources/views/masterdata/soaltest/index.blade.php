@@ -417,7 +417,7 @@
                     scrollCollapse: true,
                     serverSide: true,
                     searchDelay: 500,
-                    responsive: true,
+                    responsive: false,
                     order: [[1,'asc']],
                     ajax: {
                         url: '{!! route('admin.Test.Tabel') !!}',
