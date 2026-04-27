@@ -9,7 +9,7 @@
 
         <div class="hero-container">
             <video autoplay="" muted="" loop="" playsinline="" class="video-background">
-                <source src="{{ asset('public/assets/user/img/education/video-2.mp4') }}" type="video/mp4">
+                <source src="{{ asset('public/assets/user/img/education/tsu.mp4') }}" type="video/mp4">
             </video>
             <div class="overlay"></div>
             <div class="container">
@@ -78,9 +78,9 @@
 
         <div class="event-ticker">
             <div class="container">
-                <div class="row gy-4">
+                <div class="row gy-4" style="display: none;">
                     <div class="col-md-6 col-xl-4 col-12 ticker-item">
-                        <span class="date">NOV 15</span>
+                        <span class="date">{{tglIndo(date('Y-m-d'))}}</span>
                         <span class="title">Open House Day</span>
                         <a href="#" class="btn-register">Register</a>
                     </div>
