@@ -147,7 +147,7 @@
                 scrollX: true,
                 serverSide: true,
                 searchDelay: 500,
-                responsive: true,
+                responsive: false,
                 order: [],
                 ajax: {
                     url: '{!! route('admin.monitoringassesment.tabel') !!}',
@@ -605,7 +605,7 @@
                     }]
                 },
                 options: {
-                    responsive: true,
+                    responsive: false,
                     maintainAspectRatio: false,
                     scales: {
                         y: {

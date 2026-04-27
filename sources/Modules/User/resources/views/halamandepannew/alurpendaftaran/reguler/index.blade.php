@@ -1,6 +1,5 @@
 @extends('user::layouts/halamandepan/master')
 @section('title', $title)
-
 @section('link_href')
 @endsection
 
@@ -89,8 +88,8 @@
 
 <section class="hero-section">
     <div class="container hero-content">
-        <h1>Program Studi</h1>
-        <p>Temukan informasi lengkap mengenai program studi pilihan di Universitas Tiga Serangkai.</p>
+        <h1>Pendaftaran Reguler</h1>
+        <p>Temukan informasi lengkap mengenai pendaftaran reguler di Universitas Tiga Serangkai.</p>
     </div>
 </section>
 
@@ -98,16 +97,57 @@
     <div class="container">
         <div class="ps-card-wrapper">
             <div class="ps-header">
-                <h3>Informasi Program Studi</h3>
-                <p>Informasi program studi Universitas Tiga Serangkai</p>
+                <h3>Informasi Pendaftaran Reguler</h3>
+                <p>Informasi Pendaftaran Reguler Universitas Tiga Serangkai</p>
             </div>
 
             <div class="border-top pt-2">
-                <div class="card shadow-sm border-0" style="width: 100%;">
-                    <div class="card-body">
-                        <img src="{{ asset('public/assets/img/proditsu.jpg') }}"
-                            class="card-img-top"
-                            alt="gambar">
+                <div class="row mt-2">
+                    <h4 class="fw-bold" style="color: #11667B">Persyaratan Dokumen</h4>
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                @foreach ($masterberkas as $item)
+                                    @if ($item->IdJenis==2)
+                                        <li class="list-group-item border-0">
+                                            📄 {{ $item->deskripsi }}
+                                        </li>
+                                    @endif
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <h5 class="fw-bold" style="color: #11667B">Persyaratan Khusus Pindahan</h5>
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                @foreach ($masterberkas as $item)
+                                    @if($item->IdJenis==6)
+                                        <li class="list-group-item border-0">
+                                            📄 {{ $item->deskripsi }}
+                                        </li>
+                                    @endif
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <h5 class="fw-bold" style="color: #11667B">Persyaratan Khusus Transfer</h5>
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <ul class="list-group list-group-flush">
+                                @foreach ($masterberkas as $item)
+                                    @if($item->IdJenis==6)
+                                        <li class="list-group-item border-0">
+                                            📄 {{ $item->deskripsi }}
+                                        </li>
+                                    @endif
+                                @endforeach
+                            </ul>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -129,41 +169,7 @@
         </div>
     </div>
 </main>
+@endsection
 
-<script>
-    let jenjangAktif = 'D3';
-
-    function filterData(pilihanJenjang = null, elementBtn = null) {
-        if(pilihanJenjang !== null) {
-            jenjangAktif = pilihanJenjang;
-            document.querySelectorAll('.btn-tab').forEach(btn => btn.classList.remove('active'));
-            if(elementBtn) elementBtn.classList.add('active');
-        }
-
-        let keyword = document.getElementById('inputPencarian').value.toLowerCase();
-        let daftarKartu = document.querySelectorAll('.item-kartu');
-        let jumlahTerlihat = 0;
-
-        daftarKartu.forEach(kartu => {
-            let dataJenjang = kartu.getAttribute('data-jenjang');
-            let dataNama = kartu.getAttribute('data-nama');
-
-            let cocokTab = (dataJenjang === jenjangAktif);
-            let cocokPencarian = dataNama.includes(keyword);
-
-            if (cocokTab && cocokPencarian) {
-                kartu.style.display = 'flex';
-                jumlahTerlihat++;
-            } else {
-                kartu.style.display = 'none';
-            }
-        });
-
-        document.getElementById('pesanKosong').style.display = (jumlahTerlihat === 0) ? 'block' : 'none';
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        filterData('D3');
-    });
-</script>
+@section('script')
 @endsection

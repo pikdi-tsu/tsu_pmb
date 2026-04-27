@@ -150,7 +150,7 @@
                     scrollCollapse: true,
                     serverSide: true,
                     searchDelay: 500,
-                    responsive: true,
+                    responsive: false,
                     order: [],
                     ajax: {
                         url: '{!! route('admin.BatchPendaftaran.Tabel') !!}',

@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Storage;
 use Modules\User\Http\Controllers\AssessmentController;
 use Modules\User\Http\Controllers\BiodataController;
 use Modules\User\Http\Controllers\DaftarRekomendatorController;
@@ -30,7 +29,6 @@ Route::prefix('')->group(function () {
     Route::get('/', [UserController::class, 'index'])->name('indexing');
     Route::middleware(['web'])->group(function () {
         Route::get('/jalur-pendaftaran', [UserController::class, 'jalurPendaftaran'])->name('jalur_pendaftaran');
-        Route::get('/program-studi', [UserController::class, 'programStudi'])->name('program_studi');
         Route::get('/pengumuman', [UserController::class, 'pengumuman'])->name('pengumuman');
         Route::get('/informasi-pendaftaran', [UserController::class, 'informasiPendaftaran'])->name('informasi_pendaftaran');
         Route::get('/detail-pengumuman', [UserController::class, 'detailPengumuman'])->name('detail_pengumuman');
@@ -45,6 +43,15 @@ Route::prefix('')->group(function () {
         Route::get('/ResetPassword', [UserController::class, 'ResetPassword'])->name('ResetPassword');
         Route::post('/ResetPasswordAction', [UserController::class, 'ResetPasswordAction'])->name('ResetPasswordAction');
 
+        Route::get('/program-studi', [UserController::class, 'programStudi'])->name('program_studi');
+        Route::get('/gelobangukt', [UserController::class, 'gelombangukt'])->name('gelombangukt');
+        Route::get('/alurpendaftaranbeasiswa', [UserController::class, 'alurbeasiswa'])->name('alurpendaftaranbeasiswa');
+        Route::get('/detailbeasiswa/{params}', [UserController::class, 'detailbeasiswa'])->name('detailbeasiswa');
+        Route::get('/pendaftaranreguler', [UserController::class, 'pendaftaranreguler'])->name('pendaftaranreguler');
+        Route::get('/kontakkami', [UserController::class, 'kontakkami'])->name('kontakkami');
+        Route::get('/downloadbrowsur', [UserController::class, 'downloadbrowsur'])->name('downloadbrowsur');
+        Route::get('/getbrowsur', [UserController::class, 'getbrowsur'])->name('getbrowsur');
+
         //Daftar Rekomendator
         Route::get('/Daftar-Rekomendator', [DaftarRekomendatorController::class, 'index'])->name('daftarrekomendator.index');
         Route::post('/Save-Rekomendator', [DaftarRekomendatorController::class, 'save'])->name('daftarrekomendator.save');
@@ -55,19 +62,6 @@ Route::prefix('')->group(function () {
             Route::get('/ChangePassword', [UserController::class, 'edit'])->name('user.ChangePassword');
             Route::post('/ChangePasswordSave', [UserController::class, 'update'])->name('user.ChangePasswordSave');
             Route::post('/logout', [UserController::class, 'logout'])->name('logout');
-
-	    Route::get('/dokumen/lihat/{path}', function($path){
-		$fullPath = storage_path('app/'. $path);
-                if(!file_exists($fullPath)){
-                  abort(404,'File tidak ada');
-                }	
-
-                if(ob_get_length()){
-                  ob_end_clean();
-                }
-                return response()->file($fullPath);
-		
-            })->name('dokumen.show')->where('path','.*');
 
             Route::prefix('Pendaftaran')->group(function () {
                 Route::get('/', [PendaftaranController::class, 'index'])->name('pendaftaran');

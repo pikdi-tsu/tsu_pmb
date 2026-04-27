@@ -309,7 +309,7 @@
                     scrollCollapse: true,
                     serverSide: true,
                     searchDelay: 500,
-                    responsive: true,
+                    responsive: false,
                     order: [],
                     ajax: {
                         url: '{!! url('admin/PembayaranUKT/tabelPembayaranUKT') !!}', //+'/'+params,
@@ -401,9 +401,9 @@
                                 $('#o-prodi2').html(data.daftar.prodi2 && data.daftar.prodi2.jenjang ? data.daftar.prodi2.jenjang.jenjang + '-' + data.daftar.prodi2.jurusan : (data.daftar.prodi2 ? data.daftar.prodi2.jurusan : '-'));
                                 $('#o-prodi3').html(data.daftar.prodi3 && data.daftar.prodi3.jenjang ? data.daftar.prodi3.jenjang.jenjang + '-' + data.daftar.prodi3.jurusan : (data.daftar.prodi3 ? data.daftar.prodi3.jurusan : '-'));
                                 let ukt1 = data.ukt1 ? new Intl.NumberFormat('id-ID').format(data.ukt1.biaya_ukt) : '0';
-                                $('#o-uktprodi1').html('Rp ' + ukt1);                               
+                                $('#o-uktprodi1').html('Rp ' + ukt1);
                                 let ukt2 = data.ukt2 ? new Intl.NumberFormat('id-ID').format(data.ukt2.biaya_ukt) : '0';
-                                $('#o-uktprodi2').html('Rp ' + ukt2);                              
+                                $('#o-uktprodi2').html('Rp ' + ukt2);
                                 let ukt3 = data.ukt3 ? new Intl.NumberFormat('id-ID').format(data.ukt3.biaya_ukt) : '0';
                                 $('#o-uktprodi3').html('Rp ' + ukt3);
                                 let konfirmdaftar = data.daftar.konfirm_pendaftaran=='0' ? 'Belum Konfirmasi' : 'Sudah Konfirmasi';

@@ -15,7 +15,7 @@ class DaftarRekomendatorController extends Controller
 {
     public function index()
     {
-        $kategori = DB::table('pmb_master_kategori_rekomendator')->where('isactive', '1')->get();
+        $kategori = DB::table('pmb_master_kategori_rekomendator')->whereNotIn('kategori_rekomendator',['DOSEN','TENDIK'])->where('isactive', '1')->get();
         $data = array(
             'title' => 'Daftar Rekomendator',
             'menu' => 'Daftar Rekomendator',

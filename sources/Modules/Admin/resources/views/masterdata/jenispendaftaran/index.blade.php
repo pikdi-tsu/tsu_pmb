@@ -182,7 +182,7 @@
                     scrollCollapse: true,
                     serverSide: true,
                     searchDelay: 500,
-                    responsive: true,
+                    responsive: false,
                     order: [[1,'asc']],
                     ajax: {
                         url: '{!! route('admin.JenisPendaftaran.Tabel') !!}',
@@ -373,7 +373,7 @@
                                 $('#namajalur').val(data.jenis.jenis_pendaftaran)
                                 $('#jenisjalur').val(data.jenis.is_beasiswa).trigger('change')
                                 // TAMBAHAN SET VALUE FORMAT NIM
-                                $('#format_nim').val(data.jenis.format_nim) 
+                                $('#format_nim').val(data.jenis.format_nim)
                                 if(data.jenis.biaya_pendaftaran==1){
                                     $('#check_daftar').val(data.jenis.biaya_pendaftaran)
                                     $('#check_daftar').prop('checked',true).trigger('change')

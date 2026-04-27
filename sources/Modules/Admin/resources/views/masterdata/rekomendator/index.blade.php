@@ -38,11 +38,7 @@
 
                                         <div class="row">
                                             <div class="col-md-6">
-                                                <div class="form-group mb-3">
-                                                    <label for="kode_rekomendator">Kode Rekomendator</label>
-                                                    <input type="text" id="kode_rekomendator" name="kode_rekomendator"
-                                                        placeholder="Auto Generated" class="form-control" readonly>
-                                                </div>
+
                                                 <div class="form-group mb-3">
                                                     <label for="nama_rekomendator">Nama Rekomendator</label>
                                                     <input type="text" id="nama_rekomendator" name="nama_rekomendator"
@@ -69,14 +65,15 @@
                                                     <label for="alamat">Alamat</label>
                                                     <textarea id="alamat" name="alamat" rows="3" class="form-control" placeholder="Alamat Lengkap"></textarea>
                                                 </div>
-                                            </div>
-
-                                            <div class="col-md-6">
                                                 <div class="form-group mb-3">
                                                     <label for="no_hp">No. Handphone</label>
                                                     <input type="text" id="no_hp" name="no_hp"
                                                         placeholder="08xxxxxxxxxx" class="form-control">
                                                 </div>
+                                            </div>
+
+                                            <div class="col-md-6">
+
                                                 <div class="form-group mb-3">
                                                     <label for="email">Email</label>
                                                     <input type="email" id="email" name="email" placeholder="Email"
@@ -97,16 +94,15 @@
                                                     <input type="text" id="atasnama_rekening" name="atasnama_rekening"
                                                         placeholder="Atas Nama" class="form-control">
                                                 </div>
+                                                <div class="form-group mb-3">
+                                                    <label for="status">Status</label>
+                                                    <select class="form-control" id="status" name="status" required>
+                                                        <option value="" selected disabled>-- Pilih Status --</option>
+                                                        <option value="1">Aktif</option>
+                                                        <option value="0">Non Aktif</option>
+                                                    </select>
+                                                </div>
                                             </div>
-                                        </div>
-
-                                        <div class="form-group mb-3">
-                                            <label for="status">Status</label>
-                                            <select class="form-control" id="status" name="status" required>
-                                                <option value="" selected disabled>-- Pilih Status --</option>
-                                                <option value="1">Aktif</option>
-                                                <option value="0">Non Aktif</option>
-                                            </select>
                                         </div>
 
                                         <div class="form-group">
@@ -125,7 +121,8 @@
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="table-responsive" style="margin-top: 20px;">
-                                        <table id="tabel-rekomendator" class="table table-bordered table-hover"style="width: 100%;">
+                                        <table id="tabel-rekomendator"
+                                            class="table table-bordered table-hover"style="width: 100%;">
                                             <thead>
                                                 <tr>
                                                     <th>No</th>
@@ -219,12 +216,45 @@
                 importExcel();
             }
 
+            function cekKategoriManual() {
+                $('#kategori').change(function() {
+                    // Ambil Teks dari opsi yang dipilih (contoh: "DOSEN" atau "UMUM")
+                    let teksKategori = $(this).find('option:selected').text().trim().toUpperCase();
+
+                    // Cek apakah form sedang dalam mode edit
+                    let isEdit = $('#IdRekomendator').val() !== '';
+
+                    if (teksKategori === 'DOSEN' || teksKategori === 'TENDIK') {
+                        // Buka kunci input agar bisa diketik
+                        $('#kode_rekomendator').prop('readonly', false).attr('placeholder',
+                            'Ketik Kode Manual...');
+                    } else {
+                        // Kunci kembali inputnya
+                        $('#kode_rekomendator').prop('readonly', true).attr('placeholder',
+                        'Auto Generated');
+
+                        // Kosongkan isi field HANYA JIKA sedang tambah data baru.
+                        // (Jika sedang edit, kita biarkan kode aslinya tetap tampil)
+                        if (!isEdit) {
+                            $('#kode_rekomendator').val('');
+                        }
+                    }
+                });
+            }
+
+            function kapitalisasiKode() {
+                $('#kode_rekomendator').on('input', function() {
+                    let isi = $(this).val();
+                    $(this).val(isi.toUpperCase());
+                });
+            }
+
             function tabelRekomendator() {
                 let otable = $('#tabel-rekomendator').DataTable({
                     destroy: true,
                     processing: true,
                     serverSide: true,
-                    responsive: true,
+                    responsive: false,
                     ajax: {
                         url: '{!! route('admin.Rekomendator.Tabel') !!}',
                         type: 'GET',

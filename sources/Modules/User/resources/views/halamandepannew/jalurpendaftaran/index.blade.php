@@ -12,7 +12,7 @@
     .btn-teal { background-color: #009ca6; color: white; border: none; }
     .btn-teal:hover { background-color: #007d85; color: white; }
     .text-orange { color: #f39c12; }
-    
+
     .card-filter {
         border-radius: 10px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.05);
@@ -104,7 +104,7 @@
         @forelse($batches as $batch)
             <div class="card card-jalur mb-3">
                 <div class="card-body p-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center">
-                    
+
                     <div class="mb-3 mb-md-0">
                         <h5 class="fw-bold mb-2 text-uppercase">
                             PENDAFTARAN MAHASISWA BARU {{ $batch->tahun_akademik }} - {{ $batch->nama_batch }}
@@ -116,15 +116,15 @@
 
                     <div class="text-md-end">
                         <p class="mb-1 text-secondary">
-                            <i class="far fa-calendar-alt text-teal me-2"></i> 
-                            {{ \Carbon\Carbon::parse($batch->tglmulai)->format('d M Y') }} - 
+                            <i class="far fa-calendar-alt text-teal me-2"></i>
+                            {{ \Carbon\Carbon::parse($batch->tglmulai)->format('d M Y') }} -
                             {{ \Carbon\Carbon::parse($batch->tglselesai)->format('d M Y') }}
                         </p>
                         <p class="mb-3 text-secondary">
-                            <i class="fas fa-tags text-teal me-2"></i> Biaya Daftar 
+                            <i class="fas fa-tags text-teal me-2"></i> Biaya Daftar
                             <strong class="text-orange">Rp. 300.000</strong>
                         </p>
-                        
+
                         {{-- Cek apakah tanggal sekarang masih masuk masa pendaftaran --}}
                         @if(date('Y-m-d') >= $batch->tglmulai && date('Y-m-d') <= $batch->tglselesai)
                             <a href="{{ route('LoginPMB') }}" class="btn btn-teal px-4 py-2 fw-bold">Daftar Sekarang</a>
@@ -142,6 +142,6 @@
         @endforelse
     </div>
 
-    
+
 </div>
 @endsection

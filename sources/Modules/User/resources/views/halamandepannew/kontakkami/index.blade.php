@@ -89,8 +89,8 @@
 
 <section class="hero-section">
     <div class="container hero-content">
-        <h1>Program Studi</h1>
-        <p>Temukan informasi lengkap mengenai program studi pilihan di Universitas Tiga Serangkai.</p>
+        <h1>Kontak Kami</h1>
+        <p>Temukan informasi lengkap mengenai kontak di Universitas Tiga Serangkai.</p>
     </div>
 </section>
 
@@ -98,16 +98,14 @@
     <div class="container">
         <div class="ps-card-wrapper">
             <div class="ps-header">
-                <h3>Informasi Program Studi</h3>
-                <p>Informasi program studi Universitas Tiga Serangkai</p>
+                <h3>Informasi Kontak Kami</h3>
+                <p>Informasi Kontak Kami Universitas Tiga Serangkai</p>
             </div>
 
             <div class="border-top pt-2">
                 <div class="card shadow-sm border-0" style="width: 100%;">
                     <div class="card-body">
-                        <img src="{{ asset('public/assets/img/proditsu.jpg') }}"
-                            class="card-img-top"
-                            alt="gambar">
+                           @include('user::layouts.halamandepan.cta-bantuan')
                     </div>
                 </div>
             </div>
@@ -130,40 +128,4 @@
     </div>
 </main>
 
-<script>
-    let jenjangAktif = 'D3';
-
-    function filterData(pilihanJenjang = null, elementBtn = null) {
-        if(pilihanJenjang !== null) {
-            jenjangAktif = pilihanJenjang;
-            document.querySelectorAll('.btn-tab').forEach(btn => btn.classList.remove('active'));
-            if(elementBtn) elementBtn.classList.add('active');
-        }
-
-        let keyword = document.getElementById('inputPencarian').value.toLowerCase();
-        let daftarKartu = document.querySelectorAll('.item-kartu');
-        let jumlahTerlihat = 0;
-
-        daftarKartu.forEach(kartu => {
-            let dataJenjang = kartu.getAttribute('data-jenjang');
-            let dataNama = kartu.getAttribute('data-nama');
-
-            let cocokTab = (dataJenjang === jenjangAktif);
-            let cocokPencarian = dataNama.includes(keyword);
-
-            if (cocokTab && cocokPencarian) {
-                kartu.style.display = 'flex';
-                jumlahTerlihat++;
-            } else {
-                kartu.style.display = 'none';
-            }
-        });
-
-        document.getElementById('pesanKosong').style.display = (jumlahTerlihat === 0) ? 'block' : 'none';
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        filterData('D3');
-    });
-</script>
 @endsection
