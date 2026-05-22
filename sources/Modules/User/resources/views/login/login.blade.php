@@ -23,7 +23,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     {{-- BAGIAN PASSWORD (DIUBAH) --}}
                     <div class="input-group mb-3">
                         <input type="password" class="form-control" placeholder="Password"
@@ -88,16 +88,16 @@
             });
             // ---------------------------
 
-            $('#password').keypress(function(event) {
-                var ew = event.which;
-                if (48 <= ew && ew <= 57)
-                    return true;
-                if (65 <= ew && ew <= 90)
-                    return true;
-                if (97 <= ew && ew <= 122)
-                    return true;
-                return false;
-            });
+            // $('#password').keypress(function(event) {
+            //     var ew = event.which;
+            //     if (48 <= ew && ew <= 57)
+            //         return true;
+            //     if (65 <= ew && ew <= 90)
+            //         return true;
+            //     if (97 <= ew && ew <= 122)
+            //         return true;
+            //     return false;
+            // });
         });
 
         function checkPassword() {
@@ -111,7 +111,7 @@
                 $('#submit').prop('disabled', false);
             } else {
                 pass_numb = password.replace(/[^0-9]/g, '').length;
-                pass_char = password.replace(/[0-9]/g, '').length;
+                // pass_char = password.replace(/[0-9]/g, '').length;
 
                 if (pass_numb == 0) {
                     $('#password').addClass('is-invalid');
@@ -119,13 +119,15 @@
 
                     $('#warning').html('*Must contain Number');
                     $('#submit').attr('disabled', 'disabled');
-                } else if (pass_char == 0) {
-                    $('#password').addClass('is-invalid');
-                    $('#password').removeClass('is-valid');
+                }
+                // else if (pass_char == 0) {
+                //     $('#password').addClass('is-invalid');
+                //     $('#password').removeClass('is-valid');
 
-                    $('#warning').html('*Must contain Letter');
-                    $('#submit').attr('disabled', 'disabled');
-                } else {
+                //     $('#warning').html('*Must contain Letter');
+                //     $('#submit').attr('disabled', 'disabled');
+                // }
+                else {
                     $('#password').removeClass('is-invalid');
                     $('#password').addClass('is-valid');
                     $('#warning').html('');

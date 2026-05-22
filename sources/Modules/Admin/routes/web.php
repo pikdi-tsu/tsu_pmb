@@ -1,6 +1,7 @@
     <?php
 
     use Illuminate\Support\Facades\Route;
+    use Illuminate\Support\Facades\Response;
     use Modules\Admin\Http\Controllers\BerkasPMBController;
     use Modules\Admin\Http\Controllers\DashboardController;
     use Modules\Admin\Http\Controllers\DataBeasiswaContoller;
@@ -33,8 +34,6 @@
     use Modules\Admin\Http\Controllers\masterdata\TingkatKejuaraanController;
     use Modules\Admin\Http\Controllers\masterdata\RekomendatorController;
     use Modules\Admin\Http\Controllers\TestPMBController;
-    use Illuminate\Support\Facades\Response;
-    use Symfony\Component\HttpFoundation\StreamedResponse;
 
     /*
     |--------------------------------------------------------------------------
@@ -49,6 +48,26 @@
 
     Route::middleware(['web'])->group(function () {
         Route::prefix('admin')->group(function () {
+
+            Route::get('/file/{folder}/{filename}', function ($folder, $filename) {
+                $path = storage_path('app/' . $folder . '/' . $filename);
+                abort_unless(file_exists($path), 404);
+
+                // Bersihin semua output buffer
+                if (ob_get_level()) {
+                    ob_end_clean();
+                }
+
+                return response()->stream(function () use ($path) {
+                    readfile($path);
+                }, 200, [
+                    'Content-Type' => mime_content_type($path),
+                    'Content-Length' => filesize($path),
+                    'Content-Disposition' => 'inline; filename="' . basename($path) . '"',
+                    'Cache-Control' => 'no-cache, no-store, must-revalidate'
+                ]);
+            });
+
             Route::get('/', [LoginController::class, 'index'])->name('loginadmin');
             Route::post('/loginaction', [LoginController::class, 'loginaction'])->name('admin.loginaction');
             Route::get('/loginChance', [LoginController::class, 'loginChance'])->name('admin.loginchance');
@@ -56,60 +75,6 @@
             Route::post('/NewPasswordAction', [LoginController::class, 'newPasswordAction'])->name('admin.NewPasswordAction');
             Route::get('/checkbirthday', [LoginController::class, 'checkbirthday']);
             Route::post('/logout', [LoginController::class, 'logout'])->name('admin.logout');
-            
-            Route::get('/file/{folder}/{filename}', function ($folder, $filename) {
-
-                $path = storage_path('app/'. $folder.'/'.$filename);
-                abort_unless(file_exists($path), 404);
-                
-                // HAPUS semua output buffer (penting di cPanel)
-                while (ob_get_level()) {
-                    ob_end_clean();
-                }
-        
-                return response()->stream(function () use ($path) {
-                    readfile($path);
-                }, 200, [
-                    'Content-Type' => mime_content_type($path),
-                    'Content-Disposition' => 'inline; filename="'.basename($path).'"',
-                    'Cache-Control' => 'no-cache, no-store, must-revalidate'
-                ]);
-                
-                // return new StreamedResponse(function () use ($path) {
-                //     $stream = fopen($path, 'rb');
-                //     fpassthru($stream);
-                //     fclose($stream);
-                // }, 200, [
-                //     'Content-Type' => mime_content_type($path),
-                //     'Content-Disposition' => 'inline; filename="'.basename($path).'"'
-                // ]);
-
-                // return response()->make(file_get_contents($path), 200, [
-                //     'Content-Type' => mime_content_type($path),
-                //     'Content-Disposition' => 'inline; filename="'.$filename.'"'
-                // ]);
-                // return 'ROUTE MASUK: ' . $filename;
-                // dd([
-                //     'path' => $path,
-                //     'exists' => file_exists($path),
-                //     'mime' => mime_content_type($path)
-                // ]);
-                // return response()->make(file_get_contents($path), 200, [
-                //     'Content-Type' => mime_content_type($path)
-                // ]);
-                //return response()->file($path);
-                // dd([
-                //     'filename' => $filename,
-                //     'path' => $path,
-                //     'exists' => file_exists($path),
-                // ]);
-                //dd($path);
-                // if (!file_exists($path)) {
-                //     abort(404, 'File tidak ditemukan');
-                // }
-        
-                // return response()->file($path);
-            });
 
             //forgot password
             Route::get('/ForgotPassword', [LoginController::class, 'forgotPassword'])->name('admin.ForgotPassword.show');
@@ -126,12 +91,17 @@
                         Route::get('/DetailBeasiswa/{params}', [DataBeasiswaContoller::class, 'showBeasiswa'])->name('admin.databeasiswa.detail');
                         Route::get('/CariRekomendator', [DataBeasiswaContoller::class, 'cariRekomendator'])->name('admin.databeasiswa.carirekomendator');
                         Route::post('/UpdateRekomendator', [DataBeasiswaContoller::class, 'updateRekomendator'])->name('admin.databeasiswa.updaterekomendator');
+                        Route::post('/HapusData', [DataBeasiswaContoller::class, 'hapusdata'])->name('admin.databeasiswa.hapusdata');
+                        Route::get('/EditJurusan/{params}', [DataBeasiswaContoller::class, 'editJurusan'])->name('admin.databeasiswa.editjurusan');
+                        Route::post('/UpdateJurusan', [DataBeasiswaContoller::class, 'updateJurusan'])->name('admin.databeasiswa.updatejurusan');
                     });
                     Route::prefix('NonBeasiswa')->group(function () {
                         Route::get('/', [DataNonBeasiswaController::class, 'index'])->name('admin.datanonbeasiswa.show');
                         Route::get('/TabelNonBeasiswa', [DataNonBeasiswaController::class, 'tabelNonBeasiswa'])->name('admin.datanonbeasiswa.Tabel');
                         Route::get('/DetailNonBeasiswa/{params}', [DataNonBeasiswaController::class, 'showNonBeasiswa'])->name('admin.datanonbeasiswa.detail');
                         Route::post('/UpdateRekomendator', [DataNonBeasiswaController::class, 'updateRekomendator'])->name('admin.datanonbeasiswa.updaterekomendator');
+                        Route::get('/EditJurusan/{params}', [DataNonBeasiswaController::class, 'editJurusan'])->name('admin.datanonbeasiswa.editjurusan');
+                        Route::post('/UpdateJurusan', [DataNonBeasiswaController::class, 'updateJurusan'])->name('admin.datanonbeasiswa.updatejurusan');
                     });
                 });
 
@@ -203,6 +173,8 @@
                     Route::get('/ChangeKabupaten/{prov}', [FinalPMBController::class, 'ChangeKabupaten']);
                     Route::get('/ChangeKecamatan/{prov}/{kab}', [FinalPMBController::class, 'ChangeKecamatan']);
                     Route::get('/ChangeKelurahan/{prov}/{kab}/{kec}', [FinalPMBController::class, 'ChangeKelurahan']);
+                    Route::get('/EditJurusan/{params}', [FinalPMBController::class, 'editJurusan'])->name('admin.finalpmb.editjurusan');
+                    Route::post('/UpdateJurusan', [FinalPMBController::class, 'updateJurusan'])->name('admin.finalpmb.updatejurusan');
                 });
                 Route::prefix('MasterData')->group(function () {
                     Route::prefix('BatchPendaftaran')->group(function () {
@@ -218,6 +190,7 @@
                         Route::post('/Store', [JenisPendaftaranController::class, 'StoreJalur'])->name('admin.JenisPendaftaran.Store');
                         Route::get('/EditJenis/{params}', [JenisPendaftaranController::class, 'ShowJalur'])->name('admin.JenisPendaftaran.Edit');
                         Route::get('/Status/{params1}/{params2}', [JenisPendaftaranController::class, 'delete'])->name('admin.JenisPendaftaran.delete');
+                        Route::get('/StatusAktif/{params1}/{params2}', [JenisPendaftaranController::class, 'Mengaktifkan'])->name('admin.JenisPendaftaran.mengaktifkan');
                     });
                     Route::prefix('Beasiswa')->group(function () {
                         Route::get('/', [BeasiswaController::class, 'index'])->name('admin.Beasiswa.show');
@@ -267,6 +240,7 @@
                         Route::post('/Store', [TarifUKTController::class, 'StoreUKT'])->name('admin.TarifUKT.Store');
                         Route::get('/EditUKT/{params}', [TarifUKTController::class, 'ShowUKT'])->name('admin.TarifUKT.Edit');
                         Route::get('/Status/{params1}/{params2}', [TarifUKTController::class, 'delete'])->name('admin.TarifUKT.delete');
+                        Route::get('/StatusAktif/{params1}/{params2}', [TarifUKTController::class, 'Mengaktifkan'])->name('admin.TarifUKT.mengaktifkan');
                     });
                     Route::prefix('Fakultas')->group(function () {
                         Route::get('/', [FakultasController::class, 'index'])->name('admin.fakultas.show');

@@ -30,7 +30,7 @@
                 <!-- Add icons to the links using the .nav-icon class with font-awesome or any other icon font library -->
                 <li class="nav-header">Main Navigation</li>
                 <li class="nav-item">
-                    <a href="{{ route('admin.dashboard') }}" class="nav-link">
+                    <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->is('admin/dashboard*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-tachometer-alt"></i>
                         <p>Dashboard</p>
                     </a>
@@ -43,11 +43,10 @@
                     $ukt = checkmenu('Pembayaran', 'Pembayaran UKT');
                     $dttest = checkmenu('Test Online', 'Data Test Online');
                     $dtfinal = checkmenu('Final PMB', 'Data Final PMB');
-                    $generatenim = checkmenu('Generate NIM', 'Generate NIM');
                 @endphp
                 @if ($dtbeasiswa + $dtnonbeasiswa > 0)
-                    <li class="nav-item"> {{-- menu-open --}}
-                        <a href="#" class="nav-link"> {{-- active --}}
+                    <li class="nav-item {{ request()->is('admin/DataPendaftaran/Beasiswa*') || request()->is('admin/DataPendaftaran/NonBeasiswa*') ? 'menu-open' : '' }}"> {{-- menu-open --}}
+                        <a href="#" class="nav-link {{ request()->is('admin/DataPendaftaran/Beasiswa*') || request()->is('admin/DataPendaftaran/NonBeasiswa*') ? 'active' : '' }}"> {{-- active --}}
                             <i class="nav-icon fas fa-clipboard-list"></i>
                             <p>Data Pendaftaran
                                 <i class="right fas fa-angle-left"></i>
@@ -56,7 +55,7 @@
                         <ul class="nav nav-treeview">
                             @if ($dtbeasiswa > 0)
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.databeasiswa.show') }}" class="nav-link">
+                                    <a href="{{ route('admin.databeasiswa.show') }}" class="nav-link {{ request()->is('admin/DataPendaftaran/Beasiswa*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         Beasiswa
                                     </a>
@@ -64,7 +63,7 @@
                             @endif
                             @if ($dtnonbeasiswa > 0)
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.datanonbeasiswa.show') }}" class="nav-link">
+                                    <a href="{{ route('admin.datanonbeasiswa.show') }}" class="nav-link {{ request()->is('admin/DataPendaftaran/NonBeasiswa*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         Non Beasiswa
                                     </a>
@@ -75,15 +74,15 @@
                 @endif
                 @if ($dtberkasbeasiswa > 0)
                     <li class="nav-item">
-                        <a href="{{ route('admin.berkaspmb.show') }}" class="nav-link">
+                        <a href="{{ route('admin.berkaspmb.show') }}" class="nav-link {{ request()->is('admin/BerkasPMB*') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-file"></i>
                             <p>Data Berkas PMB</p>
                         </a>
                     </li>
                 @endif
                 @if ($pendaftaran + $ukt > 0)
-                    <li class="nav-item"> {{-- menu-open --}}
-                        <a href="#" class="nav-link"> {{-- active --}}
+                    <li class="nav-item {{ request()->is('admin/PembayaranPMB*') || request()->is('admin/PembayaranUKT*') ? 'menu-open' : '' }}"> {{-- menu-open --}}
+                        <a href="#" class="nav-link {{ request()->is('admin/PembayaranPMB*') || request()->is('admin/PembayaranUKT*') ? 'active' : '' }}"> {{-- active --}}
                             <i class="nav-icon fas fa-money-check"></i>
                             <p>Data Pembayaran PMB
                                 <i class="right fas fa-angle-left"></i>
@@ -92,7 +91,7 @@
                         <ul class="nav nav-treeview">
                             @if ($pendaftaran > 0)
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.pembayaranpmb.show') }}" class="nav-link">
+                                    <a href="{{ route('admin.pembayaranpmb.show') }}" class="nav-link {{ request()->is('admin/PembayaranPMB*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         Pendaftaran
                                     </a>
@@ -100,7 +99,7 @@
                             @endif
                             @if ($ukt > 0)
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.pembayaranukt.show') }}" class="nav-link">
+                                    <a href="{{ route('admin.pembayaranukt.show') }}" class="nav-link {{ request()->is('admin/PembayaranUKT*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         UKT
                                     </a>
@@ -111,119 +110,97 @@
                 @endif
                 @if ($dttest > 0)
                     <li class="nav-item" style="display: none;">
-                        <a href="{{ route('admin.testpmb.show') }}" class="nav-link">
+                        <a href="{{ route('admin.testpmb.show') }}" class="nav-link {{ request()->is('admin/TestOnlinePMB*') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-money-check"></i>
                             <p>Data Test PMB</p>
                         </a>
                     </li>
                 @endif
                 <li class="nav-item" style="display: none;">
-                    <a href="{{ route('admin.emailpmb.show') }}" class="nav-link">
+                    <a href="{{ route('admin.emailpmb.show') }}" class="nav-link {{ request()->is('admin/EmailPMB*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-envelope"></i>
                         <p>Send Email</p>
                     </a>
                 </li>
-                @if($generatenim>0)
                 <li class="nav-item">
-                    <a href="{{ route('admin.nim.index') }}"
-                        class="nav-link {{ request()->routeIs('admin.nim.*') ? 'active' : '' }}">
+                    <a href="{{ route('admin.nim.index') }}" class="nav-link {{ request()->is('admin/GenerateNIM*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-id-card"></i>
                         <p>Generate NIM</p>
                     </a>
                 </li>
-                @endif
                 @if ($dtfinal > 0)
                     <li class="nav-item">
-                        <a href="{{ route('admin.finalpmb.show') }}" class="nav-link">
+                        <a href="{{ route('admin.finalpmb.show') }}" class="nav-link {{ request()->is('admin/FinalPMB*') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-user-check"></i>
                             <p>Final PMB</p>
                         </a>
                     </li>
                 @endif
-                @php
-                    $asssoal = checkmenu('Assessment','Master Soal');
-                    $asstest = checkmenu('Assessment','Master Test');
-                    $asshasil = checkmenu('Assessment','Hasil Test');
-                    $assmonitoring = checkmenu('Assessment','Monitoring Test');
-                @endphp
-                @if($asssoal+$asstest+$asshasil+$assmonitoring>0)
-                <li class="nav-item">
-                    <a href="#" class="nav-link">
+                <li class="nav-item {{ request()->is('admin/Assessment/MasterAssessment/Test*') || request()->is('admin/Assessment/MasterAssessment/Soal*') || request()->is('admin/TestAssesment*') || request()->is('admin/MonitoringAssesment*') ? 'menu-open' : '' }}">
+                    <a href="#" class="nav-link {{ request()->is('admin/Assessment/MasterAssessment/Test*') || request()->is('admin/Assessment/MasterAssessment/Soal*') || request()->is('admin/TestAssesment*') || request()->is('admin/MonitoringAssesment*') ? 'active' : '' }}">
                         <i class="nav-icon fa fa-list-ul"></i>
                         <p>
                             Assessment<i class="right fas fa-angle-left"></i>
                         </p>
                     </a>
-                    @if($asssoal+$asstest>0)
-                    <ul class="nav nav-treeview" style="display: none;">
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item {{ request()->is('admin/Assessment/MasterAssessment/Test*') || request()->is('admin/Assessment/MasterAssessment/Soal*') ? 'menu-open' : '' }}">
+                            <a href="#" class="nav-link {{ request()->is('admin/Assessment/MasterAssessment/Test*') || request()->is('admin/Assessment/MasterAssessment/Soal*') ? 'active' : '' }}">
                                 <i class="fas fa-clipboard-list nav-icon"></i>
                                 <p>
                                     Master Data Assessment
                                     <i class="right fas fa-angle-left"></i>
                                 </p>
                             </a>
-                            <ul class="nav nav-treeview" style="display: none;">
-                                @if($asstest>0)
+                            <ul class="nav nav-treeview">
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.mastertest.show') }}" class="nav-link">
+                                    <a href="{{ route('admin.mastertest.show') }}" class="nav-link {{ request()->is('admin/Assessment/MasterAssessment/Test*') ? 'active' : '' }}">
                                         <i class="far fa-dot-circle nav-icon"></i>
                                         <p>Master Test</p>
                                     </a>
                                 </li>
-                                @endif
-                                @if($asssoal>0)
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.mastersoal.show') }}" class="nav-link">
+                                    <a href="{{ route('admin.mastersoal.show') }}" class="nav-link {{ request()->is('admin/Assessment/MasterAssessment/Soal*') ? 'active' : '' }}">
                                         <i class="far fa-dot-circle nav-icon"></i>
                                         <p>Master Soal</p>
                                     </a>
                                 </li>
-                                @endif
                             </ul>
                         </li>
                     </ul>
-                    @endif
-                    @if($asshasil+$assmonitoring>0)
-                    <ul class="nav nav-treeview" style="display: none;">
-                        <li class="nav-item">
-                            <a href="#" class="nav-link">
+                    <ul class="nav nav-treeview">
+                        <li class="nav-item {{ request()->is('admin/TestAssesment*') || request()->is('admin/MonitoringAssesment*') ? 'menu-open' : '' }} }}">
+                            <a href="#" class="nav-link {{ request()->is('admin/TestAssesment*') || request()->is('admin/MonitoringAssesment*') ? 'active' : '' }}">
                                 <i class="fa fa-list-alt nav-icon"></i>
                                 <p>
                                     Hasil & Monitoring
                                     <i class="right fas fa-angle-left"></i>
                                 </p>
                             </a>
-                            <ul class="nav nav-treeview" style="display: none;">
-                                @if($asshasil>0)
+                            <ul class="nav nav-treeview">
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.testassesment.show') }}" class="nav-link">
+                                    <a href="{{ route('admin.testassesment.show') }}" class="nav-link {{ request()->is('admin/TestAssesment*') ? 'active' : '' }}">
                                         <i class="far fa-dot-circle nav-icon"></i>
                                         <p>Hasil Test</p>
                                     </a>
                                 </li>
-                                @endif
-                                @if($assmonitoring>0)
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.monitoringassesment.show') }}" class="nav-link">
+                                    <a href="{{ route('admin.monitoringassesment.show') }}" class="nav-link {{ request()->is('admin/MonitoringAssesment*') ? 'active' : '' }}">
                                         <i class="far fa-dot-circle nav-icon"></i>
                                         <p>Monitoring Test</p>
                                     </a>
                                 </li>
-                                @endif
                             </ul>
                         </li>
                     </ul>
-                    @endif
                 </li>
-                @endif
                 @php
                     $fakultas = checkmenu('Master Data', 'Master Fakultas');
                     $jurusan = checkmenu('Master Data', 'Master Jurusan');
                     $jenisP = checkmenu('Master Data', 'Master Jalur Pendaftaran');
                     $jenjang = checkmenu('Master Data', 'Master Jenjang Pendidikan');
                     $jurusanS = checkmenu('Master Data', 'Master Jurusan Sekolah');
+                    $soal = checkmenu('Master Data', 'Master Soal Test');
                     $content = checkmenu('Master Data', 'Master Content');
                     $batch = checkmenu('Master Data', 'Master Batch Pendaftaran');
                     $berkas = checkmenu('Master Data', 'Master Berkas');
@@ -235,11 +212,28 @@
                     $kecamatan = checkmenu('Master Data', 'Master kecamatan');
                     $kelurahan = checkmenu('Master Data', 'Master Kelurahan');
                     $jenisberkas = checkmenu('Master Data', 'Master Jenis Berkas');
-                    $rekomendator = checkmenu('Master Data', 'Master Rekomendator');
                 @endphp
-                @if ($fakultas+$jurusan+$jenisP+$jenjang+$jurusanS+$content+$batch+$berkas+$ukt+$beasiswa+$tingkatkejuaraan+$provinsi+$kabupaten+$kecamatan+$kelurahan+$jenisberkas+$rekomendator>0)
-                    <li class="nav-item"> {{-- menu-open --}}
-                        <a href="#" class="nav-link"> {{-- active --}}
+                @if (
+                    $fakultas +
+                        $jurusan +
+                        $jenisP +
+                        $jenjang +
+                        $jurusanS +
+                        $soal +
+                        $content +
+                        $batch +
+                        $berkas +
+                        $ukt +
+                        $beasiswa +
+                        $tingkatkejuaraan +
+                        $provinsi +
+                        $kabupaten +
+                        $kecamatan +
+                        $kelurahan +
+                        $jenisberkas >
+                        0)
+                    <li class="nav-item {{ request()->is('admin/MasterData*') ? 'menu-open' : '' }}"> {{-- menu-open --}}
+                        <a href="#" class="nav-link {{ request()->is('admin/MasterData*') ? 'active' : '' }}"> {{-- active --}}
                             <i class="nav-icon fas fa-clipboard-list"></i>
                             <p>Master Data PMB
                                 <i class="right fas fa-angle-left"></i>
@@ -248,7 +242,7 @@
                         <ul class="nav nav-treeview">
                             @if ($batch > 0)
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.BatchPendaftaran.show') }}" class="nav-link">
+                                    <a href="{{ route('admin.BatchPendaftaran.show') }}" class="nav-link {{ request()->is('admin/MasterData/BatchPendaftaran*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         Master Batch Pendaftaran
                                     </a>
@@ -256,7 +250,7 @@
                             @endif
                             @if ($jenisP > 0)
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.JenisPendaftaran.show') }}" class="nav-link">
+                                    <a href="{{ route('admin.JenisPendaftaran.show') }}" class="nav-link {{ request()->is('admin/MasterData/JenisPendaftaran*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         Master Jalur Pendaftaran
                                     </a>
@@ -264,7 +258,7 @@
                             @endif
                             @if ($ukt > 0)
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.TarifUKT.show') }}" class="nav-link">
+                                    <a href="{{ route('admin.TarifUKT.show') }}" class="nav-link {{ request()->is('admin/MasterData/TarifUKT*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         Master Tarif UKT
                                     </a>
@@ -272,7 +266,7 @@
                             @endif
                             @if ($beasiswa > 0)
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.Beasiswa.show') }}" class="nav-link">
+                                    <a href="{{ route('admin.Beasiswa.show') }}" class="nav-link {{ request()->is('admin/MasterData/Beasiswa*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         Master Beasiswa
                                     </a>
@@ -280,7 +274,7 @@
                             @endif
                             @if ($tingkatkejuaraan > 0)
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.TingkatKejuaraan.show') }}" class="nav-link">
+                                    <a href="{{ route('admin.TingkatKejuaraan.show') }}" class="nav-link {{ request()->is('admin/MasterData/TingkatKejuaraan*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         Master Tingkat Kejuaraan
                                     </a>
@@ -288,7 +282,7 @@
                             @endif
                             @if ($provinsi > 0)
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.Provinsi.show') }}" class="nav-link">
+                                    <a href="{{ route('admin.Provinsi.show') }}" class="nav-link {{ request()->is('admin/MasterData/Provinsi*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         Master Provinsi
                                     </a>
@@ -296,7 +290,7 @@
                             @endif
                             @if ($kabupaten > 0)
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.Kabupaten.show') }}" class="nav-link">
+                                    <a href="{{ route('admin.Kabupaten.show') }}" class="nav-link {{ request()->is('admin/MasterData/Kabupaten*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         Master Kabupaten/Kota
                                     </a>
@@ -304,7 +298,7 @@
                             @endif
                             @if ($kecamatan > 0)
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.Kecamatan.show') }}" class="nav-link">
+                                    <a href="{{ route('admin.Kecamatan.show') }}" class="nav-link {{ request()->is('admin/MasterData/Kecamatan*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         Master Kecamatan
                                     </a>
@@ -312,23 +306,21 @@
                             @endif
                             @if ($kelurahan > 0)
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.Kelurahan.show') }}" class="nav-link">
+                                    <a href="{{ route('admin.Kelurahan.show') }}" class="nav-link {{ request()->is('admin/MasterData/Kelurahan*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         Master Kelurahan
                                     </a>
                                 </li>
                             @endif
-                            @if ($rekomendator > 0)
                             <li class="nav-item">
-                                <a href="{{ route('admin.Rekomendator.show') }}" class="nav-link">
+                                <a href="{{ route('admin.Rekomendator.show') }}" class="nav-link {{ request()->is('admin/MasterData/Rekomendator*') ? 'active' : '' }}">
                                     <i class="far fa-circle nav-icon"></i>
                                     Master Rekomendator
                                 </a>
                             </li>
-                            @endif
                             @if ($jenisberkas > 0)
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.JenisBerkas.show') }}" class="nav-link">
+                                    <a href="{{ route('admin.JenisBerkas.show') }}" class="nav-link {{ request()->is('admin/MasterData/JenisBerkas*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         Master Jenis Berkas
                                     </a>
@@ -336,7 +328,7 @@
                             @endif
                             @if ($berkas > 0)
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.Berkas.show') }}" class="nav-link">
+                                    <a href="{{ route('admin.Berkas.show') }}" class="nav-link {{ request()->is('admin/MasterData/Berkas*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         Master Berkas
                                     </a>
@@ -344,7 +336,7 @@
                             @endif
                             @if ($fakultas > 0)
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.fakultas.show') }}" class="nav-link">
+                                    <a href="{{ route('admin.fakultas.show') }}" class="nav-link {{ request()->is('admin/MasterData/Fakultas*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         Master Fakultas
                                     </a>
@@ -352,7 +344,7 @@
                             @endif
                             @if ($jurusan > 0)
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.Jurusan.show') }}" class="nav-link">
+                                    <a href="{{ route('admin.Jurusan.show') }}" class="nav-link {{ request()->is('admin/MasterData/Jurusan*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         Master Jurusan
                                     </a>
@@ -360,7 +352,7 @@
                             @endif
                             @if ($jenjang > 0)
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.Jenjang.show') }}" class="nav-link">
+                                    <a href="{{ route('admin.Jenjang.show') }}" class="nav-link {{ request()->is('admin/MasterData/JenjangPendidikan*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         Master Jenjang Pendidikan
                                     </a>
@@ -368,21 +360,23 @@
                             @endif
                             @if ($jurusanS > 0)
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.JurusanSekolah.show') }}" class="nav-link">
+                                    <a href="{{ route('admin.JurusanSekolah.show') }}" class="nav-link {{ request()->is('admin/MasterData/JurusanSekolah*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         Master Jurusan Sekolah
                                     </a>
                                 </li>
                             @endif
-                            <li class="nav-item" style="display: none;">
-                                <a href="{{ route('admin.Test.show') }}" class="nav-link">
-                                    <i class="far fa-circle nav-icon"></i>
-                                    Master Soal Test
-                                </a>
-                            </li>
+                            @if ($soal > 0)
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.Test.show') }}" class="nav-link {{ request()->is('admin/MasterData/SoalTest*') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        Master Soal Test
+                                    </a>
+                                </li>
+                            @endif
                             @if ($content > 0)
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.content.show') }}" class="nav-link">
+                                    <a href="{{ route('admin.content.show') }}" class="nav-link {{ request()->is('admin/MasterData/Content*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         <p>Master Content</p>
                                     </a>
@@ -400,8 +394,8 @@
                     // dd($changepassword,$listmenu);
                 @endphp
                 @if ($changepassword > 0)
-                    <li class="nav-item">
-                        <a href="#" class="nav-link">
+                    <li class="nav-item {{ request()->is('admin/Tools*') ? 'menu-open' : '' }}">
+                        <a href="#" class="nav-link {{ request()->is('admin/Tools*') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-cog"></i>
                             <p>
                                 Tools
@@ -411,15 +405,15 @@
                         <ul class="nav nav-treeview">
                             @if ($changepassword > 0)
                                 <li class="nav-item">
-                                    <a href="{{ route('admin.show.changepassword') }}" class="nav-link">
+                                    <a href="{{ route('admin.show.changepassword') }}" class="nav-link {{ request()->is('admin/Tools/changepassword*') ? 'active' : '' }}">
                                         <i class="far fa-circle nav-icon"></i>
                                         Change Password
                                     </a>
                                 </li>
                             @endif
                             @if ($listmenu + $groupuser > 0)
-                                <li class="nav-item">
-                                    <a href="#" class="nav-link">
+                                <li class="nav-item {{ request()->is('admin/Tools/ShowMenu*') || request()->is('admin/Tools/ShowGroupUser*') ? 'menu-open' : '' }}">
+                                    <a href="#" class="nav-link {{ request()->is('admin/Tools/ShowMenu*') || request()->is('admin/Tools/ShowGroupUser*') ? 'active' : '' }}">
                                         <i class="nav-icon far fa-circle text-danger"></i>
                                         <p> Management Menu
                                             <i class="right fas fa-angle-left"></i>
@@ -428,7 +422,7 @@
                                     <ul class="nav nav-treeview">
                                         @if ($listmenu > 0)
                                             <li class="nav-item">
-                                                <a href="{{ route('admin.menu.show') }}" class="nav-link">
+                                                <a href="{{ route('admin.menu.show') }}" class="nav-link {{ request()->is('admin/Tools/ShowMenu*') ? 'active' : '' }}">
                                                     <i class="far fa-circle nav-icon"></i>
                                                     <p>List Menu</p>
                                                 </a>
@@ -436,7 +430,7 @@
                                         @endif
                                         @if ($groupuser > 0)
                                             <li class="nav-item">
-                                                <a href="{{ route('admin.gruopuser.show') }}" class="nav-link">
+                                                <a href="{{ route('admin.gruopuser.show') }}" class="nav-link {{ request()->is('admin/Tools/ShowGroupUser*') ? 'active' : '' }}">
                                                     <i class="far fa-circle nav-icon"></i>
                                                     <p>Group User</p>
                                                 </a>
@@ -446,8 +440,8 @@
                                 </li>
                             @endif
                             @if ($usermanagement + $userreset > 0)
-                                <li class="nav-item">
-                                    <a href="#" class="nav-link">
+                                <li class="nav-item {{ request()->is('admin/Tools/usermanagement*') || request()->is('admin/Tools/userreset*') ? 'menu-open' : '' }}">
+                                    <a href="#" class="nav-link {{ request()->is('admin/Tools/usermanagement*') || request()->is('admin/Tools/userreset*') ? 'active' : '' }}">
                                         <i class="nav-icon far fa-circle text-danger"></i>
                                         <p> Management User
                                             <i class="right fas fa-angle-left"></i>
@@ -456,7 +450,7 @@
                                     <ul class="nav nav-treeview">
                                         @if ($usermanagement > 0)
                                             <li class="nav-item">
-                                                <a href="{{ route('admin.show.userManagement') }}" class="nav-link">
+                                                <a href="{{ route('admin.show.userManagement') }}" class="nav-link {{ request()->is('admin/Tools/usermanagement*') ? 'active' : '' }}">
                                                     <i class="far fa-circle nav-icon"></i>
                                                     <p>User Management</p>
                                                 </a>
@@ -464,7 +458,7 @@
                                         @endif
                                         @if ($userreset > 0)
                                             <li class="nav-item">
-                                                <a href="{{ route('admin.UserReset.show') }}" class="nav-link">
+                                                <a href="{{ route('admin.UserReset.show') }}" class="nav-link {{ request()->is('admin/Tools/userreset*') ? 'active' : '' }}">
                                                     <i class="far fa-circle nav-icon"></i>
                                                     <p>User Reset</p>
                                                 </a>

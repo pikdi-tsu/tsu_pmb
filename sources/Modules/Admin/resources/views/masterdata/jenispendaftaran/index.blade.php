@@ -20,13 +20,17 @@
             <div class="row mb-2">
                 <div class="col-sm-6">
                     <h1>{{ $menu }}</h1>
-                </div><div class="col-sm-6">
+                </div>
+                <div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item active"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
                         <li class="breadcrumb-item active">Master Data</li>
                         <li class="breadcrumb-item active">{{ $menu }}</li>
                     </ol>
-                </div></div></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="content">
         <div class="container-fluid">
             <div class="row">
@@ -37,7 +41,8 @@
                         </div>
                         <div class="card-body">
                             <div class="row justify-content-center">
-                                <div class="col-md-6"> <form id="form-fakultas" method="POST" action="#">
+                                <div class="col-md-6">
+                                    <form id="form-fakultas" method="POST" action="#">
                                         @csrf
                                         <input type="hidden" id="IdJenis" name="IdJenis" value="">
                                         <div class="form-group mb-3">
@@ -67,7 +72,8 @@
                                                         <input type="checkbox" id="check_daftar" name="check_daftar" value="0">
                                                     </span>
                                                 </div>
-                                                <input type="number" value="0" min="0" class="form-control" id="biaya_daftar" name="biaya_daftar" readonly>
+                                                {{-- <input type="number" value="0" min="0" class="form-control" id="biaya_daftar" name="biaya_daftar" readonly> --}}
+                                                <input type="text" value="0" min="0" name="biaya_daftar" id="biaya_daftar" class="form-control" readonly>
                                             </div>
                                         </div>
 
@@ -114,6 +120,17 @@
                                             <textarea class="form-control" id="deskripsi" name="deskripsi" rows="3" placeholder="Deskripsi Jalur"></textarea>
                                         </div>
 
+                                        <div class="form-group mb-3">
+                                            <div class="custom-control custom-checkbox custom-control-inline">
+                                                <input class="custom-control-input" type="checkbox" id="checkboxpagi" name="kelaspagi" value="1">
+                                                <label for="checkboxpagi" class="custom-control-label">Kelas Pagi</label>
+                                            </div>
+                                            <div class="custom-control custom-checkbox custom-control-inline">
+                                                <input class="custom-control-input" type="checkbox" id="checkboxsore" name="kelassore" value="1">
+                                                <label for="checkboxsore" class="custom-control-label">Kelas Malam</label>
+                                            </div>
+                                        </div>
+
                                         <div class="form-group">
                                             <button type="button" id="submit-jalur" class="btn btn-success float-right" style="margin-left:10px;"> <i class="fas fa-paper-plane"></i> Submit</button>
                                             <button id="btn-reset" class="btn btn-warning float-right">Reset</button>
@@ -135,6 +152,7 @@
                                             <th>Berkas Umum</th>
                                             <th>Berkas Khusus</th>
                                             <th>Deskripsi</th>
+                                            <th>Jadwal Kelas</th>
                                             <th>Aktif</th>
                                             <th>Action</th>
                                         </tr>
@@ -146,8 +164,9 @@
                         </div>
                     </div>
                 </div>
-                </div>
-            </div></div>
+            </div>
+        </div>
+    </div>
     @endsection
 
 @section('script')
@@ -169,6 +188,8 @@
                 btn_reset()
                 checkDaftar()
                 submitJalur()
+                aktifkanJalur()
+                // rupiah()
             }
 
             function tabelJenis()
@@ -183,7 +204,7 @@
                     serverSide: true,
                     searchDelay: 500,
                     responsive: false,
-                    order: [[1,'asc']],
+                    // order: [[1,'asc']],
                     ajax: {
                         url: '{!! route('admin.JenisPendaftaran.Tabel') !!}',
                         type: 'GET',
@@ -220,6 +241,9 @@
                         },
                         {
                             data: 'deskripsi'
+                        },
+                        {
+                            data: 'jadwalkelas'
                         },
                         {
                             data: 'aktif'
@@ -261,6 +285,8 @@
                 let berkasumum   = $('#berkasumum').val()
                 let berkaskhusus = $('#berkaskhusus').val()
                 let deskripsi    = $('#deskripsi').val()
+                let kelaspagi    = $('#checkboxpagi').is(':checked') ? 1 : 0;
+                let kelassore    = $('#checkboxsore').is(':checked') ? 1 : 0;
 
                 let notifku = ''
                 if (kode == null || kode == '') {
@@ -277,6 +303,8 @@
                     notifku = 'Berkas Umum Tidak Boleh Kosong'
                 } else if (deskripsi == null || deskripsi == '') {
                     notifku = 'Deskripsi tidak boleh kosong'
+                } else if (kelaspagi == 0 && kelassore == 0) {
+                    notifku = 'Silahkan Pilih Salah Satu Jadwal Kelas'
                 } else{
                     notifku = 'success';
                 }
@@ -290,7 +318,7 @@
                     let checkvalidation = validationJalur();
                     if(checkvalidation != 'success'){
                         notifalert('Information',checkvalidation,'warning')
-                    }else{
+                    } else{
                         let dataku = $('#form-fakultas').serialize()
                         Swal.fire({
                             title: "Information",
@@ -377,12 +405,15 @@
                                 if(data.jenis.biaya_pendaftaran==1){
                                     $('#check_daftar').val(data.jenis.biaya_pendaftaran)
                                     $('#check_daftar').prop('checked',true).trigger('change')
-                                    $('#biaya_daftar').val(data.jenis.jml_biaya_pendaftaran)
+                                    // $('#biaya_daftar').val(data.jenis.jml_biaya_pendaftaran)
+                                    $('#biaya_daftar').val(formatRupiah(data.jenis.jml_biaya_pendaftaran));
                                 }
                                 $('#statusukt').val(data.jenis.status_ukt).trigger('change')
                                 $('#berkasumum').val(data.jenis.berkas_umum).trigger('change')
                                 $('#berkaskhusus').val(data.jenis.berkas_khusus).trigger('change')
                                 $('#deskripsi').val(data.jenis.deskripsi)
+                                $('#checkboxpagi').prop('checked', data.jenis.kelaspagi == '1');
+                                $('#checkboxsore').prop('checked', data.jenis.kelassore == '1');
                             }
                         }
                     });
@@ -399,7 +430,7 @@
 
                     Swal.fire({
                         title: 'Information',
-                        text: 'Are you sure to delete this item ?',
+                        text: 'Apakah Anda Yakin Menghapus Data Ini ?',
                         icon: 'question',
                         showConfirmButton: true,
                         showCancelButton: true,
@@ -425,6 +456,51 @@
                                 error: function(data) {
                                     $('#loading').hide()
                                     console.log(0)
+                                }
+                            });
+                            return false;
+                        }else{
+                            return false;
+                        }
+                    })
+                })
+            }
+
+            function aktifkanJalur()
+            {
+                // $('.btn_aktifkan').click(function(e) {
+                $(document).on('click', '.btn_aktifkan', function(e) {
+                    e.preventDefault();
+                    let params = $(this).data('id')
+                    let status = $(this).data('status')
+
+                    Swal.fire({
+                        title: 'Information',
+                        text: 'Apakah Anda Yakin Ingin Mengaktifkan ?',
+                        icon: 'question',
+                        showConfirmButton: true,
+                        showCancelButton: true,
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                type: "GET",
+                                url: '{!! url('admin/MasterData/JenisPendaftaran/StatusAktif') !!}' + '/' + params + '/' + status,
+                                dataType: "JSON",
+                                beforeSend: function(response) {
+                                    $('#loading').show()
+                                },
+                                success: function(data) {
+                                    $('#loading').hide()
+                                    Swal.fire({
+                                        title: 'Information',
+                                        text: data.message,
+                                        icon: data.status
+                                    }).then(() => {
+                                        $("#example2").DataTable().ajax.reload();
+                                    })
+                                },
+                                error: function(data) {
+                                    $('#loading').hide()
                                 }
                             });
                             return false;
@@ -469,6 +545,55 @@
                     }
                 });
             }
+
+            // function rupiah()
+            // {
+            //     const inputBiaya = document.getElementById('biaya_daftar');
+
+            //     inputBiaya.addEventListener('keyup', function(e) {
+            //         let angka = this.value.replace(/[^,\d]/g, '').toString();
+
+            //         let split = angka.split(',');
+            //         let sisa = split[0].length % 3;
+
+            //         let rupiah = split[0].substr(0, sisa);
+            //         let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+            //         if (ribuan) {
+            //             let separator = sisa ? '.' : '';
+            //             rupiah += separator + ribuan.join('.');
+            //         }
+
+            //         rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+
+            //         this.value = rupiah;
+            //     });
+            // }
+
+            $('#biaya_daftar').on('keyup', function(){
+                $(this).val(formatRupiah($(this).val()));
+            });
+
+            function formatRupiah(angka){
+                let number_string = angka.toString().replace(/[^,\d]/g, '');
+
+                let split = number_string.split(',');
+                let sisa = split[0].length % 3;
+
+                let rupiah = split[0].substr(0, sisa);
+
+                let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+                if(ribuan){
+                    let separator = sisa ? '.' : '';
+                    rupiah += separator + ribuan.join('.');
+                }
+
+                rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+
+                return rupiah;
+            }
+
 
         });
     </script>

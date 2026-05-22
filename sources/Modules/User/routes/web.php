@@ -75,6 +75,7 @@ Route::prefix('')->group(function () {
                 Route::get('/KonfirmasiDaftar/{params}', [PendaftaranController::class, 'ConfirmDaftar'])->name('Daftar.KonfirmasiDaftar');
                 Route::get('/ShowDaftar/{params}', [PendaftaranController::class, 'showDaftar'])->name('Daftar.ShowDaftar');
                 Route::get('/DeleteDaftar/{params}', [PendaftaranController::class, 'delete'])->name('Daftar.DeleteDaftar');
+                Route::get('/GetWaktuKuliah/{params}', [PendaftaranController::class, 'getwaktukuliah'])->name('Daftar.GetWaktuKuliah');
             });
 
             Route::prefix('BerkasBeasiswa')->group(function () {

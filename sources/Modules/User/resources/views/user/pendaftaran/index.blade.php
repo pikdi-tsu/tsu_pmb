@@ -129,6 +129,10 @@
                                             </div>
                                             <div class="form-group mb-3">
                                                 <label for="waktukuliah">Waktu Kuliah</label>
+                                                <select class="form-control select2" id="waktukuliah" name="waktukuliah" disabled>
+                                                    <option value="" selected disabled>-- Pilih Waktu Kuliah --</option>
+                                                </select>
+                                                {{-- <label for="waktukuliah">Waktu Kuliah</label>
                                                 <select class="form-control select2" id="waktukuliah" name="waktukuliah"
                                                     disabled>
                                                     <option value="" selected disabled>-- Pilih Waktu Kuliah --
@@ -136,7 +140,7 @@
                                                     @foreach ($waktu as $q)
                                                         <option value="{{ $q->id }}">{{ $q->waktu }}</option>
                                                     @endforeach
-                                                </select>
+                                                </select> --}}
                                             </div>
                                             <div class="form-group mb-3">
                                                 <label for="rekomendator">Rekomendator <code>*(Opsional)</code></label>
@@ -396,7 +400,7 @@
                     scrollCollapse: true,
                     serverSide: true,
                     searchDelay: 500,
-                    responsive: false,
+                    responsive: true,
                     order: [],
                     ajax: {
                         url: '{!! route('Daftar.TabelDaftar') !!}',
@@ -742,7 +746,6 @@
                 $('#jalur').on('change', function() {
                     // HANYA jalan jika BUKAN sedang mode editing
                     if (window.isEditing == false) {
-
                         loadBeasiswa();
                     } else {
 
@@ -980,15 +983,22 @@
                         let f1 = $('#prodi1').val() ? $('#prodi1 option:selected').data('fakultas') : null;
                         let f2 = $('#prodi2').val() ? $('#prodi2 option:selected').data('fakultas') : null;
                         let f3 = $('#prodi3').val() ? $('#prodi3 option:selected').data('fakultas') : null;
-
                         let isConflict = false;
                         let msg = '';
 
-                        // HANYA CEK FAKULTAS
-                        if ((f1 && f2 && f1 === f2) || (f1 && f3 && f1 === f3) || (f2 && f3 && f2 === f3)) {
-                            isConflict = true;
-                            msg = 'Program studi tidak boleh berasal dari Fakultas yang sama!';
+                        if (f1 != 'F003') {
+                            // HANYA CEK FAKULTAS
+                            if ((f1 && f2 && f1 === f2) || (f1 && f3 && f1 === f3) || (f2 && f3 && f2 === f3)) {
+                                isConflict = true;
+                                msg = 'Program studi tidak boleh berasal dari Fakultas yang sama!';
+                            }
+                        } else {
+                            if ((f1 && f2 && f1 != f2) || (f1 && f3 && f1 != f3) || (f2 && f3 && f2 !== f3)) {
+                                isConflict = true;
+                                msg = 'Jika Pilihan 1 Fakultas Vokasi, Maka Pilihan Selanjutnya Harus Vokasi Juga!';
+                            }
                         }
+
 
                         if (isConflict) {
                             Swal.fire({
@@ -1006,6 +1016,63 @@
 
                 $(document).on('change', '#prodi3', function() {
                     let prodi3 = $(this).val();
+                    let jalurpendaftaran = $("#jalur").val();
+
+                    $.ajax({
+                        type: "GET",
+                        url: '{!! url("Pendaftaran/GetWaktuKuliah") !!}' + '/' + jalurpendaftaran,
+                        dataType: "JSON",
+                        beforeSend: function(response) {
+                            $('#loading').show();
+                        },
+                        success: function(data) {
+                            $('#loading').hide();
+                            if(data.hasil == 0) {
+                                // notifalert('Information', 'Data Pendaftaran Tidak Ditemukan', 'error');
+                                return;
+                            } else {
+                                 // reset option
+                                $('#waktukuliah').html(
+                                    '<option value="" disabled>-- Pilih Jadwal Kelas --</option>'
+                                );
+
+                                // tambah option dinamis
+                                if(data.kelaspagi == 1){
+                                    $('#waktukuliah').append(
+                                        `<option value="PAGI">Kelas Pagi</option>`
+                                    );
+                                }
+
+                                if(data.kelassore == 1){
+                                    $('#waktukuliah').append(
+                                        `<option value="SORE">Kelas Sore</option>`
+                                    );
+                                }
+
+                                // set selected jika ada data sebelumnya
+                                // if(data.kelaspagi == 1){
+                                //     $('#waktukuliah').val('PAGI');
+                                // }
+
+                                // if(data.kelassore == 1){
+                                //     $('#waktukuliah').val('SORE');
+                                // }
+
+                                // refresh select2
+                                $('#waktukuliah').trigger('change');
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            $('#loading').hide();
+                            console.error("AJAX ERROR:", xhr.responseText);
+                            Swal.fire({
+                                title: 'Gagal Show Data',
+                                text: 'Terjadi masalah saat mengambil data dari server. Silakan coba lagi atau hubungi admin.',
+                                icon: 'error'
+                            });
+                        }
+                    });
+
                     if (prodi3 != null && prodi3 !== '') {
                         $('#waktukuliah, #rekomendator').prop('disabled', false);
                     } else {
@@ -1056,7 +1123,6 @@
                 let prodi2 = $('#prodi2').val();
                 let prodi3 = $('#prodi3').val();
                 let waktukuliah = $('#waktukuliah').val();
-
                 let notif = '';
 
                 if (tahun == null) {
@@ -1240,8 +1306,19 @@
                                             $('#jurusansekolah').val(data.daftar
                                                 .jurusan_sekolah).trigger(
                                                 'change');
-                                            $('#waktukuliah').val(data.daftar
-                                                .waktu_kuliah).trigger('change');
+                                            // $('#waktukuliah').val(data.daftar
+                                            //     .waktu_kuliah).trigger('change');
+                                            console.log('data :>> ', data.daftar);
+                                            if (data.daftar.kelaspagi == 1) {
+                                                console.log('masuk1 :>> ', 'masuk1');
+                                                $('#waktukuliah').val('PAGI').trigger('change');
+                                            } else if(data.daftar.kelassore == 1) {
+                                                console.log('masuk2 :>> ', 'masuk2');
+                                                $('#waktukuliah').val('SORE').trigger('change');
+                                            }  else {
+                                                $('#waktukuliah').val('').trigger('change');
+                                            }
+                                            // $('#waktukuliah').val(data.daftar.kelaspagi).trigger('change');
                                             $('#waktukuliah').prop('disabled',
                                                 false);
                                             if (data.daftar.rekomendator) {
@@ -1402,7 +1479,13 @@
                                         .jalur.jml_biaya_pendaftaran) : 'Gratis';
                                 $('#o-biayadaftar').html(biayadaftar)
                                 $('#o-tgldaftar').html(data.daftar.tgl_daftar)
-                                $('#o-waktukuliah').html(data.daftar.waktukuliah.waktu)
+                                if (data.daftar.kelaspagi == 1) {
+                                    $('#o-waktukuliah').html('Kelas Pagi')
+                                } else if(data.daftar.kelassore == 1){
+                                    $('#o-waktukuliah').html('Kelas Sore')
+                                } else {
+                                    $('#o-waktukuliah').html('')
+                                }
                                 $('#o-rekomendator').html(data.rekomendator)
                                 let statusUkt = data.daftar.jalur.status_ukt == '0' ? 'Gratis' :
                                     'Bayar';

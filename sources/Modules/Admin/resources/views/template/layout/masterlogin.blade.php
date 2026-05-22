@@ -88,7 +88,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
             });
         }
 
-        $("#password,#a_1,#a_2").keypress(function(event){
+        $("#a_1,#a_2").keypress(function(event){
             var ew = event.which;
 
             if(48 <= ew && ew <= 57)

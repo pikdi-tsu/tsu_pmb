@@ -49,6 +49,7 @@
                                         <th>Prodi Pilihan 1</th>
                                         <th>Prodi Pilihan 2</th>
                                         <th>Prodi Pilihan 3</th>
+                                        <th>Jadwal Kelas</th>
                                         <th>Status</th>
                                         <th>Action</th>
                                     </tr>
@@ -191,6 +192,7 @@
         </div>
         <!-- /.modal-dialog -->
     </div>
+
     <div class="modal fade" id="modal-edit-rekomendator">
         <div class="modal-dialog">
             <div class="modal-content">
@@ -229,6 +231,81 @@
             </div>
         </div>
     </div>
+
+    {{-- Modal edit jurusan --}}
+    <div class="modal fade" id="modal-edit-jurusan">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h4 class="modal-titlejurusan"></h4>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form id="form-editjurusan" method="POST" action="#">
+                        <input type="hidden" id="kodependaftaranmahasiswa" name="kodependaftaranmahasiswa">
+                        <div class="form-group mb-3">
+                            <label for="prodi1">Program Studi Pilihan 1</label>
+                            <select class="form-control select2" id="prodi1" name="prodi1">
+                                <option value="" selected disabled>-- Pilih Program Studi 1 --</option>
+                                @foreach ($getfakultas as $item)
+                                    <optgroup label="{{ $item->namafakultas }}">
+                                        @foreach ($item->jurusan as $jurusan)
+                                            <option value="{{ $jurusan->KodeJurusan }}">
+                                                {{ $jurusan->jenjang->jenjang .' '. $jurusan->jurusan }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="prodi2">Program Studi Pilihan 2</label>
+                            <select class="form-control select2" id="prodi2" name="prodi2">
+                                <option value="" selected disabled>-- Pilih Program Studi 2 --</option>
+                                @foreach ($getfakultas as $item)
+                                    <optgroup label="{{ $item->namafakultas }}">
+                                        @foreach ($item->jurusan as $jurusan)
+                                            <option value="{{ $jurusan->KodeJurusan }}">
+                                                {{ $jurusan->jenjang->jenjang .' '. $jurusan->jurusan }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="prodi3">Program Studi Pilihan 3</label>
+                            <select class="form-control select2" id="prodi3" name="prodi3">
+                                <option value="" selected disabled>-- Pilih Program Studi 3 --</option>
+                                @foreach ($getfakultas as $item)
+                                    <optgroup label="{{ $item->namafakultas }}">
+                                        @foreach ($item->jurusan as $jurusan)
+                                            <option value="{{ $jurusan->KodeJurusan }}">
+                                                {{ $jurusan->jenjang->jenjang .' '. $jurusan->jurusan }}
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group mb-3">
+                            <label for="jadwalkelas">Jadwal Kelas</label>
+                            <select class="form-control select2" id="jadwalkelas" name="jadwalkelas">
+                                <option value="" selected disabled>-- Pilih Jadwal Kelas --</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" id="btn-saveupdatejurusan" class="btn btn-success"><i class="fas fa-save"></i> Simpan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
 @endsection
 @section('script')
     <script>
@@ -246,6 +323,10 @@
                 tabelBeasiswa()
             }
 
+            $('.select2').select2({
+                dropdownParent: $('#modal-edit-jurusan'),
+                width: '100%'
+            });
 
             function tabelBeasiswa()
             {
@@ -292,6 +373,9 @@
                         },
                         {
                             data: 'prodi3'
+                        },
+                        {
+                            data: 'jadwalkelas'
                         },
                         {
                             data: 'status'
@@ -443,107 +527,275 @@
             }
 
         });
-        $('#example2').on('click', '.btn_edit_rekomendator', function(e) {
-                e.preventDefault();
-                let id = $(this).data('id');
 
-                // MENGGUNAKAN .attr() AGAR DATA SELALU TERBACA AKURAT DARI DOM
-                let rek_saatini = $(this).attr('data-rek');
+        $('#example2').on('click', '.btn_edit_jurusan', function(e) {
+            e.preventDefault();
+            let param = $(this).data('id');
+            // $('#modal-edit-jurusan').modal('show');
 
-                $('#edit_id_daftar').val(id);
-
-                // Tampilkan Teks Rekomendator Saat Ini
-                if(rek_saatini && rek_saatini !== '-' && rek_saatini !== '') {
-                    $('#teks_rekomendator_saatini').text(rek_saatini);
-                } else {
-                    $('#teks_rekomendator_saatini').text('-');
-                }
-
-                // Sembunyikan form dropdown pencarian & tombol simpan
-                $('#wadah-form-rekomendator').hide();
-                $('#btn-save-rekomendator').hide();
-                // Munculkan tombol pemancing edit
-                $('#btn-tampil-form-edit').show();
-
-                // Kosongkan Select2
-                $('#select_rekomendator').empty().append('<option value="" selected disabled>-- Ketik Nama Rekomendator --</option>');
-
-                $('#modal-edit-rekomendator').modal('show');
-            });
-
-            // 2. EVENT KETIKA TOMBOL "UBAH / TAMBAH" DI DALAM MODAL DIKLIK
-            $('#btn-tampil-form-edit').click(function(e){
-                e.preventDefault();
-                $(this).hide(); // Sembunyikan tombol "Ubah"
-                $('#wadah-form-rekomendator').slideDown('fast'); // Tampilkan form Select2
-                $('#btn-save-rekomendator').fadeIn('fast'); // Tampilkan tombol "Simpan"
-            });
-
-            // SETUP SELECT2 UNTUK PENCARIAN NAMA REKOMENDATOR SAJA
-            $('#select_rekomendator').select2({
-                dropdownParent: $('#modal-edit-rekomendator'),
-                theme: 'bootstrap4',
-                placeholder: '-- Ketik Nama Rekomendator --',
-                allowClear: true,
-                minimumInputLength: 2,
-                ajax: {
-                    url: '{!! route('admin.databeasiswa.carirekomendator') !!}', // Pastikan route ini dapat diakses admin juga
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return { q: params.term };
-                    },
-                    processResults: function(data) {
-                        return {
-                            results: $.map(data, function(item) {
-                                return {
-                                    text: item.kode_rekomendator+' - '+item.nama_rekomendator,
-                                    id: item.kode_rekomendator
-                                }
-                            })
-                        };
-                    },
-                    cache: true
-                }
-            });
-
-            // EVENT SIMPAN PERUBAHAN REKOMENDATOR
-            $('#btn-save-rekomendator').click(function(e) {
-                e.preventDefault();
-                let id_daftar = $('#edit_id_daftar').val();
-                let kode_rek = $('#select_rekomendator').val();
-
-                if (!kode_rek) {
-                    notifalert('Information', 'Pilih Rekomendator terlebih dahulu!', 'warning');
-                    return;
-                }
-
-                $.ajax({
-                    type: "POST",
-                    url: '{!! route('admin.databeasiswa.updaterekomendator') !!}',
-                    data: {
-                        id_daftar: id_daftar,
-                        kode_rekomendator: kode_rek
-                    },
+            $.ajax({
+                    type: "GET",
+                    url: '{!! url('admin/DataPendaftaran/Beasiswa/EditJurusan') !!}' + '/' + param,
                     dataType: "JSON",
-                    beforeSend: function() {
+                    beforeSend: function(response) {
                         $('#loading').show();
                     },
-                    success: function(response) {
+                    success: function(data) {
+                    console.log('data :>> ', data.jalur);
                         $('#loading').hide();
-                        if (response.status == 'success') {
-                            $('#modal-edit-rekomendator').modal('hide');
-                            notifalert('Berhasil', response.message, 'success');
-                            $('#example2').DataTable().ajax.reload();
+                        if(data.hasil == 0) {
+                            notifalert('Information', 'Data Pendaftaran Tidak Ditemukan', 'error');
                         } else {
-                            notifalert('Gagal', response.message, 'error');
+                            $('#kodependaftaranmahasiswa').val(param);
+                            $('.modal-titlejurusan').html('Data Jurusan ' + data.KodePendaftaran);
+                            $('#prodi1').val(data.pilihan1).trigger('change');
+                            $('#prodi2').val(data.pilihan2).trigger('change');
+                            $('#prodi3').val(data.pilihan3).trigger('change');
+                            $('#modal-edit-jurusan').modal('show');
+
+                                // reset option
+                            $('#jadwalkelas').html(
+                                '<option value="" disabled>-- Pilih Jadwal Kelas --</option>'
+                            );
+
+                            // tambah option dinamis
+                            if(data.jalur.kelaspagi == 1){
+                                $('#jadwalkelas').append(
+                                    `<option value="PAGI">Kelas Pagi</option>`
+                                );
+                            }
+
+                            if(data.jalur.kelassore == 1){
+                                $('#jadwalkelas').append(
+                                    `<option value="SORE">Kelas Sore</option>`
+                                );
+                            }
+
+                            // set selected jika ada data sebelumnya
+                            if(data.kelaspagi == 1){
+                                $('#jadwalkelas').val('PAGI');
+                            }
+
+                            if(data.kelassore == 1){
+                                $('#jadwalkelas').val('SORE');
+                            }
+
+                            // refresh select2
+                            $('#jadwalkelas').trigger('change');
                         }
                     },
-                    error: function() {
+                    error: function(xhr, status, error) {
                         $('#loading').hide();
-                        Swal.fire('Error', 'Terjadi kesalahan pada server', 'error');
+                        console.error("AJAX ERROR:", xhr.responseText);
+                        Swal.fire({
+                            title: 'Gagal Show Data',
+                            text: 'Terjadi masalah saat mengambil data dari server. Silakan coba lagi atau hubungi admin.',
+                            icon: 'error'
+                        });
                     }
                 });
+        });
+
+        $('#btn-saveupdatejurusan').click(function(e) {
+            e.preventDefault();
+            let kodependaftaran = $('#kodependaftaranmahasiswa').val();
+            let prodi1 = $('#prodi1').val();
+            let prodi2 = $('#prodi2').val();
+            let prodi3 = $('#prodi3').val();
+            let jadwalkelas = $('#jadwalkelas').val();
+
+            $.ajax({
+                type: "POST",
+                url: '{!! route('admin.databeasiswa.updatejurusan') !!}',
+                data: {
+                    kodependaftaran: kodependaftaran,
+                    prodi1: prodi1,
+                    prodi2: prodi2,
+                    prodi3: prodi3,
+                    jadwalkelas: jadwalkelas
+                },
+                dataType: "JSON",
+                beforeSend: function() {
+                    $('#loading').show();
+                },
+                success: function(response) {
+                    $('#loading').hide();
+                    if (response.status == 'success') {
+                        $('#modal-edit-jurusan').modal('hide');
+                        notifalert('Berhasil', response.message, 'success');
+                        $('#example2').DataTable().ajax.reload(null, false);
+                    } else {
+                        notifalert('Gagal', response.message, 'error');
+                    }
+                },
+                error: function() {
+                    $('#loading').hide();
+                    Swal.fire('Error', 'Terjadi kesalahan pada server', 'error');
+                }
             });
+        });
+
+        $('#example2').on('click', '.btn_edit_rekomendator', function(e) {
+            e.preventDefault();
+            let id = $(this).data('id');
+
+            // MENGGUNAKAN .attr() AGAR DATA SELALU TERBACA AKURAT DARI DOM
+            let rek_saatini = $(this).attr('data-rek');
+
+            $('#edit_id_daftar').val(id);
+
+            // Tampilkan Teks Rekomendator Saat Ini
+            if(rek_saatini && rek_saatini !== '-' && rek_saatini !== '') {
+                $('#teks_rekomendator_saatini').text(rek_saatini);
+            } else {
+                $('#teks_rekomendator_saatini').text('-');
+            }
+
+            // Sembunyikan form dropdown pencarian & tombol simpan
+            $('#wadah-form-rekomendator').hide();
+            $('#btn-save-rekomendator').hide();
+            // Munculkan tombol pemancing edit
+            $('#btn-tampil-form-edit').show();
+
+            // Kosongkan Select2
+            $('#select_rekomendator').empty().append('<option value="" selected disabled>-- Ketik Nama Rekomendator --</option>');
+
+            $('#modal-edit-rekomendator').modal('show');
+        });
+
+        // 2. EVENT KETIKA TOMBOL "UBAH / TAMBAH" DI DALAM MODAL DIKLIK
+        $('#btn-tampil-form-edit').click(function(e){
+            e.preventDefault();
+            $(this).hide(); // Sembunyikan tombol "Ubah"
+            $('#wadah-form-rekomendator').slideDown('fast'); // Tampilkan form Select2
+            $('#btn-save-rekomendator').fadeIn('fast'); // Tampilkan tombol "Simpan"
+        });
+
+        // SETUP SELECT2 UNTUK PENCARIAN NAMA REKOMENDATOR SAJA
+        $('#select_rekomendator').select2({
+            dropdownParent: $('#modal-edit-rekomendator'),
+            theme: 'bootstrap4',
+            placeholder: '-- Ketik Nama Rekomendator --',
+            allowClear: true,
+            minimumInputLength: 2,
+            ajax: {
+                url: '{!! route('admin.databeasiswa.carirekomendator') !!}', // Pastikan route ini dapat diakses admin juga
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return { q: params.term };
+                },
+                processResults: function(data) {
+                    return {
+                        results: $.map(data, function(item) {
+                            return {
+                                text: item.kode_rekomendator+' - '+item.nama_rekomendator,
+                                id: item.kode_rekomendator
+                            }
+                        })
+                    };
+                },
+                cache: true
+            }
+        });
+
+        // EVENT SIMPAN PERUBAHAN REKOMENDATOR
+        $('#btn-save-rekomendator').click(function(e) {
+            e.preventDefault();
+            let id_daftar = $('#edit_id_daftar').val();
+            let kode_rek = $('#select_rekomendator').val();
+
+            if (!kode_rek) {
+                notifalert('Information', 'Pilih Rekomendator terlebih dahulu!', 'warning');
+                return;
+            }
+
+            $.ajax({
+                type: "POST",
+                url: '{!! route('admin.databeasiswa.updaterekomendator') !!}',
+                data: {
+                    id_daftar: id_daftar,
+                    kode_rekomendator: kode_rek
+                },
+                dataType: "JSON",
+                beforeSend: function() {
+                    $('#loading').show();
+                },
+                success: function(response) {
+                    $('#loading').hide();
+                    if (response.status == 'success') {
+                        $('#modal-edit-rekomendator').modal('hide');
+                        notifalert('Berhasil', response.message, 'success');
+                        $('#example2').DataTable().ajax.reload();
+                    } else {
+                        notifalert('Gagal', response.message, 'error');
+                    }
+                },
+                error: function() {
+                    $('#loading').hide();
+                    Swal.fire('Error', 'Terjadi kesalahan pada server', 'error');
+                }
+            });
+        });
+
+        $('body').on('click', '.btn_hapus', function() {
+            let idku = $(this).attr('data-id');
+
+            Swal.fire({
+                title: 'Konfirmasi Hapus!',
+                text: 'Apakah Anda Yakin Menghapus Mahasiswa ?',
+                icon: 'question',
+                showConfirmButton: true,
+                showCancelButton: true,
+            }).then((result) => {
+                if (result.value) {
+                    $.ajax({
+                        type: "POST",
+                        url: "{!! route('admin.databeasiswa.hapusdata') !!}",
+                        dataType: "JSON",
+                        data: {
+                            id: idku,
+                        },
+                        beforeSend: function() {
+                            Swal.fire({
+                                title: 'Sedang Proses',
+                                html: 'Mohon Tunggu Sebentar',
+                                allowEscapeKey: false,
+                                allowOutsideClick: false,
+                                showCancelButton: false,
+                                showConfirmButton: false,
+                                backdrop: true,
+                                didOpen: () => {
+                                    Swal.showLoading()
+                                }
+                            })
+                        },
+                        success: function(response) {
+                            Swal.fire({
+                                title: response.title,
+                                text: response.message,
+                                icon: (response.status != 'error') ? 'success' : 'error'
+                            }).then((result) => {
+                                location.reload();
+                                Swal.close();
+                            });
+                            return;
+                        },
+                        error: function(xhr, status, error) {
+                            Swal.close();
+                            let res = xhr.responseJSON;
+                            Swal.fire({
+                                title: res?.title ?? 'Error',
+                                text: res?.message ?? error,
+                                icon: status
+                            });
+                            return;
+                        }
+                    });
+                    return false;
+                }
+            })
+        });
+
     </script>
 @endsection

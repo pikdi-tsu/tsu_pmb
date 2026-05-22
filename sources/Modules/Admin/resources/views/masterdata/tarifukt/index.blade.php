@@ -77,7 +77,8 @@
                                                         Rp
                                                     </span>
                                                 </div>
-                                                <input type="number" value="0" min="0" class="form-control" id="biaya_ukt" name="biaya_ukt" required>
+                                                {{-- <input type="number" value="0" min="0" class="form-control" id="biaya_ukt" name="biaya_ukt" required> --}}
+                                                <input type="text" value="0" min="0" name="biaya_ukt" id="biaya_ukt" class="form-control" required>
                                             </div>
                                         </div>
                                         <!-- Nama Jenis -->
@@ -142,7 +143,9 @@
                 tabelUKT()
                 submitUKT()
                 btn_reset()
+                aktifkanUkt()
                 // formatRP()
+                // rupiah();
             }
 
             function tabelUKT()
@@ -156,7 +159,7 @@
                     scrollCollapse: true,
                     serverSide: true,
                     searchDelay: 500,
-                    responsive: false,
+                    responsive: true,
                     order: [],
                     ajax: {
                         url: '{!! route('admin.TarifUKT.Tabel') !!}',
@@ -319,7 +322,7 @@
                                 $('#batch').val(data.ukt.idbatch).trigger('change')
                                 $('#jalur').val(data.ukt.idjalur).trigger('change')
                                 $('#prodi').val(data.ukt.idjurusan).trigger('change')
-                                $('#biaya_ukt').val(data.ukt.biaya_ukt)
+                                $('#biaya_ukt').val(formatRupiah(data.ukt.biaya_ukt));
                                 $('#keterangan').val(data.ukt.keterangan)
                             }
                         }
@@ -373,6 +376,51 @@
                 })
             }
 
+            function aktifkanUkt()
+            {
+                // $('.btn_aktifkan').click(function(e) {
+                $(document).on('click', '.btn_aktifkan', function(e) {
+                    e.preventDefault();
+                    let params = $(this).data('id')
+                    let status = $(this).data('status')
+
+                    Swal.fire({
+                        title: 'Information',
+                        text: 'Apakah Anda Yakin Ingin Mengaktifkan ?',
+                        icon: 'question',
+                        showConfirmButton: true,
+                        showCancelButton: true,
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            $.ajax({
+                                type: "GET",
+                                url: '{!! url('admin/MasterData/TarifUKT/StatusAktif') !!}' + '/' + params + '/' + status,
+                                dataType: "JSON",
+                                beforeSend: function(response) {
+                                    $('#loading').show()
+                                },
+                                success: function(data) {
+                                    $('#loading').hide()
+                                    Swal.fire({
+                                        title: 'Information',
+                                        text: data.message,
+                                        icon: data.status
+                                    }).then(() => {
+                                        $("#example2").DataTable().ajax.reload();
+                                    })
+                                },
+                                error: function(data) {
+                                    $('#loading').hide()
+                                }
+                            });
+                            return false;
+                        }else{
+                            return false;
+                        }
+                    })
+                })
+            }
+
             function btn_reset()
             {
                 $('#btn-reset').click(function (e) {
@@ -386,28 +434,76 @@
                 });
             }
 
-            function formatRP()
-            {
-                $('#biaya_ukt').on('keyup', function(){
-                    $(this).val(formatRupiah($(this).val()));
-                });
+            $('#biaya_ukt').on('keyup', function(){
+                $(this).val(formatRupiah($(this).val()));
+            });
 
-            }
+            function formatRupiah(angka){
+                let number_string = angka.toString().replace(/[^,\d]/g, '');
 
-            function formatRupiah(angka) {
-                var number_string = angka.replace(/[^,\d]/g, '').toString(),
-                    split   = number_string.split(','),
-                    sisa    = split[0].length % 3,
-                    rupiah  = split[0].substr(0, sisa),
-                    ribuan  = split[0].substr(sisa).match(/\d{3}/gi);
+                let split = number_string.split(',');
+                let sisa = split[0].length % 3;
 
-                if (ribuan) {
-                    var separator = sisa ? '.' : '';
+                let rupiah = split[0].substr(0, sisa);
+
+                let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+                if(ribuan){
+                    let separator = sisa ? '.' : '';
                     rupiah += separator + ribuan.join('.');
                 }
 
-                return split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+                rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+
+                return rupiah;
             }
+
+            // function rupiah()
+            // {
+            //     const inputBiaya = document.getElementById('biaya_ukt');
+
+            //     inputBiaya.addEventListener('keyup', function(e) {
+            //         let angka = this.value.replace(/[^,\d]/g, '').toString();
+
+            //         let split = angka.split(',');
+            //         let sisa = split[0].length % 3;
+
+            //         let rupiah = split[0].substr(0, sisa);
+            //         let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+            //         if (ribuan) {
+            //             let separator = sisa ? '.' : '';
+            //             rupiah += separator + ribuan.join('.');
+            //         }
+
+            //         rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+
+            //         this.value = rupiah;
+            //     });
+            // }
+
+            // function formatRP()
+            // {
+            //     $('#biaya_ukt').on('keyup', function(){
+            //         $(this).val(formatRupiah($(this).val()));
+            //     });
+
+            // }
+
+            // function formatRupiah(angka) {
+            //     var number_string = angka.replace(/[^,\d]/g, '').toString(),
+            //         split   = number_string.split(','),
+            //         sisa    = split[0].length % 3,
+            //         rupiah  = split[0].substr(0, sisa),
+            //         ribuan  = split[0].substr(sisa).match(/\d{3}/gi);
+
+            //     if (ribuan) {
+            //         var separator = sisa ? '.' : '';
+            //         rupiah += separator + ribuan.join('.');
+            //     }
+
+            //     return split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+            // }
 
         });
     </script>

@@ -23,16 +23,16 @@ class Master_Fakultas extends Model
     // protected $keyType = 'string';
     protected $fillable = [
         'KodeFakultas',
-    //     'role_access',
-    //     'password',
-    //     'created_at',
-    //     'created_by',
-    //     'updated_at',
-    //     'updated_by',
+        //     'role_access',
+        //     'password',
+        //     'created_at',
+        //     'created_by',
+        //     'updated_at',
+        //     'updated_by',
     ];
 
     function jurusan()
     {
-        return $this->hasMany('App\Models\MasterData\Master_JurusanKuliah', 'idfakultas','KodeFakultas');
+        return $this->hasMany('App\Models\MasterData\Master_JurusanKuliah', 'idfakultas', 'KodeFakultas')->where('isactive', '1');
     }
 }

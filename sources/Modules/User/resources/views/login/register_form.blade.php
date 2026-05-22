@@ -81,18 +81,33 @@
                         <div class="input-group mb-3">
                             <input type="password" class="form-control" onkeyup="checkPassword()" placeholder="Password"
                                 name="password" id="password">
-                            <div class="input-group-append">
+                            {{-- <div class="input-group-append">
                                 <div class="input-group-text">
                                     <span class="fas fa-lock"></span>
                                 </div>
+                            </div> --}}
+
+                            <div class="input-group-append">
+                            {{-- Tambahkan ID dan style cursor pointer --}}
+                            <div class="input-group-text" id="toggle-password" style="cursor: pointer;">
+                                {{-- Ubah default icon jadi mata (fa-eye) --}}
+                                <span class="fas fa-eye"></span>
                             </div>
+                        </div>
                         </div>
                         <div class="input-group mb-3">
                             <input type="password" class="form-control" onkeyup="checkPassword()"
                                 placeholder="Konfirmasi Password" name="password1" id="password1">
-                            <div class="input-group-append">
+                            {{-- <div class="input-group-append">
                                 <div class="input-group-text">
                                     <span class="fas fa-lock"></span>
+                                </div>
+                            </div> --}}
+                            <div class="input-group-append">
+                                {{-- Tambahkan ID dan style cursor pointer --}}
+                                <div class="input-group-text" id="toggle-password1" style="cursor: pointer;">
+                                    {{-- Ubah default icon jadi mata (fa-eye) --}}
+                                    <span class="fas fa-eye"></span>
                                 </div>
                             </div>
                         </div>
@@ -128,6 +143,43 @@
             })
             loadEvent()
 
+            // --- FITUR SHOW PASSWORD ---
+            $('#toggle-password').click(function(){
+                var passwordField = $('#password');
+                var passwordIcon = $(this).find('span');
+
+                // Cek tipe input saat ini
+                if(passwordField.attr('type') === 'password'){
+                    // Ubah jadi text (terlihat)
+                    passwordField.attr('type', 'text');
+                    // Ubah icon jadi mata dicoret
+                    passwordIcon.removeClass('fa-eye').addClass('fa-eye-slash');
+                } else {
+                    // Balikin jadi password (tersembunyi)
+                    passwordField.attr('type', 'password');
+                    // Balikin icon jadi mata biasa
+                    passwordIcon.removeClass('fa-eye-slash').addClass('fa-eye');
+                }
+            });
+            $('#toggle-password1').click(function(){
+                var passwordField1 = $('#password1');
+                var passwordIcon = $(this).find('span');
+
+                // Cek tipe input saat ini
+                if(passwordField1.attr('type') === 'password'){
+                    // Ubah jadi text (terlihat)
+                    passwordField1.attr('type', 'text');
+                    // Ubah icon jadi mata dicoret
+                    passwordIcon.removeClass('fa-eye').addClass('fa-eye-slash');
+                } else {
+                    // Balikin jadi password (tersembunyi)
+                    passwordField1.attr('type', 'password');
+                    // Balikin icon jadi mata biasa
+                    passwordIcon.removeClass('fa-eye-slash').addClass('fa-eye');
+                }
+            });
+            // ---------------------------
+
             function loadEvent() {
                 Next1()
                 Prev1()
@@ -142,8 +194,6 @@
                     $('#form-2').show()
                 });
             }
-
-
 
             function Prev1() {
                 $('#prev-1').click(function(e) {
@@ -201,9 +251,9 @@
             let repass  = $('#password1').val()
 
             let notif = ''
-            
+
             // Regex Pattern untuk validasi final (8 char, upper, number, no symbol)
-            let passwordRegex = /^(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/;
+            // let passwordRegex = /^(?=.*[A-Z])(?=.*\d)[a-zA-Z\d]{8,}$/;
 
             if (nama == '' || nama == null) {
                 notif = 'Nama Calon Mahasiswa Tidak Boleh Kosong';
@@ -223,12 +273,12 @@
             } else if (email == '' || email == null) {
                 notif = 'Email Tidak Boleh Kosong';
                 $('#next-1').trigger('click');
-            } 
+            }
             // --- MODIFIKASI VALIDASI PASSWORD DISINI ---
             else if (pass == '' || pass == null) {
                 notif = 'Password Tidak Boleh Kosong';
                 $('#next-1').trigger('click');
-            } 
+            }
             // Validasi Logika Ketat
             else if (pass.length < 8) {
                 notif = 'Password Minimal 8 Karakter!';
@@ -242,10 +292,10 @@
                 notif = 'Password Harus Mengandung Angka!';
                 $('#next-1').trigger('click');
             }
-            else if (/[^a-zA-Z0-9]/.test(pass)) {
-                notif = 'Password Tidak Boleh Mengandung Simbol!';
-                $('#next-1').trigger('click');
-            }
+            // else if (/[^a-zA-Z0-9]/.test(pass)) {
+            //     notif = 'Password Tidak Boleh Mengandung Simbol!';
+            //     $('#next-1').trigger('click');
+            // }
             // -------------------------------------------
             else if (repass == '' || repass == null) {
                 notif = 'Konfirmasi Password Tidak Boleh Kosong';
@@ -323,16 +373,16 @@
                 });
             }
 
-            $('#password,#password1').keypress(function(event) {
-                var ew = event.which;
-                if (48 <= ew && ew <= 57)
-                    return true;
-                if (65 <= ew && ew <= 90)
-                    return true;
-                if (97 <= ew && ew <= 122)
-                    return true;
-                return false;
-            });
+            // $('#password,#password1').keypress(function(event) {
+            //     var ew = event.which;
+            //     if (48 <= ew && ew <= 57)
+            //         return true;
+            //     if (65 <= ew && ew <= 90)
+            //         return true;
+            //     if (97 <= ew && ew <= 122)
+            //         return true;
+            //     return false;
+            // });
 
 
         });
@@ -377,9 +427,9 @@
 
             // 4. Cek Simbol (Tidak boleh ada simbol)
             // Regex ini mendeteksi jika ada karakter SELAIN huruf dan angka
-            if (/[^a-zA-Z0-9]/.test(password)) {
-                error_msg.push('Tidak boleh ada Simbol');
-            }
+            // if (/[^a-zA-Z0-9]/.test(password)) {
+            //     error_msg.push('Tidak boleh ada Simbol');
+            // }
 
             if (error_msg.length > 0) {
                 // Jika ada error
@@ -393,6 +443,7 @@
                 $('#warning').html('');
             }
         }
+
         function checkNIK() {
             var password = $('#nik').val()
 

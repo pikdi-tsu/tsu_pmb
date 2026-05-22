@@ -32,53 +32,68 @@ class Pendaftaran extends Model
     //     'updated_at',
     //     'updated_by',
     // ];
-    public function biodata(){
-        return $this->hasOne('App\Models\User\Biodata', 'biodata_id','biodata_id');
+    public function biodata()
+    {
+        return $this->hasOne('App\Models\User\Biodata', 'biodata_id', 'biodata_id');
     }
 
-    public function batch(){
-        return $this->hasOne('App\Models\MasterData\Master_Batch', 'id','batch_daftar');
+    public function batch()
+    {
+        return $this->hasOne('App\Models\MasterData\Master_Batch', 'id', 'batch_daftar');
     }
 
-    public function jalur(){
-        return $this->hasOne('App\Models\MasterData\Master_JenisPendaftaran', 'id','jalur_daftar');
+    public function jalur()
+    {
+        return $this->hasOne('App\Models\MasterData\Master_JenisPendaftaran', 'id', 'jalur_daftar');
     }
 
-    public function jenisbeasiswa(){
-        return $this->hasOne('App\Models\MasterData\Master_Beasiswa', 'id','beasiswa');
+    public function jenisbeasiswa()
+    {
+        return $this->hasOne('App\Models\MasterData\Master_Beasiswa', 'id', 'beasiswa');
     }
 
-    public function jurusansekolah(){
-        return $this->hasOne('App\Models\MasterData\Master_JurusanSekolah', 'id','jurusan_sekolah');
+    public function jurusansekolah()
+    {
+        return $this->hasOne('App\Models\MasterData\Master_JurusanSekolah', 'id', 'jurusan_sekolah');
     }
 
-    public function prodi1(){
-        return $this->hasOne('App\Models\MasterData\Master_JurusanKuliah', 'KodeJurusan','pilihan1');
+    public function prodi1()
+    {
+        return $this->hasOne('App\Models\MasterData\Master_JurusanKuliah', 'KodeJurusan', 'pilihan1');
     }
 
-    public function prodi2(){
-        return $this->hasOne('App\Models\MasterData\Master_JurusanKuliah', 'KodeJurusan','pilihan2');
+    public function prodi2()
+    {
+        return $this->hasOne('App\Models\MasterData\Master_JurusanKuliah', 'KodeJurusan', 'pilihan2');
     }
 
-    public function prodi3(){
-        return $this->hasOne('App\Models\MasterData\Master_JurusanKuliah', 'KodeJurusan','pilihan3');
+    public function prodi3()
+    {
+        return $this->hasOne('App\Models\MasterData\Master_JurusanKuliah', 'KodeJurusan', 'pilihan3');
     }
 
-    public function waktukuliah(){
-        return $this->hasOne('App\Models\MasterData\Master_WaktuKuliah', 'id','waktu_kuliah');
+    public function jurusanditerima()
+    {
+        return $this->hasOne('App\Models\MasterData\Master_JurusanKuliah', 'KodeJurusan', 'jurusan_diterima');
+    }
+
+    public function waktukuliah()
+    {
+        return $this->hasOne('App\Models\MasterData\Master_WaktuKuliah', 'id', 'waktu_kuliah');
     }
 
     public function bayar()
     {
-        return $this->hasMany('App\Models\Transaksi', 'id_referensi','KodePendaftaran');
+        return $this->hasMany('App\Models\Transaksi', 'id_referensi', 'KodePendaftaran');
     }
 
     public function jawaban_peserta()
     {
-        return $this->hasMany('App\Models\User\JawabanTest', 'kodependaftaran','KodePendaftaran');
+        return $this->hasMany('App\Models\User\JawabanTest', 'kodependaftaran', 'KodePendaftaran');
     }
 
-    public function jurusan_acc(){
-        return $this->hasOne('App\Models\MasterData\Master_JurusanKuliah', 'KodeJurusan','jurusan_diterima');
+    public function jurusan_acc()
+    {
+        return $this->hasOne('App\Models\MasterData\Master_JurusanKuliah', 'KodeJurusan', 'jurusan_diterima');
     }
 }
