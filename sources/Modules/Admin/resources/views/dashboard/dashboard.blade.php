@@ -36,10 +36,10 @@
 
                             <p>Total Pendaftar</p>
                         </div>
-                        <div class="icon">
+                        {{-- <div class="icon">
                             <i class="ion ion-bag"></i>
-                        </div>
-                        <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                        </div> --}}
+                        {{-- <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a> --}}
                     </div>
                 </div>
                 <!-- ./col -->
@@ -49,12 +49,12 @@
                         <div class="inner">
                             <h3>{{ $validasi }}</h3>
 
-                            <p>Validasi Pendaftaran</p>
+                            <p>Konfirmasi Pendaftaran</p>
                         </div>
-                        <div class="icon">
+                        {{-- <div class="icon">
                             <i class="ion ion-stats-bars"></i>
-                        </div>
-                        <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                        </div> --}}
+                        {{-- <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a> --}}
                     </div>
                 </div>
                 <!-- ./col -->
@@ -66,10 +66,10 @@
 
                             <p>Pendaftar Aktif</p>
                         </div>
-                        <div class="icon">
-                            <i class="ion ion-person-add"></i>
-                        </div>
-                        <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                        {{-- <div class="icon">
+                            <i class="ion ion-person"></i>
+                        </div> --}}
+                        {{-- <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a> --}}
                     </div>
                 </div>
                 <!-- ./col -->
@@ -79,18 +79,17 @@
                         <div class="inner">
                             <h3>{{ $blmvalidasi }}</h3>
 
-                            <p>Belum Validasi</p>
+                            <p>Belum Konfirmasi</p>
                         </div>
-                        <div class="icon">
+                        {{-- <div class="icon">
                             <i class="ion ion-pie-graph"></i>
-                        </div>
-                        <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a>
+                        </div> --}}
+                        {{-- <a href="#" class="small-box-footer">More info <i class="fas fa-arrow-circle-right"></i></a> --}}
                     </div>
                 </div>
                 <!-- ./col -->
             </div>
-            <div class="row">
-                <!-- /.col-md-6 -->
+            {{-- <div class="row">
                 <div class="col-md-12">
                     <div class="card card-primary card-outline">
                         <div class="card-header">
@@ -109,9 +108,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- /.col-md-6 -->
-            </div>
-            <!-- /.row -->
+            </div> --}}
         </div><!-- /.container-fluid -->
     </div>
     <!-- /.content -->

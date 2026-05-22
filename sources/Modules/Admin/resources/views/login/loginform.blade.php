@@ -42,13 +42,19 @@
                         </div>
                     </div>
                     <div class="input-group mb-3">
-                        <input type="password" class="form-control" placeholder="Password" name="password"
-                            id="password" required>
+                        <input type="password" class="form-control" placeholder="Password" name="password" id="password" required>
                         <div class="input-group-append">
+                            {{-- Tambahkan ID dan style cursor pointer --}}
+                            <div class="input-group-text" id="toggle-password" style="cursor: pointer;">
+                                {{-- Ubah default icon jadi mata (fa-eye) --}}
+                                <span class="fas fa-eye"></span>
+                            </div>
+                        </div>
+                        {{-- <div class="input-group-append">
                             <div class="input-group-text">
                                 <span class="fas fa-lock"></span>
                             </div>
-                        </div>
+                        </div> --}}
                     </div>
                     <div class="row">
                         <div class="col-6">
@@ -113,5 +119,25 @@
             }, 1000);
         @endif
     });
+
+     // --- FITUR SHOW PASSWORD ---
+    $('#toggle-password').click(function(){
+        var passwordField = $('#password');
+        var passwordIcon = $(this).find('span');
+
+        // Cek tipe input saat ini
+        if(passwordField.attr('type') === 'password'){
+            // Ubah jadi text (terlihat)
+            passwordField.attr('type', 'text');
+            // Ubah icon jadi mata dicoret
+            passwordIcon.removeClass('fa-eye').addClass('fa-eye-slash');
+        } else {
+            // Balikin jadi password (tersembunyi)
+            passwordField.attr('type', 'password');
+            // Balikin icon jadi mata biasa
+            passwordIcon.removeClass('fa-eye-slash').addClass('fa-eye');
+        }
+    });
+    // ---------------------------
 </script>
 @endsection

@@ -125,7 +125,8 @@
 
                             <div class="text-center text-white p-4 custom-header">
                                 <h5 class="fw-bold mb-1">{{ $item->jenis_pendaftaran }}</h5>
-                                <div class="small">REGULER {{ $waktukuliah->waktu }} GASAL 2026</div>
+                                {{-- <div class="small">REGULER {{ $waktukuliah->waktu }} GASAL 2026</div> --}}
+                                <div class="small">{{ $batch->namabatch }}</div>
                                 <div class="mt-2 small">
                                     <i class="bi bi-clock"></i>
                                     {{ $batch->tglmulai_format . ' - ' . $batch->tglselesai_format}}
@@ -134,6 +135,16 @@
                             </div>
 
                             <div class="card-body p-4">
+                                @php
+                                    $waktu = '';
+                                    if ($item->kelaspagi == '1' && $item->kelassore == '1'){
+                                        $waktu = 'PAGI dan SORE';
+                                    } else if ($item->kelaspagi == '1') {
+                                        $waktu = 'PAGI';
+                                    } else if ($item->kelassore == '1') {
+                                        $waktu = 'SORE';
+                                    }
+                                @endphp
                                 <div class="row text-muted small">
                                     <div class="col-6 mb-3">
                                         <div>Periode Pendaftaran</div>
@@ -146,7 +157,7 @@
 
                                     <div class="col-6">
                                         <div>Sistem Kuliah</div>
-                                        <div class="fw-semibold text-dark">{{ $waktukuliah->waktu }}</div>
+                                        <div class="fw-semibold text-dark">{{ $waktu }}</div>
                                     </div>
                                     <div class="col-6">
                                         <div>Formulir</div>

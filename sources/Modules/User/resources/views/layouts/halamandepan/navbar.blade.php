@@ -1,10 +1,20 @@
+<style>
+  .logo img{
+    height: 100px !important;
+    width: auto !important;
+    max-height: none !important;
+    margin-right: 10px;
+}
+</style>
 <header id="header" class="header d-flex align-items-center fixed-top" style="margin-bottom: 20px">
     <div class="container-fluid container-xl position-relative d-flex align-items-center justify-content-between">
 
         <a href="{{ route('indexing') }}" class="logo d-flex align-items-center">
-            <img src="{{ asset('public/assets/user/img/tsu.png') }}" alt="">
-            <span><h6>Seleksi Penerimaan Mahasiswa Baru</h6>
-            <h4 class="sitename">Universitas Tiga Serangkai</h4></span>
+            <img src="{{ asset('public/assets/user/img/logotsuputih.png') }}" alt="">
+            {{-- <span>
+                <h6>Seleksi Penerimaan Mahasiswa Baru</h6>
+                <h4 class="sitename">Universitas Tiga Serangkai</h4>
+            </span> --}}
         </a>
 
         <nav id="navmenu" class="navmenu">

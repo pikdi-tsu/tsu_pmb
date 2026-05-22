@@ -22,7 +22,9 @@ use App\Models\MasterData\Master_KontrakBeasiswa;
 
 use App\Models\Parameter;
 use Symfony\Component\HttpFoundation\Response;
-use Session, Crypt, DB;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
@@ -38,9 +40,13 @@ class UserController extends Controller
      */
     public function index()
     {
+        $thnakademik = Master_Batch::where('isactive', 1)->orderByDesc('created_at')->first('tahun_akademik');
+
         $data = array(
-            'title' => 'Beranda'
+            'title' => 'Beranda',
+            'thnakademik' => ($thnakademik == NULL) ? '' : $thnakademik->tahun_akademik
         );
+
         return view('user::halamandepannew.index', $data);
     }
 
@@ -105,9 +111,9 @@ class UserController extends Controller
         \Carbon\Carbon::setLocale('id');
         // Variabel $title agar sesuai dengan @section('title', $title) di master Anda
         $title = 'Alur Pendaftaran Beasiswa - Universitas Tiga Serangkai';
-        $jenispendaftaran = Master_JenisPendaftaran::where('is_beasiswa', '1')->get();
+        $jenispendaftaran = Master_JenisPendaftaran::where('is_beasiswa', '1')->where('isactive', '1')->get();
         // $batchpendaftaran = Master_Batch::where('isactive', '1')->get();
-        // dd($batchpendaftaran);
+        // dd($jenispendaftaran);
 
         $today = Carbon::today();
 
@@ -138,6 +144,8 @@ class UserController extends Controller
                 $batch = null;
             }
         }
+
+        $batch->namabatch = $batch->nama_batch;
 
         $batch->tglmulai_format = \Carbon\Carbon::parse($batch->tglmulai)
             ->translatedFormat('j F Y');
@@ -311,16 +319,21 @@ class UserController extends Controller
     public function StoreRegister(Request $post)
     {
         $check_email = Master_Akun::where('email', $post->email)->count();
-
         if ($check_email > 0) {
             return redirect()->back()->with('alert', ['title' => 'Gagal', 'message' => 'Email sudah dipakai', 'status' => 'error']);
         }
 
+        $ceknik = Biodata::where('nik', $post->nik)->where('isactive', '1')->count();
+        if ($ceknik == 2) {
+            return redirect()->back()->with('alert', ['title' => 'Gagal', 'message' => 'NIK Sudah Terdaftar, Maksimal 2 NIK', 'status' => 'error']);
+        }
+        // dd($ceknik, 'lolos');
         $data_akun = array(
-            'email'    => $post->email,
-            'password' => Hash::make($post->password),
-            'created_at'      => date('Y-m-d H:i:s'),
+            'email'        => $post->email,
+            'password'     => Hash::make($post->password),
+            'created_at'   => date('Y-m-d H:i:s'),
         );
+
         $akun = Master_Akun::insert($data_akun);
         $cekAkun = Master_Akun::orderby('akun_id', 'desc')->first();
 
@@ -333,6 +346,7 @@ class UserController extends Controller
             'kabupaten'       => $post->kabupaten,
             'created_at'      => date('Y-m-d H:i:s'),
         );
+
         $biodata = Biodata::insert($data_biodata);
         $cekBio = Biodata::where('akun', $cekAkun->akun_id)->first();
         // Email

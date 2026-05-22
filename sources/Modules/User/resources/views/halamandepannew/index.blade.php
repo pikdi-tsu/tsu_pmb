@@ -4,101 +4,37 @@
 @section('link_href')
 @endsection
 @section('content')
-    <!-- Hero Section -->
-    <section id="hero" class="hero section dark-background">
+<style>
+    video {
+        filter: brightness(0.5);
+    }
+    .object-fit-cover {
+        object-fit: cover;
+    }
+</style>
 
-        <div class="hero-container">
-            <video autoplay="" muted="" loop="" playsinline="" class="video-background">
-                <source src="{{ asset('public/assets/user/img/education/tsu.mp4') }}" type="video/mp4">
-            </video>
-            <div class="overlay"></div>
-            <div class="container">
-                <div class="row align-items-center">
-                    <div class="col-lg-7" data-aos="zoom-out" data-aos-delay="100">
-                        <div class="hero-content">
-                            <h2>Seleksi Penerimaan Mahasiswa Baru</h2>
-                            <h4>Tahun Ajaran 2025/2026</h4>
-                            <p> <a href="#">Info Pendaftaran Mahasiswa Baru Gelombang 2 Th. 2025</a> </p>
-                            <p> <a href="#">Info Pendaftaran Mahasiswa Baru Gelombang 3 Th. 2025</a> </p>
-                            <div>
-                                <a href="{{ route('register') }}" class="btn btn-warning btn-lg text-bold">Daftar
-                                    Sekarang</a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-5" data-aos="zoom-out" data-aos-delay="200" style="display: none;">
-                        <div class="stats-card">
-                            <div class="stats-header">
-                                <h3>Why Choose Us</h3>
-                                <div class="decoration-line"></div>
-                            </div>
-                            <div class="stats-grid">
-                                <div class="stat-item">
-                                    <div class="stat-icon">
-                                        <i class="bi bi-trophy-fill"></i>
-                                    </div>
-                                    <div class="stat-content">
-                                        <h4>98%</h4>
-                                        <p>Graduate Employment</p>
-                                    </div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-icon">
-                                        <i class="bi bi-globe"></i>
-                                    </div>
-                                    <div class="stat-content">
-                                        <h4>45+</h4>
-                                        <p>International Partners</p>
-                                    </div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-icon">
-                                        <i class="bi bi-mortarboard"></i>
-                                    </div>
-                                    <div class="stat-content">
-                                        <h4>15:1</h4>
-                                        <p>Student-Faculty Ratio</p>
-                                    </div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-icon">
-                                        <i class="bi bi-building"></i>
-                                    </div>
-                                    <div class="stat-content">
-                                        <h4>120+</h4>
-                                        <p>Degree Programs</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <div class="position-relative vh-100 overflow-hidden">
+
+        <!-- Video Background -->
+        <video autoplay muted loop playsinline
+            class="position-absolute top-50 start-50 translate-middle min-vw-100 min-vh-100 object-fit-cover">
+            <source src="{{ asset('public/assets/user/img/education/tsu.mp4') }}" type="video/mp4">
+        </video>
+
+        <!-- Overlay -->
+        <div class="position-absolute top-0 start-0 w-100 h-100 bg-dark opacity-50"></div>
+
+        <!-- Content -->
+        <div class="container position-relative text-white h-100 d-flex align-items-center">
+            <div>
+                <h2 class="text-white">Selamat datang di Portal Penerimaan Mahasiswa Baru</h2>
+                <h2 class="text-white">Tiga Serangkai University</h2>
+                <h4 class="mb-3 text-white">Tahun Akademik {{ $thnakademik }}</h4>
+                <a href="{{ route('register') }}" class="btn btn-warning btn-lg text-bold text-white">Daftar Sekarang</a>
             </div>
         </div>
 
-        <div class="event-ticker">
-            <div class="container">
-                <div class="row gy-4" style="display: none;">
-                    <div class="col-md-6 col-xl-4 col-12 ticker-item">
-                        <span class="date">{{tglIndo(date('Y-m-d'))}}</span>
-                        <span class="title">Open House Day</span>
-                        <a href="#" class="btn-register">Register</a>
-                    </div>
-                    <div class="col-md-6 col-12 col-xl-4  ticker-item">
-                        <span class="date">DEC 5</span>
-                        <span class="title">Application Workshop</span>
-                        <a href="#" class="btn-register">Register</a>
-                    </div>
-                    <div class="col-md-6 col-12 col-xl-4 ticker-item">
-                        <span class="date">JAN 10</span>
-                        <span class="title">International Student Orientation</span>
-                        <a href="#" class="btn-register">Register</a>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-    </section><!-- /Hero Section -->
+    </div>
 
     <div class="social-widget-container">
 

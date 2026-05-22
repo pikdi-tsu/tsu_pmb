@@ -34,7 +34,7 @@ class BeasiswaController extends Controller
 
     public function TabelBeasiswa()
     {
-        $data = Master_Beasiswa::where('isactive',1)->with('tingkat','jalur')->get();
+        $data = Master_Beasiswa::where('isactive', '1')->with('tingkat','jalur')->get();
         return DataTables::of($data)
         ->addIndexColumn()
         ->addColumn('jalur', function ($d) {
