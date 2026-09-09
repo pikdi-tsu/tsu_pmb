@@ -20,6 +20,8 @@ use App\Models\User\Biodata;
 use App\Models\Transaksi;
 use Illuminate\Support\Facades\DB;
 use App\Models\MasterData\Master_Fakultas;
+use Maatwebsite\Excel\Facades\Excel;
+use Modules\Admin\Http\Exports\ExportPendaftarExcel;
 
 class DataBeasiswaContoller extends Controller
 {
@@ -118,9 +120,9 @@ class DataBeasiswaContoller extends Controller
             })
             ->addColumn('jadwalkelas', function ($d) {
                 if ($d->kelaspagi == '1') {
-                    $jadwal = 'Kelas  Pagi';
+                    $jadwal = 'Kelas Pagi';
                 } elseif ($d->kelassore == '1') {
-                    $jadwal = 'Kelas  Pagi';
+                    $jadwal = 'Kelas Sore';
                 } else {
                     $jadwal = 'Belum Diatur';
                 }
@@ -368,6 +370,8 @@ class DataBeasiswaContoller extends Controller
             $kodependaftaran = decrypt($req->kodependaftaran);
             // dd($req);
 
+            $kelaspagi = '0';
+            $kelassore = '0';
             if ($req->jadwalkelas == 'SORE') {
                 $kelaspagi = '0';
                 $kelassore = '1';
@@ -375,7 +379,6 @@ class DataBeasiswaContoller extends Controller
                 $kelaspagi = '1';
                 $kelassore = '0';
             }
-
 
             $updatejurusan = Pendaftaran::where('KodePendaftaran', $kodependaftaran)->where('isactive', '1')->where('deleted_at', NULL)->update([
                 'pilihan1'    => $req->prodi1,
@@ -393,7 +396,18 @@ class DataBeasiswaContoller extends Controller
                 return response()->json(['status' => 'error', 'message' => 'Gagal Mengubah Data Jurusan']);
             }
         } catch (\Exception $e) {
-            dd($e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error updateJurusan DataBeasiswa: ' . $e->getMessage());
+            return response()->json(['status' => 'error', 'message' => 'Terjadi kesalahan sistem'], 500);
         }
+    }
+
+    public function exportExcel(Request $request)
+    {
+        $filters = [
+            'batch_id' => $request->batch_id,
+            'jalur_id' => $request->jalur_id,
+        ];
+        $filename = 'Rekap_Pendaftar_Beasiswa_' . date('Ymd_His') . '.xlsx';
+        return Excel::download(new ExportPendaftarExcel($filters), $filename);
     }
 }

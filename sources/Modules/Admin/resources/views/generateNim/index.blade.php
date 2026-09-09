@@ -40,8 +40,11 @@
             @endif
 
             <div class="card card-primary card-outline">
-                <div class="card-header">
+                <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="card-title"><i class="fas fa-filter"></i> Filter Data Pendaftaran</h3>
+                    <a href="{{ route('admin.nim.exportexcel') }}" class="btn btn-success btn-sm">
+                        <i class="fas fa-file-excel mr-1"></i>Export Rekap NIM
+                    </a>
                 </div>
                 <div class="card-body">
                     <form action="{{ route('admin.nim.index') }}" method="GET">

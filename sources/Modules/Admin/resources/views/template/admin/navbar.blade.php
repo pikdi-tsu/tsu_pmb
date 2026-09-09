@@ -90,7 +90,7 @@
             </a>
             <ul class="dropdown-menu shadow border-0">
                 <li class="user-header bg-primary">
-                    <img src="{{ url('/admin/file/FILE_PHOTOPROFILE/' . photo_profile()) }}" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid rgba(255,255,255,0.8);" class="img-circle elevation-2" alt="User Image">
+                    <img src="{{ url('/admin/file/FILE_PHOTOPROFILE/' . photo_profile()) }}" style="width: 100px; height: 100px; object-fit: cover; border: 3px solid rgba(255,255,255,0.8);" class="img-circle elevation-2" alt="User Image" onerror="this.onerror=null;this.src='{{ asset('public/assets/img/user.png') }}';">
                     <p>
                         {{session('session')->nama}}
                     </p>

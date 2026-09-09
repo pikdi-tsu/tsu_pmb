@@ -1018,6 +1018,10 @@
                     let prodi3 = $(this).val();
                     let jalurpendaftaran = $("#jalur").val();
 
+                    if (!jalurpendaftaran) {
+                        return;
+                    }
+
                     $.ajax({
                         type: "GET",
                         url: '{!! url("Pendaftaran/GetWaktuKuliah") !!}' + '/' + jalurpendaftaran,

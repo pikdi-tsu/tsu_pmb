@@ -10,6 +10,9 @@ use App\Models\User\Pendaftaran;
 use App\Models\User\Biodata;
 use App\Models\MasterData\Master_Batch;
 use Illuminate\Support\Facades\Log;
+use App\Models\Admin\LogAktivitas;
+use Maatwebsite\Excel\Facades\Excel;
+use Modules\Admin\Http\Exports\ExportNIMExcel;
 
 class NimController extends Controller
 {
@@ -155,6 +158,7 @@ class NimController extends Controller
             }
 
             DB::commit();
+            LogAktivitas::catat('Generate NIM', 'Generate', 'Batch-' . $batch_id, 'NIM di-generate untuk ' . $pendaftarans->count() . ' mahasiswa');
             return response()->json([
                 'status' => true, 
                 'message' => 'Berhasil men-generate NIM untuk ' . $pendaftarans->count() . ' mahasiswa.'
@@ -182,5 +186,11 @@ class NimController extends Controller
                 'message' => 'Terjadi kesalahan sistem saat proses generate. Silakan hubungi Tim IT.'
             ], 500); 
         }
+    }
+
+    public function exportExcel()
+    {
+        $filename = 'Rekap_NIM_Mahasiswa_' . date('Ymd_His') . '.xlsx';
+        return Excel::download(new ExportNIMExcel(), $filename);
     }
 }

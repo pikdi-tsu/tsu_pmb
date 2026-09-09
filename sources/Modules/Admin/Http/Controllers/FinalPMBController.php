@@ -103,8 +103,8 @@ class FinalPMBController extends Controller
             })
             ->addColumn('programstudi', function ($d) {
                 if ($d->isactive == '1') {
-                    if ($d->validasi_test == '1') {
-                        $jenjang = $d->jurusanditerima->jenjang ? $d->jurusanditerima->jenjang->jenjang : '';
+                    if ($d->validasi_test == '1' && $d->jurusanditerima) {
+                        $jenjang = optional($d->jurusanditerima->jenjang)->jenjang;
                         return ($jenjang ? $jenjang . '-' : '') . $d->jurusanditerima->jurusan;
                     } else {
                         return '-';
@@ -447,6 +447,8 @@ class FinalPMBController extends Controller
             $kodependaftaran = decrypt($req->kodependaftaran);
             // dd($req);
 
+            $kelaspagi = '0';
+            $kelassore = '0';
             if ($req->jadwalkelas == 'SORE') {
                 $kelaspagi = '0';
                 $kelassore = '1';
@@ -469,7 +471,8 @@ class FinalPMBController extends Controller
                 return response()->json(['status' => 'error', 'message' => 'Gagal Mengubah Data Jurusan']);
             }
         } catch (\Exception $e) {
-            dd($e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Error updateJurusan FinalPMB: ' . $e->getMessage());
+            return response()->json(['status' => 'error', 'message' => 'Terjadi kesalahan sistem'], 500);
         }
     }
 }

@@ -192,11 +192,20 @@ class PembayaranController extends Controller
 
     public function upload_bayar(Request $post)
     {
+        $post->validate([
+            'idtransaksi' => 'required',
+            'bukti_daftar' => 'required|file|mimes:jpg,jpeg,png,pdf|max:3072',
+        ], [
+            'bukti_daftar.required' => 'File bukti pembayaran belum dipilih!',
+            'bukti_daftar.file' => 'Upload harus berupa file yang valid!',
+            'bukti_daftar.mimes' => 'Format file bukti hanya boleh JPG, JPEG, PNG, atau PDF!',
+            'bukti_daftar.max' => 'Ukuran file bukti maksimal 3MB!',
+        ]);
+
         $id = decrypt($post->idtransaksi);
         $transaksi = Transaksi::findOrFail($id);
-        // dd($transaksi);
         $file = $post->file('bukti_daftar');
-        $ext = $file->getClientOriginalExtension();
+        $ext = strtolower($file->getClientOriginalExtension());
         $filename = 'BUKTI_DAFTAR_'.$transaksi->id_referensi.'_'.date('YmdHis').'.'.$ext;
 
         $parameter = Parameter::where('id',1)->first();

@@ -555,21 +555,8 @@
                             success: function(res) {
                                 Swal.close();
                                 if (res.status === 'success') {
-                                    isTimerStarted = true;
-                                    if (res.sisa_detik) sisaDetik = res.sisa_detik;
-                                    $('#attempt_id').val(res.attempt_id);
-
-                                    secretKey = btoa('sistem_pengawas_' + res.attempt_id);
-                                    pelanggaran = 0;
-                                    localStorage.setItem(secretKey, btoa("0"));
-
-                                    areaPersiapan.hide();
-                                    $('#countdown-timer').fadeIn();
-                                    areaUjian.fadeIn();
-                                    initCountdownTimer();
-                                    setTimeout(() => {
-                                        isUjianAktif = true;
-                                    }, 1000);
+                                    window.location.href = "{{ route('assessment.index') }}";
+                                    return;
                                 }
                             },
                             error: function() {

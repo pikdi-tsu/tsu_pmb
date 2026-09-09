@@ -30,11 +30,11 @@
                 <!-- /.col-md-6 -->
                 <div class="col-md-12">
                     <div class="card card-primary card-outline">
-                        <div class="card-header">
-                            <h5 class="m-0">
-                                {{$menu}}
-                                <button type="button" id="btn-addmenu" style="display: none;" class="btn btn-success btn-sm float-right">Add Menu</button>
-                            </h5>
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="m-0">{{$menu}}</h5>
+                            <a href="{{ route('admin.databeasiswa.exportexcel') }}" class="btn btn-success btn-sm">
+                                <i class="fas fa-file-excel mr-1"></i>Export Excel
+                            </a>
                         </div>
                         <div class="card-body">
                             <table id="example2" class="table table-bordered table-hover" style="width: 100%;">

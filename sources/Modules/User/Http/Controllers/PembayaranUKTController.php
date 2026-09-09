@@ -198,11 +198,20 @@ class PembayaranUKTController extends Controller
 
     public function upload_bayar(Request $post)
     {
+        $post->validate([
+            'idtransaksi' => 'required',
+            'bukti_ukt' => 'required|file|mimes:jpg,jpeg,png,pdf|max:3072',
+        ], [
+            'bukti_ukt.required' => 'File bukti pembayaran UKT belum dipilih!',
+            'bukti_ukt.file' => 'Upload harus berupa file yang valid!',
+            'bukti_ukt.mimes' => 'Format file bukti hanya boleh JPG, JPEG, PNG, atau PDF!',
+            'bukti_ukt.max' => 'Ukuran file bukti maksimal 3MB!',
+        ]);
+
         $id = decrypt($post->idtransaksi);
         $transaksi = Transaksi::findOrFail($id);
-        // dd($transaksi);
         $file = $post->file('bukti_ukt');
-        $ext = $file->getClientOriginalExtension();
+        $ext = strtolower($file->getClientOriginalExtension());
         $filename = 'BUKTI_UKT_'.$transaksi->id_referensi.'_'.date('YmdHis').'.'.$ext;
 
         $parameter = Parameter::where('id',1)->first();

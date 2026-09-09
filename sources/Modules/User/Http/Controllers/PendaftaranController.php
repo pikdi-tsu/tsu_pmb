@@ -144,8 +144,10 @@ class PendaftaranController extends Controller
 
     public function showJalur($params)
     {
-        header("Access-Control-Allow-Origin: *");
-        header("Access-Control-Allow-Headers: *");
+        if (!headers_sent()) {
+            @header("Access-Control-Allow-Origin: *");
+            @header("Access-Control-Allow-Headers: *");
+        }
 
         $id = $params;
         $now = date('Y-m-d');
@@ -178,8 +180,10 @@ class PendaftaranController extends Controller
 
     public function showBeasiswa($params)
     {
-        header("Access-Control-Allow-Origin: *");
-        header("Access-Control-Allow-Headers: *");
+        if (!headers_sent()) {
+            @header("Access-Control-Allow-Origin: *");
+            @header("Access-Control-Allow-Headers: *");
+        }
 
         $cek1 = Master_Beasiswa::where('idjalur', $params)->selectRaw('id,jenis_beasiswa')->get();
         $data['bea'] = $cek1;
@@ -188,8 +192,10 @@ class PendaftaranController extends Controller
 
     public function detailbeasiswa($params)
     {
-        header("Access-Control-Allow-Origin: *");
-        header("Access-Control-Allow-Headers: *");
+        if (!headers_sent()) {
+            @header("Access-Control-Allow-Origin: *");
+            @header("Access-Control-Allow-Headers: *");
+        }
 
         $cek1 = Master_Beasiswa::where('id', $params)->with('tingkat')->selectRaw('id,idtingkat,juara_ke')->first();
         $data['bea'] = $cek1;
@@ -197,8 +203,10 @@ class PendaftaranController extends Controller
     }
     public function showProdi($batch, $jalur, $jurusansekolah)
     {
-        header("Access-Control-Allow-Origin: *");
-        header("Access-Control-Allow-Headers: *");
+        if (!headers_sent()) {
+            @header("Access-Control-Allow-Origin: *");
+            @header("Access-Control-Allow-Headers: *");
+        }
 
         $idbatch = $batch;
         $idjalur = $jalur;
@@ -255,8 +263,10 @@ class PendaftaranController extends Controller
 
     public function StoreDaftar(Request $post)
     {
-        header("Access-Control-Allow-Origin: *");
-        header("Access-Control-Allow-Headers: *");
+        if (!headers_sent()) {
+            @header("Access-Control-Allow-Origin: *");
+            @header("Access-Control-Allow-Headers: *");
+        }
         // dd($post);
         if ($post->IdPendaftaran == null) {
             $data = $this->save($post);
@@ -550,10 +560,17 @@ class PendaftaranController extends Controller
         $idBerkasKhusus = $jalur->berkas_khusus;
 
         // 4. Update data pendaftaran (Tambahkan kolom berkas_khusus)
+        if ($biaya == 0) {
+            // Jika biaya pendaftaran gratis dan tidak ada syarat berkas khusus, langsung ke step 6 (Test Assessment)
+            $nextStep = ($idBerkasKhusus == null) ? 6 : 4;
+        } else {
+            $nextStep = 2; // Menuju step Bayar Pendaftaran
+        }
+
         $updt = Pendaftaran::where('KodePendaftaran', $kode)->where('isactive', 1)->update([
             'konfirm_pendaftaran' => '1',
             'tgl_konfirm'         => date('Y-m-d H:i:s'),
-            'current_step'        => $biaya == 0 ? $cek1->current_step + 3 : $cek1->current_step + 1,
+            'current_step'        => $nextStep,
             'berkas_khusus'       => $idBerkasKhusus, // <-- INI fungsi yang mengirim kode jenis berkas
             'updated_at'          => date('Y-m-d H:i:s')
         ]);
@@ -618,14 +635,16 @@ class PendaftaranController extends Controller
         return response()->json($data, Response::HTTP_OK);
     }
 
-    public function getwaktukuliah($params)
+    public function getwaktukuliah($params = null)
     {
-        $id = $params;
+        if (!$params) {
+            return response()->json(['hasil' => 0], Response::HTTP_OK);
+        }
 
-        $getwaktukuliah = Master_JenisPendaftaran::where('id', $id)->where('isactive', '1')->first();
-        // dd($id, $getwaktukuliah);
-
-        // dd($getwaktukuliah);
+        $getwaktukuliah = Master_JenisPendaftaran::where('id', $params)->where('isactive', '1')->first();
+        if (!$getwaktukuliah) {
+            return response()->json(['hasil' => 0], Response::HTTP_OK);
+        }
 
         return response()->json($getwaktukuliah, Response::HTTP_OK);
     }

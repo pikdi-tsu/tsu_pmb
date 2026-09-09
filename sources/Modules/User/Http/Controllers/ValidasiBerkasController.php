@@ -315,62 +315,63 @@ class ValidasiBerkasController extends Controller
     }
 
     public function saveBerkas(Request $request)
-{
-    $kddftar = $request->iddaftar;
-    $id_berkas = $request->id_berkas;
-    $kode_berkas = $request->kode_berkas;
+    {
+        $kddftar = $request->iddaftar;
+        $id_berkas = $request->id_berkas;
+        $kode_berkas = $request->kode_berkas;
 
-    if (!$request->hasFile('berkaskhusus')) {
-        return response()->json(['status' => 'error', 'title' => 'Gagal', 'message' => 'File belum dipilih!'], 200);
-    }
+        $request->validate([
+            'iddaftar' => 'required',
+            'id_berkas' => 'required',
+            'kode_berkas' => 'required',
+            'berkaskhusus' => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+        ], [
+            'berkaskhusus.required' => 'File belum dipilih!',
+            'berkaskhusus.file' => 'Upload harus berupa file yang valid!',
+            'berkaskhusus.mimes' => 'Format berkas hanya boleh PDF, JPG, JPEG, atau PNG!',
+            'berkaskhusus.max' => 'Ukuran berkas maksimal 5MB!',
+        ]);
 
-    $fileUpload = $request->file('berkaskhusus');
+        $fileUpload = $request->file('berkaskhusus');
 
-    $originalName = $fileUpload->getClientOriginalName();
-    $safeOriginalName = str_replace(' ', '_', $originalName);
-    $filename = $kddftar . '_' . $kode_berkas . '_' . $safeOriginalName;
+        $ext = strtolower($fileUpload->getClientOriginalExtension());
+        $originalName = pathinfo($fileUpload->getClientOriginalName(), PATHINFO_FILENAME);
+        $cleanName = Str::slug($originalName);
+        $filename = $kddftar . '_' . $kode_berkas . '_' . $cleanName . '.' . $ext;
 
-    DB::beginTransaction();
+        DB::beginTransaction();
 
-    try {
-        $parameter = Parameter::where('id', 1)->first();
-        $folder_path = $parameter->file_khusus ?? 'berkas_khusus';
+        try {
+            $parameter = Parameter::where('id', 1)->first();
+            $folder_path = $parameter->file_khusus ?? 'berkas_khusus';
 
-        // PERBAIKAN 1: Hapus where('pmb_berkas_pendaftaran')
-        $existing = BerkasPendaftaran::where('kode_daftar', $kddftar)
-            ->where('id_berkas', $id_berkas)
-            ->first();
+            $existing = BerkasPendaftaran::where('kode_daftar', $kddftar)
+                ->where('id_berkas', $id_berkas)
+                ->first();
 
-        $user_login = auth()->user() ? auth()->user()->username : $kddftar;
+            $user_login = session('user') ? session('user')->nama : $kddftar;
 
-        if ($existing) {
-            $old_path = $folder_path . '/' . $existing->nama_berkas;
-            if (Storage::exists($old_path)) {
-                Storage::delete($old_path);
+            if ($existing) {
+                $old_path = $folder_path . '/' . $existing->nama_berkas;
+                if (Storage::exists($old_path)) {
+                    Storage::delete($old_path);
+                }
+
+                $existing->update([
+                    'nama_berkas' => $filename,
+                    'updated_by'  => $user_login,
+                ]);
+            } else {
+                BerkasPendaftaran::create([
+                    'kode_daftar' => $kddftar,
+                    'id_berkas'   => $id_berkas,
+                    'nama_berkas' => $filename,
+                    'created_by'  => $user_login,
+                ]);
             }
 
-            // PERBAIKAN 2: Gunakan object $existing langsung untuk update
-            $existing->update([
-                'nama_berkas' => $filename,
-                'updated_by'  => $user_login,
-            ]);
-        } else {
-            // PERBAIKAN 3: Hapus where('pmb_berkas_pendaftaran') pada max()
-            $maxId = BerkasPendaftaran::max('id');
-            $newId = $maxId ? $maxId + 1 : 1;
-
-            // PERBAIKAN 4: Gunakan create() atau insert() tanpa where()
-            BerkasPendaftaran::create([
-                'id'          => $newId,
-                'kode_daftar' => $kddftar,
-                'id_berkas'   => $id_berkas,
-                'nama_berkas' => $filename,
-                'created_by'  => $user_login,
-            ]);
-        }
-
-        // Simpan file ke Storage
-        $fileUpload->storeAs($folder_path, $filename);
+            // Simpan file ke Storage
+            $fileUpload->storeAs($folder_path, $filename);
 
         // --- MULAI PERUBAHAN DI SINI ---
         // PERBAIKAN 5: Cek step dan update pendaftaran sekaligus

@@ -12,6 +12,7 @@ use Modules\User\Http\Controllers\PembayaranUKTController;
 use Modules\User\Http\Controllers\PendaftaranController;
 use Modules\User\Http\Controllers\UserController;
 use Modules\User\Http\Controllers\ValidasiBerkasController;
+use Modules\User\Http\Controllers\KartuPesertaController;
 
 
 /*
@@ -59,6 +60,7 @@ Route::prefix('')->group(function () {
         // Route yang butuh user login
         Route::middleware(['checkuser'])->group(function () {
             Route::get('/Dashboard', [UserController::class, 'Dashboard'])->name('Dashboard');
+            Route::get('/kartu-peserta', [KartuPesertaController::class, 'download'])->name('kartupeserta.download');
             Route::get('/ChangePassword', [UserController::class, 'edit'])->name('user.ChangePassword');
             Route::post('/ChangePasswordSave', [UserController::class, 'update'])->name('user.ChangePasswordSave');
             Route::post('/logout', [UserController::class, 'logout'])->name('logout');
@@ -75,7 +77,7 @@ Route::prefix('')->group(function () {
                 Route::get('/KonfirmasiDaftar/{params}', [PendaftaranController::class, 'ConfirmDaftar'])->name('Daftar.KonfirmasiDaftar');
                 Route::get('/ShowDaftar/{params}', [PendaftaranController::class, 'showDaftar'])->name('Daftar.ShowDaftar');
                 Route::get('/DeleteDaftar/{params}', [PendaftaranController::class, 'delete'])->name('Daftar.DeleteDaftar');
-                Route::get('/GetWaktuKuliah/{params}', [PendaftaranController::class, 'getwaktukuliah'])->name('Daftar.GetWaktuKuliah');
+                Route::get('/GetWaktuKuliah/{params?}', [PendaftaranController::class, 'getwaktukuliah'])->name('Daftar.GetWaktuKuliah');
             });
 
             Route::prefix('BerkasBeasiswa')->group(function () {

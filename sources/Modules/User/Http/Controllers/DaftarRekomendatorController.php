@@ -53,7 +53,7 @@ class DaftarRekomendatorController extends Controller
 
     public function save(Request $post)
     {
-        // DB::beginTransaction();
+        DB::beginTransaction();
         $kode = $this->generateKodeRekomendator($post->kategori);
 
         $post->validate([
@@ -101,29 +101,24 @@ class DaftarRekomendatorController extends Controller
 
             $status = ['title' => 'Berhasil', 'status' => 'success', 'message' => 'Data Rekomendator Berhasil Disimpan'];
             return redirect()->route('indexing')->with('alert', $status);
-
-            // return ['title' => 'Information', 'status' => 'success', 'message' => 'Data Berhasil Disimpan'];
-        } catch (\Exception $e) { // Menggunakan Throwable untuk tangkap semua error
-            // dd($e->getMessage());
+        } catch (\Exception $e) {
             DB::rollback();
-            $status = ['title' => 'Gagal', 'status' => 'error', 'message' => 'Data Rekomendator Gagal Disimpan. Error : ' . $e];
+            \Illuminate\Support\Facades\Log::error('Gagal simpan data rekomendator: ' . $e->getMessage());
+            $status = ['title' => 'Gagal', 'status' => 'error', 'message' => 'Data Rekomendator Gagal Disimpan. Silakan coba kembali.'];
             return redirect()->back()->with('alert', $status);
-            // return ['title' => 'Error', 'status' => 'error', 'message' => 'Gagal menyimpan: ' . $e->getMessage()];
         }
     }
 
     public static function sendEmail($email, $nama, $kode, $subject)
     {
-        // dd($email, $nama, $kode, $subject);
         try {
             Mail::send('user::login/rekomendator_email', ['nama' => $nama, 'kode' => $kode], function ($message) use ($subject, $email) {
-                // dd($subject, $email, $message);
                 $message->subject($subject);
                 $message->to($email);
             });
             return 1;
         } catch (\Exception $e) {
-            dd($e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Gagal kirim email rekomendator: ' . $e->getMessage());
             return 0;
         }
     }

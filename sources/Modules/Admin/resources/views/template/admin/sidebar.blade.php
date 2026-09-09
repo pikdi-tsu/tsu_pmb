@@ -15,7 +15,8 @@
             <div class="image">
                 <img src="{{ url('admin/file/FILE_PHOTOPROFILE/' . photo_profile()) }}"
                     class="img-circle elevation-2"
-                    style="width: 50px; height: 50px; object-fit: cover; border: 1px solid #adb5bd;" alt="User Image">
+                    style="width: 50px; height: 50px; object-fit: cover; border: 1px solid #adb5bd;" alt="User Image"
+                    onerror="this.onerror=null;this.src='{{ asset('public/assets/img/user.png') }}';">
             </div>
             <div class="info text-sm">
                 <a href="javascript:void(0)" class="d-block">{{ session('session')->nama }}</a>
@@ -391,11 +392,12 @@
                     $groupuser = checkmenu('Tools', 'Group User');
                     $usermanagement = checkmenu('Tools', 'User Management');
                     $userreset = checkmenu('Tools', 'User Reset');
+                    $logaktivitas = checkmenu('Tools', 'Log Aktivitas');
                     // dd($changepassword,$listmenu);
                 @endphp
-                @if ($changepassword > 0)
-                    <li class="nav-item {{ request()->is('admin/Tools*') ? 'menu-open' : '' }}">
-                        <a href="#" class="nav-link {{ request()->is('admin/Tools*') ? 'active' : '' }}">
+                @if ($changepassword > 0 || session('namagroup') == 'Super Admin')
+                    <li class="nav-item {{ request()->is('admin/Tools*') || request()->is('admin/LogAktivitas*') ? 'menu-open' : '' }}">
+                        <a href="#" class="nav-link {{ request()->is('admin/Tools*') || request()->is('admin/LogAktivitas*') ? 'active' : '' }}">
                             <i class="nav-icon fas fa-cog"></i>
                             <p>
                                 Tools
@@ -467,9 +469,18 @@
                                     </ul>
                                 </li>
                             @endif
+                            @if ($logaktivitas > 0 || session('namagroup') == 'Super Admin')
+                                <li class="nav-item">
+                                    <a href="{{ route('admin.logaktivitas.index') }}" class="nav-link {{ request()->is('admin/LogAktivitas*') ? 'active' : '' }}">
+                                        <i class="far fa-circle nav-icon"></i>
+                                        <p>Log Aktivitas</p>
+                                    </a>
+                                </li>
+                            @endif
                         </ul>
                     </li>
                 @endif
+
             </ul>
         </nav>
         <!-- /.sidebar-menu -->

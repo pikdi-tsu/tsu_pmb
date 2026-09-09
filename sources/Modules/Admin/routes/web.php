@@ -1,6 +1,6 @@
-    <?php
+<?php
 
-    use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Route;
     use Illuminate\Support\Facades\Response;
     use Modules\Admin\Http\Controllers\BerkasPMBController;
     use Modules\Admin\Http\Controllers\DashboardController;
@@ -15,6 +15,7 @@
     use Modules\Admin\Http\Controllers\NimController;
     use Modules\Admin\Http\Controllers\EmailPMBController;
     use Modules\Admin\Http\Controllers\FinalPMBController;
+    use Modules\User\Http\Controllers\KartuPesertaController;
     use Modules\Admin\Http\Controllers\masterdata\BatchPendaftaranController;
     use Modules\Admin\Http\Controllers\masterdata\BeasiswaController;
     use Modules\Admin\Http\Controllers\masterdata\BerkasController;
@@ -34,6 +35,7 @@
     use Modules\Admin\Http\Controllers\masterdata\TingkatKejuaraanController;
     use Modules\Admin\Http\Controllers\masterdata\RekomendatorController;
     use Modules\Admin\Http\Controllers\TestPMBController;
+    use Modules\Admin\Http\Controllers\LogAktivitasController;
 
     /*
     |--------------------------------------------------------------------------
@@ -50,8 +52,52 @@
         Route::prefix('admin')->group(function () {
 
             Route::get('/file/{folder}/{filename}', function ($folder, $filename) {
-                $path = storage_path('app/' . $folder . '/' . $filename);
-                abort_unless(file_exists($path), 404);
+                $cleanFolder   = basename(trim($folder));
+                $cleanFilename = basename(trim($filename));
+                $lowerFolder   = strtolower($cleanFolder);
+
+                $folderMap = [
+                    'file_photoprofile'        => 'FILE_PHOTOPROFILE',
+                    'bukti_pendaftaran'        => 'BUKTI_PENDAFTARAN',
+                    'bukti_bayar_pendaftaran'  => 'BUKTI_PENDAFTARAN',
+                    'bukti_ukt'                => 'BUKTI_UKT',
+                    'bukti_bayar_ukt'          => 'BUKTI_UKT',
+                    'file_khusus'              => 'FILE_KHUSUS',
+                    'berkas_khusus'            => 'FILE_KHUSUS',
+                    'file_umum'                => 'FILE_UMUM',
+                    'berkas_umum'              => 'FILE_UMUM',
+                    'file_template'            => 'FILE_TEMPLATE',
+                    'browsur'                  => 'Browsur',
+                ];
+
+                abort_unless(array_key_exists($lowerFolder, $folderMap), 403);
+                $realFolder = $folderMap[$lowerFolder];
+
+                // Pastikan yang mengakses dokumen pendaftaran/berkas adalah user atau admin yang login
+                if ($realFolder !== 'FILE_PHOTOPROFILE' && $realFolder !== 'Browsur' && $realFolder !== 'FILE_TEMPLATE') {
+                    abort_unless(session()->has('session') || session()->has('user'), 401);
+                }
+
+                $path = storage_path('app/' . $realFolder . '/' . $cleanFilename);
+
+                if (!file_exists($path)) {
+                    // Fallback foto profil jika file tidak ditemukan
+                    if ($realFolder === 'FILE_PHOTOPROFILE') {
+                        $fallback = storage_path('app/FILE_PHOTOPROFILE/user.png');
+                        if (file_exists($fallback)) {
+                            $path = $fallback;
+                        } else {
+                            $fallbackPublic = public_path('assets/img/user.png');
+                            if (file_exists($fallbackPublic)) {
+                                $path = $fallbackPublic;
+                            } else {
+                                abort(404);
+                            }
+                        }
+                    } else {
+                        abort(404);
+                    }
+                }
 
                 // Bersihin semua output buffer
                 if (ob_get_level()) {
@@ -61,10 +107,10 @@
                 return response()->stream(function () use ($path) {
                     readfile($path);
                 }, 200, [
-                    'Content-Type' => mime_content_type($path),
-                    'Content-Length' => filesize($path),
+                    'Content-Type'        => mime_content_type($path),
+                    'Content-Length'      => filesize($path),
                     'Content-Disposition' => 'inline; filename="' . basename($path) . '"',
-                    'Cache-Control' => 'no-cache, no-store, must-revalidate'
+                    'Cache-Control'       => 'no-cache, no-store, must-revalidate'
                 ]);
             });
 
@@ -94,6 +140,7 @@
                         Route::post('/HapusData', [DataBeasiswaContoller::class, 'hapusdata'])->name('admin.databeasiswa.hapusdata');
                         Route::get('/EditJurusan/{params}', [DataBeasiswaContoller::class, 'editJurusan'])->name('admin.databeasiswa.editjurusan');
                         Route::post('/UpdateJurusan', [DataBeasiswaContoller::class, 'updateJurusan'])->name('admin.databeasiswa.updatejurusan');
+                        Route::get('/ExportExcel', [DataBeasiswaContoller::class, 'exportExcel'])->name('admin.databeasiswa.exportexcel');
                     });
                     Route::prefix('NonBeasiswa')->group(function () {
                         Route::get('/', [DataNonBeasiswaController::class, 'index'])->name('admin.datanonbeasiswa.show');
@@ -102,7 +149,9 @@
                         Route::post('/UpdateRekomendator', [DataNonBeasiswaController::class, 'updateRekomendator'])->name('admin.datanonbeasiswa.updaterekomendator');
                         Route::get('/EditJurusan/{params}', [DataNonBeasiswaController::class, 'editJurusan'])->name('admin.datanonbeasiswa.editjurusan');
                         Route::post('/UpdateJurusan', [DataNonBeasiswaController::class, 'updateJurusan'])->name('admin.datanonbeasiswa.updatejurusan');
+                        Route::get('/ExportExcel', [DataNonBeasiswaController::class, 'exportExcel'])->name('admin.datanonbeasiswa.exportexcel');
                     });
+                    Route::get('/KartuPeserta/{kode}', [KartuPesertaController::class, 'download'])->name('admin.kartupeserta.download');
                 });
 
                 //Pembayaran Pendaftaran
@@ -112,6 +161,7 @@
                     Route::get('/ShowPembayaranPMB/{params}', [PembayaranPMBController::class, 'showPayment']);
                     Route::get('/Approve/{params}', [PembayaranPMBController::class, 'approve']);
                     Route::post('/Revisi', [PembayaranPMBController::class, 'revisi'])->name('admin.pembayaranpmb.revisi');
+                    Route::get('/ExportExcel', [PembayaranPMBController::class, 'exportExcel'])->name('admin.pembayaranpmb.exportexcel');
                 });
 
                 //Pembayaran UKT
@@ -121,6 +171,7 @@
                     Route::get('/ShowPembayaranUKT/{params}', [PembayaranUKTController::class, 'showPayment']);
                     Route::get('/Approve/{params}', [PembayaranUKTController::class, 'approve']);
                     Route::post('/Revisi', [PembayaranUKTController::class, 'revisi'])->name('admin.pembayaranukt.revisi');
+                    Route::get('/ExportExcel', [PembayaranUKTController::class, 'exportExcel'])->name('admin.pembayaranukt.exportexcel');
                 });
 
                 Route::prefix('BerkasPMB')->group(function () {
@@ -160,6 +211,7 @@
                 Route::prefix('GenerateNIM')->group(function () {
                     Route::get('/', [NimController::class, 'index'])->name('admin.nim.index');
                     Route::post('/proses', [NimController::class, 'generate'])->name('admin.nim.proses');
+                    Route::get('/ExportExcel', [NimController::class, 'exportExcel'])->name('admin.nim.exportexcel');
                 });
 
                 Route::prefix('EmailPMB')->group(function () {
@@ -296,6 +348,13 @@
                         Route::get('/', [ContentController::class, 'index'])->name('admin.content.show');
                     });
                 });
+                // Log Aktivitas Admin
+                Route::prefix('LogAktivitas')->group(function () {
+                    Route::get('/', [LogAktivitasController::class, 'index'])->name('admin.logaktivitas.index');
+                    Route::get('/Tabel', [LogAktivitasController::class, 'tabel'])->name('admin.logaktivitas.tabel');
+                    Route::get('/ModulList', [LogAktivitasController::class, 'modulList'])->name('admin.logaktivitas.modullist');
+                });
+
                 Route::prefix('Tools')->group(function () {
                     //Change Password
                     Route::get('/changepassword', [SettingController::class, 'showChangePassword'])->name('admin.show.changepassword');
@@ -319,6 +378,7 @@
                     Route::get('/GetGroupUser/{params}', [SettingController::class, 'GetGroupUser'])->name('admin.gruopuser.GetGroupUser');
                     Route::get('/ShowPrivilege/{params}', [SettingController::class, 'ShowPrivilege'])->name('admin.gruopuser.ShowPrivilege');
                     Route::post('/SavePrivilege/{params}', [SettingController::class, 'StorePrivilege'])->name('admin.gruopuser.SavePrivilege');
+                    Route::get('/DeleteGroupUser/{params}', [SettingController::class, 'DeleteGroupUser'])->name('admin.gruopuser.DeleteGroupUser');
 
                     //User Management
                     Route::get('/usermanagement', [SettingController::class, 'userManagement'])->name('admin.show.userManagement');

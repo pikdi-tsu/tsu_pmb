@@ -99,8 +99,9 @@ class BiodataController extends Controller
 
     public function save_biodata(Request $post)
 {
-    $jmlsaudara = $post->jumlah_saudara;
-    if($jmlsaudara != count($post->nama_saudara)){
+    $jmlsaudara = (int)($post->jumlah_saudara ?? 0);
+    $namaSaudara = $post->nama_saudara ?? [];
+    if($jmlsaudara != count($namaSaudara)){
         return redirect()->back()->with('alert',['title' => 'Information', 'message' => 'Jumlah saudara harus sama dengan data saudara !', 'status' => 'warning']);
     }
 
@@ -147,7 +148,7 @@ class BiodataController extends Controller
             'statushidup_ayah' => $post->statushidup_ayah,
             'nohp_ayah' => $post->nohp_ayah,
             'pekerjaan_ayah' => $post->pekerjaan_ayah,
-            'penghasilan_ayah' => $post->penghasilan_ayah,
+            'penghasilan_ayah' => !empty($post->penghasilan_ayah) ? (preg_replace('/[^0-9]/', '', (string)$post->penghasilan_ayah) ?: 0) : 0,
             'alamat_ayah' => $post->alamat_ayah,
             'nama_ibu' => $post->nama_ibu,
             'tempat_lahir_ibu' => $post->tempat_lahir_ibu,
@@ -156,7 +157,7 @@ class BiodataController extends Controller
             'statushidup_ibu' => $post->statushidup_ibu,
             'nohp_ibu' => $post->nohp_ibu,
             'pekerjaan_ibu' => $post->pekerjaan_ibu,
-            'penghasilan_ibu' => $post->penghasilan_Ibu,
+            'penghasilan_ibu' => !empty($post->penghasilan_ibu ?? $post->penghasilan_Ibu) ? (preg_replace('/[^0-9]/', '', (string)($post->penghasilan_ibu ?? $post->penghasilan_Ibu)) ?: 0) : 0,
             'alamat_ibu' => $post->alamat_ibu,
             'jumlah_saudara' => $jmlsaudara,
             'nama_sekolah' => $post->nama_sekolah,
@@ -239,10 +240,7 @@ class BiodataController extends Controller
                     $existingBerkas->delete();
                 }
 
-                $maxId = BerkasPendaftaran::max('id');
-                $newId = $maxId ? $maxId + 1 : 1;
                 BerkasPendaftaran::create([
-                    'id'                  => $newId,
                     'kode_daftar'         => $post->kodedaftar,
                     'id_berkas'           => $cleanIdBerkas,
                     'nama_berkas'         => $filename,

@@ -33,13 +33,16 @@ if (!function_exists('rupiah')) {
 if (!function_exists('photo_profile')) {
     function photo_profile()
     {
-        $nik = session('session')->nip;
-        $email = session('session')->email;
         $photo = 'user.png';
-        // $photo = 'avatar.png';
-        $cek = User::where('nik', $nik)->where('email', $email)->first();
-        if ($cek->photo_profile_pmb != null) {
-            $photo = $cek->photo_profile_pmb;
+        if (session()->has('session')) {
+            $nik   = session('session')->nip ?? null;
+            $email = session('session')->email ?? null;
+            if ($nik && $email) {
+                $cek = User::where('nik', $nik)->where('email', $email)->first();
+                if ($cek && !empty($cek->photo_profile_pmb)) {
+                    $photo = $cek->photo_profile_pmb;
+                }
+            }
         }
 
         return $photo;

@@ -126,24 +126,13 @@ class AssessmentController extends Controller
         }
 
         $testInfo = Assessment_TipeTest::findOrFail($id);
-        $questions = Assessment_Questions::where('tipe_test_id', $testInfo->id)
-            ->where('isactive', 1)->orderBy('urutan')->get();
-
-        $questionIds = $questions->pluck('id')->toArray();
-        $allOptions = \DB::table('pmb_assessment_question_options')
-            ->whereIn('question_id', $questionIds)
-            ->orderBy('urutan')->get()->groupBy('question_id');
-
-        foreach ($questions as $q) {
-            $q->options = $allOptions->get($q->id, collect());
-        }
 
         return view('user::user.assessment.index', [
             'title' => 'Persiapan: ' . $testInfo->nama_test,
             'menu' => 'Persiapan Ujian',
             'is_preparing' => true,
             'test_info' => $testInfo,
-            'questions' => $questions,
+            'questions' => collect(), // Kosongkan soal saat persiapan agar tidak dapat diintip via inspect element
             'saved_answers' => [], 
             'sisa_waktu_detik' => $testInfo->durasi_menit * 60,
             'is_timer_started' => false
@@ -190,7 +179,10 @@ class AssessmentController extends Controller
 
     private function processFinishTest($attemptId)
     {
-        $attempt = Assessment_Attempts::findOrFail($attemptId);
+        $kodePendaftaran = $this->getKodePendaftaran();
+        $attempt = Assessment_Attempts::where('id', $attemptId)
+            ->where('kodependaftaran', $kodePendaftaran)
+            ->firstOrFail();
 
         // 1. INSERT JAWABAN KOSONG UNTUK SOAL YANG BELUM DIJAWAB
         $allQuestionIds = Assessment_Questions::where('tipe_test_id', $attempt->tipe_test_id)
@@ -266,16 +258,18 @@ class AssessmentController extends Controller
         ]);
 
         // ==========================================
-        // BAGIAN KEAMANAN YANG TERLEWAT DI KODE KAMU:
-        // Pengecekan waktu Server-Side
+        // Pengecekan Kepemilikan (Cegah IDOR) & Waktu Server-Side
         // ==========================================
-        $attempt = Assessment_Attempts::find($request->attempt_id);
+        $kodePendaftaran = $this->getKodePendaftaran();
+        $attempt = Assessment_Attempts::where('id', $request->attempt_id)
+            ->where('kodependaftaran', $kodePendaftaran)
+            ->first();
 
         // Tolak request jika sesi tidak ditemukan ATAU waktu server sudah melewati waktu selesai
         if (!$attempt || \Carbon\Carbon::now() >= \Carbon\Carbon::parse($attempt->selesai_at)) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Waktu ujian sudah habis! Jawaban tidak disimpan.'
+                'message' => 'Waktu ujian sudah habis atau sesi tidak valid! Jawaban tidak disimpan.'
             ], 403);
         }
         // ==========================================

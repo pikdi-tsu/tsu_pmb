@@ -9,6 +9,7 @@ use App\Models\Admin\ModulModel;
 use App\Models\Admin\PegawaiModel;
 use App\Models\Admin\User;
 use App\Models\Admin\UserResetPasswordModel;
+use App\Models\Admin\LogAktivitas;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -603,10 +604,11 @@ class SettingController extends Controller
             ->addColumn('action', function ($d) {
                 $id = encrypt($d->KodeGroupUser);
                 $url = '#';
-                $editpriv  = '<a href="'.route('admin.gruopuser.ShowPrivilege',[$id]).'" class="btn_delete"><i title="Edit Privilege of '.$d->NamaGroup.'" class="fa fa-eye text-green"></i></a>';
-                $editnama   = '<a href="#" data-id="'.$id.'" class="btn_edit"><i title="Edit '.$d->NamaGroup.' Data" class="fa fa-edit text-orange"></i></a>';
+                $editpriv  = '<a href="'.route('admin.gruopuser.ShowPrivilege',[$id]).'" class="btn_priv mr-2"><i title="Edit Privilege of '.$d->NamaGroup.'" class="fa fa-eye text-green"></i></a>';
+                $editnama   = '<a href="#" data-id="'.$id.'" class="btn_edit mr-2"><i title="Edit '.$d->NamaGroup.' Data" class="fa fa-edit text-orange"></i></a>';
+                $del       = '<a href="'.route('admin.gruopuser.DeleteGroupUser',[$id]).'" onclick="return confirm(\'Apakah Anda yakin ingin menghapus Group User '.$d->NamaGroup.'?\')" class="btn_del text-danger"><i title="Hapus '.$d->NamaGroup.'" class="fa fa-trash"></i></a>';
 
-                return $editpriv.'  '.$editnama;
+                return $editpriv.' '.$editnama.' '.$del;
             })
             ->rawColumns(['action'])
             ->make(true);
@@ -661,7 +663,6 @@ class SettingController extends Controller
     public function GetGroupUser($params)
     {
         $id = decrypt($params);
-        // dd($id);
         $check = MasterGroupModel::where('KodeGroupUser',$id)->first();
 
         if($check){
@@ -679,7 +680,29 @@ class SettingController extends Controller
     public function DeleteGroupUser($params)
     {
         $id = decrypt($params);
-        dd($id);
+
+        // Cek apakah group masih dipakai oleh user aktif
+        $cekUser = User::where('privilege_pmb', $id)->where('isactive', 1)->count();
+        if ($cekUser > 0) {
+            $alert = ['title' => 'Gagal', 'message' => 'Group masih digunakan oleh ' . $cekUser . ' user aktif! Tidak dapat dihapus.', 'status' => 'error'];
+            return redirect()->back()->with('alert', $alert);
+        }
+
+        // Soft-delete group user
+        $update = MasterGroupModel::where('KodeGroupUser', $id)->update([
+            'isactive'   => 0,
+            'updated_at' => date('Y-m-d H:i:s'),
+            'updated_by' => session('session')->nip
+        ]);
+
+        if ($update) {
+            LogAktivitas::catat('Group User', 'Hapus Group User', $id, 'Menghapus group user: ' . $id);
+            $alert = ['title' => 'Berhasil', 'message' => 'Group User Berhasil Dihapus', 'status' => 'success'];
+        } else {
+            $alert = ['title' => 'Gagal', 'message' => 'Group User Gagal Dihapus', 'status' => 'error'];
+        }
+
+        return redirect()->back()->with('alert', $alert);
     }
 
     public function ShowPrivilege($params)
@@ -737,7 +760,6 @@ class SettingController extends Controller
             $cari = $value->modul.$value->menu;
             // dd($cari);
             if(isset($request->menumod[$cari]) AND $request->actionmod[$cari]!=null){
-                echo $request->menumod[$cari].' vs '.$request->actionmod[$cari].'<br>';
                 $mod = explode("#", $request->menumod[$cari]);
 
                 $inn = array(

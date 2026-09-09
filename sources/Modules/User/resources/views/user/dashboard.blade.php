@@ -394,6 +394,25 @@
                 </div>
                 @endif
                 @if($daftar)
+                @if($daftar->bayar_pendaftaran == '1' || $daftar->current_step > 3)
+                <div class="card card-success card-outline">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="m-0 text-success font-weight-bold">
+                            <i class="fas fa-id-card mr-2"></i>Kartu Peserta Ujian PMB
+                        </h5>
+                        <a href="{{ route('kartupeserta.download') }}" target="_blank" class="btn btn-success btn-sm">
+                            <i class="fas fa-download mr-1"></i> Download Kartu Peserta (PDF)
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-1"><strong>Selamat! Pembayaran biaya pendaftaran PMB Anda telah terkonfirmasi.</strong></p>
+                        <p class="text-muted mb-2">Silakan unduh dan cetak <strong>Kartu Tanda Peserta Ujian Seleksi PMB</strong> Anda. Kartu ini merupakan bukti resmi dan wajib dibawa / ditunjukkan saat mengikuti seleksi.</p>
+                        <a href="{{ route('kartupeserta.download') }}" target="_blank" class="btn btn-outline-success btn-sm">
+                            <i class="fas fa-print mr-1"></i> Cetak / Unduh Sekarang
+                        </a>
+                    </div>
+                </div>
+                @endif
                 @if($daftar->keterangan)
                 <div class="card card-warning">
                     <div class="card-header">
