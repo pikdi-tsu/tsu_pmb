@@ -200,30 +200,29 @@
                     </button>
                 </div>
                 <div class="modal-body">
-                    <div class="text-center mb-4">
-                        <h6 class="text-muted mb-2">Rekomendator Saat Ini:</h6>
-                        <h4 id="teks_rekomendator_saatini" class="text-bold text-primary">-</h4>
-
-                        <button type="button" id="btn-tampil-form-edit" class="btn btn-sm btn-outline-warning mt-3">
-                            <i class="fas fa-edit"></i> Ubah / Tambah Rekomendator
-                        </button>
+                    <div class="alert alert-light border text-center py-2 mb-3">
+                        <span class="text-muted d-block small">Rekomendator Saat Ini:</span>
+                        <h5 id="teks_rekomendator_saatini" class="text-primary font-weight-bold mb-0">-</h5>
                     </div>
 
-                    <div id="wadah-form-rekomendator" style="display: none; border-top: 1px solid #eee; padding-top: 15px;">
-                        <form id="form-edit-rekomendator">
-                            <input type="hidden" id="edit_id_daftar" name="id_daftar">
-                            <div class="form-group">
-                                <label>Cari & Pilih Rekomendator Baru</label>
-                                <select class="form-control" id="select_rekomendator" name="kode_rekomendator" style="width: 100%;">
-                                    <option value="" selected disabled>-- Ketik Nama Rekomendator --</option>
-                                </select>
-                            </div>
-                        </form>
-                    </div>
+                    <form id="form-edit-rekomendator">
+                        <input type="hidden" id="edit_id_daftar" name="id_daftar">
+                        <div class="form-group mb-0">
+                            <label for="select_rekomendator">Cari & Pilih Rekomendator Baru</label>
+                            <select class="form-control select2" id="select_rekomendator" name="kode_rekomendator" style="width: 100%;">
+                                <option value="" selected disabled>-- Cari & Pilih Rekomendator --</option>
+                                @if(isset($rekomendator))
+                                    @foreach ($rekomendator as $rek)
+                                        <option value="{{ $rek->kode_rekomendator }}">{{ $rek->kode_rekomendator }} - {{ $rek->nama_rekomendator }}</option>
+                                    @endforeach
+                                @endif
+                            </select>
+                        </div>
+                    </form>
                 </div>
                 <div class="modal-footer justify-content-between">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-                    <button type="button" id="btn-save-rekomendator" class="btn btn-success" style="display: none;"><i class="fas fa-save"></i> Simpan</button>
+                    <button type="button" id="btn-save-rekomendator" class="btn btn-success"><i class="fas fa-save"></i> Simpan</button>
                 </div>
             </div>
         </div>
@@ -319,7 +318,7 @@
                 tabelBeasiswa()
             }
 
-            $('.select2').select2({
+            $('#modal-edit-jurusan .select2').select2({
                 dropdownParent: $('#modal-edit-jurusan'),
                 width: '100%'
             });
@@ -526,52 +525,19 @@
                     $('#teks_rekomendator_saatini').text('-');
                 }
 
-                // Sembunyikan form dropdown pencarian & tombol simpan
-                $('#wadah-form-rekomendator').hide();
-                $('#btn-save-rekomendator').hide();
-                // Munculkan tombol pemancing edit
-                $('#btn-tampil-form-edit').show();
-
-                // Kosongkan Select2
-                $('#select_rekomendator').empty().append('<option value="" selected disabled>-- Ketik Nama Rekomendator --</option>');
+                // Reset Select2
+                $('#select_rekomendator').val(null).trigger('change');
 
                 $('#modal-edit-rekomendator').modal('show');
             });
 
-            // 2. EVENT KETIKA TOMBOL "UBAH / TAMBAH" DI DALAM MODAL DIKLIK
-            $('#btn-tampil-form-edit').click(function(e){
-                e.preventDefault();
-                $(this).hide();
-                $('#wadah-form-rekomendator').slideDown('fast');
-                $('#btn-save-rekomendator').fadeIn('fast');
-            });
-
-            // 3. SETUP SELECT2 UNTUK PENCARIAN NAMA REKOMENDATOR SAJA
+            // SETUP SELECT2 UNTUK PENCARIAN REKOMENDATOR
             $('#select_rekomendator').select2({
                 dropdownParent: $('#modal-edit-rekomendator'),
                 theme: 'bootstrap4',
-                placeholder: '-- Ketik Nama Rekomendator --',
-                allowClear: true,
-                minimumInputLength: 2,
-                ajax: {
-                    url: '{!! route('admin.databeasiswa.carirekomendator') !!}',
-                    dataType: 'json',
-                    delay: 250,
-                    data: function(params) {
-                        return { q: params.term };
-                    },
-                    processResults: function(data) {
-                        return {
-                            results: $.map(data, function(item) {
-                                return {
-                                    text: item.kode_rekomendator+' - '+item.nama_rekomendator,
-                                    id: item.kode_rekomendator
-                                }
-                            })
-                        };
-                    },
-                    cache: true
-                }
+                width: '100%',
+                placeholder: '-- Cari & Pilih Rekomendator --',
+                allowClear: true
             });
 
             $('#example2').on('click', '.btn_edit_jurusan', function(e) {

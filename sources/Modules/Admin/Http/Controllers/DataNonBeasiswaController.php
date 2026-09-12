@@ -27,10 +27,15 @@ class DataNonBeasiswaController extends Controller
             $q->with('jenjang');
         }])->where('isactive', '1')->get();
 
+        $rekomendator = Master_Rekomendator::where('isactive', 1)
+            ->orderBy('nama_rekomendator', 'asc')
+            ->get();
+
         $data = array(
             'title' => 'Data Pendaftar Non Beasiswa',
             'menu'  => 'Data Pendaftar Non Beasiswa',
-            'getfakultas' => $getfakultas
+            'getfakultas' => $getfakultas,
+            'rekomendator' => $rekomendator,
         );
         return view('admin::pendaftaran.nonbeasiswa.index', $data);
     }
@@ -236,18 +241,20 @@ class DataNonBeasiswaController extends Controller
 
     public function updateRekomendator(Request $request)
     {
-        $id = decrypt($request->id_daftar);
-        $kode_rek = $request->kode_rekomendator;
+        try {
+            $id = decrypt($request->id_daftar);
+            $kode_rek = $request->kode_rekomendator;
+            $pendaftaran = Pendaftaran::where('KodePendaftaran', $id)->first();
+            if (!$pendaftaran) {
+                return response()->json(['status' => 'error', 'message' => 'Data Pendaftaran tidak ditemukan']);
+            }
+            $pendaftaran->rekomendator = $kode_rek;
+            $pendaftaran->updated_at = now();
+            $pendaftaran->save();
 
-        $update = Pendaftaran::where('KodePendaftaran', $id)->update([
-            'rekomendator' => $kode_rek,
-            'updated_at'   => date('Y-m-d H:i:s')
-        ]);
-
-        if ($update) {
             return response()->json(['status' => 'success', 'message' => 'Data Rekomendator berhasil diupdate']);
-        } else {
-            return response()->json(['status' => 'error', 'message' => 'Gagal mengubah Rekomendator']);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => 'Gagal mengubah Rekomendator: ' . $e->getMessage()]);
         }
     }
 
