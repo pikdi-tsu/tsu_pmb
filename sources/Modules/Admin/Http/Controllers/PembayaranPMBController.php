@@ -17,6 +17,9 @@ use Illuminate\Support\Facades\Password;
 use Yajra\DataTables\DataTables;
 use Session, Crypt, DB;
 use Symfony\Component\HttpFoundation\Response;
+use App\Models\Admin\LogAktivitas;
+use Maatwebsite\Excel\Facades\Excel;
+use Modules\Admin\Http\Exports\ExportPembayaranPMBExcel;
 
 class PembayaranPMBController extends Controller
 {
@@ -193,6 +196,7 @@ class PembayaranPMBController extends Controller
 
         if($update1&&$update2){
             DB::commit();
+            LogAktivitas::catat('Pembayaran PMB', 'Approve', $id, 'Bukti pembayaran PMB divalidasi');
             $data['status']  = true;
             $data['message'] = 'Bukti Pembayaran Berhasil di Validasi';
         }else{
@@ -222,6 +226,7 @@ class PembayaranPMBController extends Controller
 
         if($update1&&$update2){
             DB::commit();
+            LogAktivitas::catat('Pembayaran PMB', 'Revisi', $id, 'Keterangan: ' . $ket);
             $alert = ['title' => 'Information', 'message' => 'Berhasil Menambahkan Keterangan', 'status' => 'success'];
         }else{
             DB::rollback();
@@ -229,5 +234,11 @@ class PembayaranPMBController extends Controller
         }
         return redirect()->back()->with('alert',$alert);
 
+    }
+
+    public function exportExcel()
+    {
+        $filename = 'Rekap_Pembayaran_PMB_' . date('Ymd_His') . '.xlsx';
+        return Excel::download(new ExportPembayaranPMBExcel(), $filename);
     }
 }

@@ -30,8 +30,11 @@
                 <!-- /.col-md-6 -->
                 <div class="col-md-12">
                     <div class="card card-primary card-outline">
-                        <div class="card-header">
+                        <div class="card-header d-flex justify-content-between align-items-center">
                             <h5 class="m-0">{{$menu}}</h5>
+                            <a href="{{ route('admin.pembayaranpmb.exportexcel') }}" class="btn btn-success btn-sm">
+                                <i class="fas fa-file-excel mr-1"></i>Export Excel
+                            </a>
                         </div>
                         <div class="card-body">
                             <div class="row" style="display: none;">
@@ -45,7 +48,6 @@
                                 <!-- /.col-lg-6 -->
                                 <div class="btn-group">
                                     <button type="button" id="btn-showpembayaran" class="btn btn-primary btn-sm" style="margin-top: 6px;margin-right: 10px;">Show Data</button>
-                                    <button type="button" class="btn btn-success btn-sm" style="margin-top: 6px;display:none;">Export Excel</button>
                                     <!-- /input-group -->
                                 </div>
                                 <!-- /.col-lg-6 -->

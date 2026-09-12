@@ -145,13 +145,23 @@ class UserController extends Controller
             }
         }
 
-        $batch->namabatch = $batch->nama_batch;
+        if ($batch) {
+            $batch->namabatch = $batch->nama_batch;
 
-        $batch->tglmulai_format = \Carbon\Carbon::parse($batch->tglmulai)
-            ->translatedFormat('j F Y');
+            $batch->tglmulai_format = \Carbon\Carbon::parse($batch->tglmulai)
+                ->translatedFormat('j F Y');
 
-        $batch->tglselesai_format = \Carbon\Carbon::parse($batch->tglselesai)
-            ->translatedFormat('j F Y');
+            $batch->tglselesai_format = \Carbon\Carbon::parse($batch->tglselesai)
+                ->translatedFormat('j F Y');
+        } else {
+            $batch = (object) [
+                'namabatch' => 'Pendaftaran Ditutup',
+                'nama_batch' => 'Pendaftaran Ditutup',
+                'tahun_akademik' => '-',
+                'tglmulai_format' => '-',
+                'tglselesai_format' => '-',
+            ];
+        }
 
         $waktukuliah = Master_WaktuKuliah::where('isactive', '1')->first();
 
@@ -324,46 +334,58 @@ class UserController extends Controller
         }
 
         $ceknik = Biodata::where('nik', $post->nik)->where('isactive', '1')->count();
-        if ($ceknik == 2) {
+        if ($ceknik >= 2) {
             return redirect()->back()->with('alert', ['title' => 'Gagal', 'message' => 'NIK Sudah Terdaftar, Maksimal 2 NIK', 'status' => 'error']);
         }
-        // dd($ceknik, 'lolos');
-        $data_akun = array(
-            'email'        => $post->email,
-            'password'     => Hash::make($post->password),
-            'created_at'   => date('Y-m-d H:i:s'),
-        );
 
-        $akun = Master_Akun::insert($data_akun);
-        $cekAkun = Master_Akun::orderby('akun_id', 'desc')->first();
+        DB::beginTransaction();
+        try {
+            $data_akun = array(
+                'email'        => $post->email,
+                'password'     => Hash::make($post->password),
+                'created_at'   => date('Y-m-d H:i:s'),
+            );
 
-        $data_biodata = array(
-            'akun'            => $cekAkun->akun_id,
-            'nik'             => $post->nik,
-            'nama'            => $post->nama,
-            'nohp'            => $post->nohp,
-            'provinsi'        => $post->provinsi,
-            'kabupaten'       => $post->kabupaten,
-            'created_at'      => date('Y-m-d H:i:s'),
-        );
+            $akunId = Master_Akun::insertGetId($data_akun);
 
-        $biodata = Biodata::insert($data_biodata);
-        $cekBio = Biodata::where('akun', $cekAkun->akun_id)->first();
-        // Email
-        $data = array(
-            'biodata'   => $cekBio,
-            'akun'      => $cekAkun,
-        );
+            $data_biodata = array(
+                'akun'            => $akunId,
+                'nik'             => $post->nik,
+                'nama'            => $post->nama,
+                'nohp'            => $post->nohp,
+                'provinsi'        => $post->provinsi,
+                'kabupaten'       => $post->kabupaten,
+                'created_at'      => date('Y-m-d H:i:s'),
+            );
 
-        if ($akun && $biodata) {
-            Mail::send('user::login/register_email', $data, function ($message) use ($cekBio, $cekAkun) {
-                $message->subject('Aktivasi Akun - ' . $cekBio->nama);
-                $message->to($cekAkun->email);
-            });
+            Biodata::insert($data_biodata);
+            $cekBio = Biodata::where('akun', $akunId)->first();
+            $cekAkun = Master_Akun::where('akun_id', $akunId)->first();
+
+            // Email
+            try {
+                $data = array(
+                    'biodata'   => $cekBio,
+                    'akun'      => $cekAkun,
+                );
+
+                if ($cekAkun && $cekBio) {
+                    Mail::send('user::login/register_email', $data, function ($message) use ($cekBio, $cekAkun) {
+                        $message->subject('Aktivasi Akun - ' . $cekBio->nama);
+                        $message->to($cekAkun->email);
+                    });
+                }
+            } catch (\Exception $eMail) {
+                \Illuminate\Support\Facades\Log::error('Gagal kirim email aktivasi: ' . $eMail->getMessage());
+            }
+
+            DB::commit();
+            return redirect()->route('register.sukses')->with('alert', ['title' => 'Berhasil', 'message' => 'Registrasi Berhasil. Silahkan cek email Anda untuk aktivasi akun.', 'status' => 'success']);
+        } catch (\Exception $e) {
+            DB::rollback();
+            \Illuminate\Support\Facades\Log::error('Gagal Registrasi: ' . $e->getMessage());
+            return redirect()->back()->with('alert', ['title' => 'Gagal', 'message' => 'Terjadi kendala saat registrasi. Silakan coba kembali.', 'status' => 'error']);
         }
-        // Email
-
-        return redirect()->route('register.sukses')->with('alert', ['title' => 'Berhasil', 'message' => 'Registrasi Berhasil', 'status' => 'success']);
     }
 
     public function SuksesRegist()
@@ -469,17 +491,17 @@ class UserController extends Controller
         $newpass = $post->newpass;
         $newpass2 = $post->newpass2;
         // dd(preg_match('/\d/', $$oldpass));
-        if ((preg_match('/[[:punct:]]/', $oldpass)) == 1 || (preg_match('/[A-Z]/', $oldpass)) == 0 || (preg_match('/\d/', $oldpass)) == 0 || strlen($oldpass) < 8) {
+        if ((preg_match('/[A-Z]/', $oldpass)) == 0 || (preg_match('/\d/', $oldpass)) == 0 || strlen($oldpass) < 8) {
             Session::flash('alert', ['title' => 'Gagal', 'message' => 'Pergantian Password Gagal ! Silahkan Baca Note !', 'status' => 'error']);
             return redirect()->back();
         }
 
-        if ((preg_match('/[[:punct:]]/', $newpass)) == 1 || (preg_match('/[A-Z]/', $newpass)) == 0 || (preg_match('/\d/', $newpass)) == 0 || strlen($newpass) < 8) {
+        if ((preg_match('/[A-Z]/', $newpass)) == 0 || (preg_match('/\d/', $newpass)) == 0 || strlen($newpass) < 8) {
             Session::flash('alert', ['title' => 'Gagal', 'message' => 'Pergantian Password Gagal ! Silahkan Baca Note !', 'status' => 'error']);
             return redirect()->back();
         }
 
-        if ((preg_match('/[[:punct:]]/', $newpass2)) == 1 || (preg_match('/[A-Z]/', $newpass2)) == 0 || (preg_match('/\d/', $newpass2)) == 0 || strlen($newpass2) < 8) {
+        if ((preg_match('/[A-Z]/', $newpass2)) == 0 || (preg_match('/\d/', $newpass2)) == 0 || strlen($newpass2) < 8) {
             Session::flash('alert', ['title' => 'Gagal', 'message' => 'Pergantian Password Gagal ! Silahkan Baca Note !', 'status' => 'error']);
             return redirect()->back();
         }

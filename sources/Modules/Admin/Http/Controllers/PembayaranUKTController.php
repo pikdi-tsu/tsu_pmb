@@ -17,6 +17,9 @@ use Illuminate\Support\Facades\Password;
 use Yajra\DataTables\DataTables;
 use Session, Crypt, DB;
 use Symfony\Component\HttpFoundation\Response;
+use App\Models\Admin\LogAktivitas;
+use Maatwebsite\Excel\Facades\Excel;
+use Modules\Admin\Http\Exports\ExportPembayaranUKTExcel;
 
 class PembayaranUKTController extends Controller
 {
@@ -181,8 +184,8 @@ class PembayaranUKTController extends Controller
     {
         $id = decrypt($params);
         
-        // Tangkap data skema dari AJAX
-        $skema = $request->skema_ukt; 
+        // Tangkap data skema dari AJAX dan normalize ke lowercase sesuai enum ('lunas','bulanan')
+        $skema = strtolower($request->skema_ukt ?? 'lunas'); 
 
         $cek = Pendaftaran::where('KodePendaftaran',$id)->select('current_step','jalur_daftar')->first();
         $step = $cek->current_step + 1;
@@ -206,8 +209,8 @@ class PembayaranUKTController extends Controller
 
         if($update1 && $update2){
             DB::commit();
+            LogAktivitas::catat('Pembayaran UKT', 'Approve', $id, 'Skema: ' . strtoupper($skema));
             $data['status']  = true;
-            // Tambahkan keterangan skema di pesan sukses agar admin yakin data masuk
             $data['message'] = 'Bukti Pembayaran Berhasil di Validasi (Skema: '. strtoupper($skema) .')';
         }else{
             DB::rollback();
@@ -237,6 +240,7 @@ class PembayaranUKTController extends Controller
 
         if($update1&&$update2){
             DB::commit();
+            LogAktivitas::catat('Pembayaran UKT', 'Revisi', $id, 'Keterangan: ' . $ket);
             $alert = ['title' => 'Information', 'message' => 'Berhasil Menambahkan Keterangan', 'status' => 'success'];
         }else{
             DB::rollback();
@@ -244,5 +248,11 @@ class PembayaranUKTController extends Controller
         }
         return redirect()->back()->with('alert',$alert);
 
+    }
+
+    public function exportExcel()
+    {
+        $filename = 'Rekap_Pembayaran_UKT_' . date('Ymd_His') . '.xlsx';
+        return Excel::download(new ExportPembayaranUKTExcel(), $filename);
     }
 }

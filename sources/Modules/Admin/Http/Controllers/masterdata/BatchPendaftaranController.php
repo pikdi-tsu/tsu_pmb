@@ -53,17 +53,20 @@ class BatchPendaftaranController extends Controller
             return $nama;
         })
         ->addColumn('aktif', function ($d) {
-            $role = '-';
-            $warna = '';
-            if($d->isactive==1){
-                $role = 'Aktif';
-                $warna = 'success';
-            }else{
-                $role = 'Tidak Aktif';
-                $warna = 'danger';
+            $today = now()->toDateString();
+            if ($d->isactive != 1) {
+                return '<span class="badge badge-secondary">Tidak Aktif</span>';
             }
-            $show = '<span class="badge bg-'.$warna.'">'.$role.'</span>';
-            return $show;
+            if ($today < $d->tglmulai) {
+                $sisaHari = now()->diffInDays($d->tglmulai, false);
+                return '<span class="badge badge-warning text-dark">Akan Datang</span><br><small class="text-muted">Mulai ' . tglIndo($d->tglmulai) . '</small>';
+            } elseif ($today > $d->tglselesai) {
+                return '<span class="badge badge-secondary">Berakhir</span>';
+            } else {
+                $sisaHari = now()->diffInDays($d->tglselesai, false);
+                $warna    = $sisaHari <= 3 ? 'danger' : 'success';
+                return '<span class="badge badge-' . $warna . '">Aktif</span><br><small class="text-' . $warna . '">Sisa ' . $sisaHari . ' hari</small>';
+            }
         })
         ->addColumn('action', function ($d) {
             $id = encrypt($d->id);
@@ -84,6 +87,7 @@ class BatchPendaftaranController extends Controller
         ->rawColumns(['action','aktif'])
         ->make(true);
     }
+
 
     public function StoreBatch(Request $post)
     {

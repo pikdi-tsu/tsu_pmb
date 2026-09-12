@@ -37,6 +37,12 @@
                         <p>Dashboard</p>
                     </a>
                 </li>
+                <li class="nav-item">
+                    <a href="{{ route('kartupeserta.download') }}" target="_blank" class="nav-link">
+                        <i class="nav-icon fas fa-id-card text-info"></i>
+                        <p>Kartu Peserta (PDF)</p>
+                    </a>
+                </li>
 
                 <li class="nav-item" style="display: none;">
                     <a href="{{route('pendaftaran')}}" class="nav-link {{$menu=='Pendaftaran' ? 'active' : ''}}">

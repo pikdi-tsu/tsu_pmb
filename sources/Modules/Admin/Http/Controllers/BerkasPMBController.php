@@ -17,6 +17,7 @@ use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Password;
 use Session, Crypt, DB;
 use Symfony\Component\HttpFoundation\Response;
+use App\Models\Admin\LogAktivitas;
 
 class BerkasPMBController extends Controller
 {
@@ -229,6 +230,7 @@ class BerkasPMBController extends Controller
                 ]);
 
             DB::commit();
+            LogAktivitas::catat('Berkas PMB', 'Validasi Item Berkas', $request->kode_daftar, 'Berkas ID ' . $request->id_berkas . ' - Status: ' . $request->status);
             return response()->json([
                 'title'   => 'Berhasil!',
                 'message' => 'Berkas divalidasi oleh ' . namaku($nip_admin),
@@ -326,6 +328,8 @@ class BerkasPMBController extends Controller
 
             if ($updt) {
                 DB::commit();
+                $aksi_label = $status_global == '-1' ? 'Revisi Berkas' : 'Finalisasi Berkas';
+                LogAktivitas::catat('Berkas PMB', $aksi_label, $id, 'Status global: ' . $status_global . ($keterangan ? ' - Ket: ' . $keterangan : ''));
                 return response()->json([
                     'title'   => 'Berhasil!',
                     'message' => $status_global == '-1' ? 'Keterangan Revisi Berkas Sudah Ditambahkan!' : 'Berhasil Finalisasi Validasi Berkas',
