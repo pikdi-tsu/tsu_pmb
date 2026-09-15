@@ -1,0 +1,224 @@
+name: Deploy to DirectAdmin (Production)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  web-deploy:
+    name: Fast Deploy to DirectAdmin via SCP
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install NPM dependencies and build
+        run: |
+          if [ -f sources/package.json ]; then
+            cd sources
+            npm install
+            npm run build --if-present
+            cd ..
+          fi
+
+      - name: Archive Core and Public files
+        run: |
+          # 1. Arsipkan kode Laravel Core (dari folder sources/)
+          cd sources
+          tar -czf /tmp/core.tar.gz \
+            --warning=no-file-changed \
+            --exclude='./.git' \
+            --exclude='./.github' \
+            --exclude='./.idea' \
+            --exclude='./.vscode' \
+            --exclude='./tests' \
+            --exclude='./node_modules' \
+            --exclude='./vendor' \
+            --exclude='./scratch' \
+            --exclude='./storage/logs/*' \
+            --exclude='./storage/framework/cache/*' \
+            --exclude='./storage/framework/sessions/*' \
+            --exclude='./storage/framework/views/*' \
+            --exclude='./*.sqlite' \
+            --exclude='./*.sql' \
+            --exclude='./*.zip' \
+            --exclude='./*.rar' \
+            --exclude='./phpunit.xml' \
+            .
+          cd ..
+
+          # 2. Arsipkan Public Web Files (index.php, .htaccess, dan folder public)
+          tar -czf /tmp/public.tar.gz \
+            --warning=no-file-changed \
+            --exclude='./sources' \
+            --exclude='./.git' \
+            --exclude='./.github' \
+            --exclude='./.idea' \
+            --exclude='./.vscode' \
+            --exclude='./*.tar.gz' \
+            --exclude='./*.zip' \
+            --exclude='./*.rar' \
+            --exclude='./*.sql' \
+            index.php .htaccess public
+
+          mv /tmp/core.tar.gz ./core.tar.gz
+          mv /tmp/public.tar.gz ./public.tar.gz
+
+      - name: Upload archives to DirectAdmin via SCP
+        env:
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_USER: ${{ secrets.SSH_USERNAME }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          TARGET_DOMAIN: ${{ secrets.TARGET_DOMAIN || 'pmb.tsu.ac.id' }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          scp -P 22 -o StrictHostKeyChecking=no -o BatchMode=yes -i ~/.ssh/deploy_key core.tar.gz public.tar.gz ${SSH_USER}@${SSH_HOST}:~/domains/${TARGET_DOMAIN}/
+          rm -f ~/.ssh/deploy_key
+
+      - name: Deploy & Execute Server Commands via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          TARGET_DOMAIN: ${{ secrets.TARGET_DOMAIN || 'pmb.tsu.ac.id' }}
+          CORE_DIR: ${{ secrets.CORE_DIR || 'tsu_pmb_core' }}
+          APP_NAME: ${{ secrets.APP_NAME || 'PMB TSU' }}
+          APP_URL: ${{ secrets.APP_URL || 'https://pmb.tsu.ac.id' }}
+          ASSET_URL: ${{ secrets.ASSET_URL || 'https://pmb.tsu.ac.id' }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL || 'https://pmb.tsu.ac.id' }}
+          DB_CONNECTION: ${{ secrets.DB_CONNECTION || 'mysql' }}
+          DB_HOST: ${{ secrets.DB_HOST || 'localhost' }}
+          DB_PORT: ${{ secrets.DB_PORT || '3306' }}
+          DB_DATABASE: ${{ secrets.DB_DATABASE }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          debug: true
+          envs: TARGET_DOMAIN,CORE_DIR,APP_NAME,APP_URL,ASSET_URL,FRONTEND_URL,DB_CONNECTION,DB_HOST,DB_PORT,DB_DATABASE,DB_USERNAME,DB_PASSWORD
+          script: |
+            set -e
+
+            DOMAIN_PATH=~/domains/${TARGET_DOMAIN}
+            CORE_PATH=${DOMAIN_PATH}/${CORE_DIR}
+            PUBLIC_PATH=${DOMAIN_PATH}/public_html
+
+            # 0. Buat direktori core & public_html jika belum ada
+            mkdir -p ${CORE_PATH}
+            mkdir -p ${PUBLIC_PATH}
+
+            # 1. Ekstrak arsip rilis ke direktori core dan public_html
+            if [ -f ${DOMAIN_PATH}/core.tar.gz ]; then
+                tar -xzf ${DOMAIN_PATH}/core.tar.gz -C ${CORE_PATH}/
+                rm -f ${DOMAIN_PATH}/core.tar.gz
+            fi
+
+            if [ -f ${DOMAIN_PATH}/public.tar.gz ]; then
+                tar -xzf ${DOMAIN_PATH}/public.tar.gz -C ${PUBLIC_PATH}/
+                rm -f ${DOMAIN_PATH}/public.tar.gz
+            fi
+
+            # 2. Sesuaikan path autoloader index.php di public_html agar mengarah ke folder core
+            cd ${PUBLIC_PATH}
+            sed -i "s|__DIR__.'/sources/|__DIR__.'/../${CORE_DIR}/|g" index.php
+
+            # Buat symlink akses aset jika dipanggil langsung via /assets/ maupun /public/assets/
+            if [ -d public/assets ] && [ ! -e assets ]; then
+                ln -sfn public/assets assets
+            fi
+
+            # 3. Masuk ke core untuk inisialisasi folder, dependensi & environment
+            cd ${CORE_PATH}
+            mkdir -p storage/framework/{sessions,views,cache}
+            mkdir -p bootstrap/cache
+
+            # Pastikan folder public di core menunjuk ke public_html agar helper Laravel konsisten
+            rm -rf public
+            ln -sfn ../public_html public
+
+            if [ ! -f .env ]; then cp .env.example .env; fi
+
+            # Bersihkan variabel Secrets dari karakter enter/CRLF
+            APP_NAME=$(echo "$APP_NAME" | tr -d '\r\n')
+            APP_URL=$(echo "$APP_URL" | tr -d '\r\n ')
+            ASSET_URL=$(echo "$ASSET_URL" | tr -d '\r\n ')
+            FRONTEND_URL=$(echo "$FRONTEND_URL" | tr -d '\r\n ')
+            DB_CONNECTION=$(echo "$DB_CONNECTION" | tr -d '\r\n ')
+            DB_HOST=$(echo "$DB_HOST" | tr -d '\r\n ')
+            DB_PORT=$(echo "$DB_PORT" | tr -d '\r\n ')
+            DB_DATABASE=$(echo "$DB_DATABASE" | tr -d '\r\n ')
+            DB_USERNAME=$(echo "$DB_USERNAME" | tr -d '\r\n ')
+            DB_PASSWORD=$(echo "$DB_PASSWORD" | tr -d '\r\n')
+
+            # Helper fungsi untuk update/tambah key di .env
+            update_env() {
+                local key=$1
+                local val=$2
+                if [ -n "$val" ]; then
+                    local escaped_val=$(echo "$val" | sed 's/"/\\"/g')
+                    if grep -q "^${key}=" .env; then
+                        sed -i "s|^${key}=.*|${key}=\"${escaped_val}\"|" .env
+                    else
+                        echo "${key}=\"${escaped_val}\"" >> .env
+                    fi
+                fi
+            }
+
+            # Set environment dasar production
+            update_env "APP_NAME" "$APP_NAME"
+            update_env "APP_URL" "$APP_URL"
+            update_env "ASSET_URL" "$ASSET_URL"
+            update_env "FRONTEND_URL" "$FRONTEND_URL"
+            update_env "DB_CONNECTION" "$DB_CONNECTION"
+            update_env "DB_HOST" "$DB_HOST"
+            update_env "DB_PORT" "$DB_PORT"
+            update_env "DB_DATABASE" "$DB_DATABASE"
+            update_env "DB_USERNAME" "$DB_USERNAME"
+            update_env "DB_PASSWORD" "$DB_PASSWORD"
+            update_env "APP_ENV" "production"
+            update_env "APP_DEBUG" "false"
+            update_env "FORCE_HTTPS" "true"
+            update_env "SESSION_SECURE_COOKIE" "true"
+
+            # 4. Install vendor production menggunakan composer.phar mandiri
+            wget -O composer.phar https://getcomposer.org/download/latest-stable/composer.phar
+            export COMPOSER_ALLOW_SUPERUSER=1
+            php composer.phar install --ignore-platform-reqs --no-dev --optimize-autoloader
+
+            # Bersihkan config cache agar key:generate membaca config terbaru
+            php artisan config:clear
+
+            if ! grep -q "^APP_KEY=base64:" .env; then
+                php artisan key:generate --force
+            fi
+
+            # 5. Jalankan migrasi database SEBELUM optimize:clear (Mencegah Table 'cache' doesn't exist)
+            php artisan migrate --force
+
+            # 6. Symlink storage publik ke public_html
+            ln -sfn $(pwd)/storage/app/public ${PUBLIC_PATH}/storage
+            if [ -d ${PUBLIC_PATH}/public ]; then
+                ln -sfn $(pwd)/storage/app/public ${PUBLIC_PATH}/public/storage
+            fi
+
+            # 7. Bersihkan dan optimasi framework cache
+            php artisan optimize:clear
+            php artisan optimize
+            php artisan view:cache
+
+            # 8. Hak akses aman standar LiteSpeed / DirectAdmin suPHP
+            chmod -R 755 storage bootstrap/cache
+            chmod 600 storage/*.key 2>/dev/null || true

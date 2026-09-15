@@ -44,3 +44,14 @@ sources/yarn-error.log
 public/storage
 public/hot
 public/build
+
+# --- 5. STANDAR HIGIENITAS REPOSITORI & DEPLOYMENT (SOP IT TSU) ---
+*.sql
+*.sqlite
+*.zip
+*.tar.gz
+*.rar
+/scratch
+scratch/
+/.claude
+/.agents
