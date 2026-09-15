@@ -124,4 +124,46 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | TSU Ecosystem & Homebase Vault Configuration
+    |--------------------------------------------------------------------------
+    */
+    'module' => [
+        'full_name' => env('MODULE_FULL_NAME', 'tsu_pmb'),
+        'name' => env('MODULE_NAME', 'pmb'),
+    ],
+
+    'tsu_homebase' => [
+        'url' => env('HOMEBASE_URL', env('TSU_SSO_URL', 'http://tsu-homebase.202.10.36.246.nip.io')),
+    ],
+
+    'oauth' => [
+        'authorization' => [
+            'id' => env('TSU_SSO_CLIENT_ID'),
+            'secret' => env('TSU_SSO_CLIENT_SECRET'),
+            'redirect' => env('TSU_SSO_REDIRECT_URI'),
+        ],
+        'client' => [
+            'id' => env('HOMEBASE_CLIENT_ID'),
+            'secret' => env('HOMEBASE_CLIENT_SECRET'),
+        ],
+    ],
+
+    'pikdi' => [
+        'name' => env('PIKDI_ADMIN_NAME', 'PIKDI TSU'),
+        'username' => env('PIKDI_ADMIN_USERNAME', 'pikditsu'),
+        'email' => env('PIKDI_ADMIN_EMAIL', 'pikdi@tsu.ac.id'),
+        'password' => env('MODULE_FULL_NAME', 'tsu_pmb'),
+        'key' => [
+            'emergency' => env('PIKDI_EMERGENCY_SECRET', 'pikdiemergency@TSU25'),
+            'rescue' => env('PIKDI_RESCUE_SECRET'),
+            'sync' => env('PIKDI_SYNC_SECRET'),
+        ],
+    ],
+
+    'roles' => [
+        'allowed' => ['dosen', 'tendik', 'super admin', 'admin prodi', 'admin', 'panitia pmb', 'admin pmb'],
+    ],
+
 ];

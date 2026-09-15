@@ -19,9 +19,9 @@ class PegawaiModel extends Model
      * @var array<int, string>
      */
     protected $table = 'data_karyawan';
-    // protected $primaryKey = 'nik';
-    // protected $keyType = 'string';
     public $incrementing = false;
+    public $timestamps = false;
+    protected $guarded = [];
     // protected $fillable = [
     //     'NIP',
     //     'NAMA',

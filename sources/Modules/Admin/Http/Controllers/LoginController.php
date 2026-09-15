@@ -39,81 +39,104 @@ class LoginController extends Controller
     );
     public function index()
     {
-        if (Session::has('session')) {
-            return redirect()->route('admin.dashboard')->with('alert',[
-                'title' => 'success!',
-                'message' => 'Already login',
-                'status' => 'success'
+        if (Session::has('session') || Auth::check()) {
+            return redirect()->route('admin.dashboard')->with('alert', [
+                'title'   => 'Info',
+                'message' => 'Anda sudah login.',
+                'status'  => 'info'
             ]);
-        } else {
-            $this->checkTimeChance();
-            $data = array(
-                'title' => 'Login Admin',
-                'menu' => 'Login Admin'
-            );
-            return view('admin::login.loginform',$data);
         }
+
+        // SSO Block (IP Based)
+        $ssoThrottleKey = 'sso-attempt:' . request()->ip();
+        $ssoSeconds = 0;
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($ssoThrottleKey, 5)) {
+            $ssoSeconds = \Illuminate\Support\Facades\RateLimiter::availableIn($ssoThrottleKey);
+            session()->now('error', "SECURITY LOCKDOWN: Tunggu <b id='sso-alert-timer'>$ssoSeconds</b> detik lagi.");
+        }
+
+        // Manual PIKDI Block (Session Based)
+        $manualSeconds = 0;
+        if (session()->has('manual_block_until')) {
+            $timeLeft = session('manual_block_until') - now()->timestamp;
+            if ($timeLeft > 0) {
+                $manualSeconds = $timeLeft;
+                session()->now('error', "SECURITY LOCKDOWN: Tunggu <b id='sso-alert-timer'>$manualSeconds</b> detik lagi.");
+            } else {
+                session()->forget('manual_block_until');
+            }
+        }
+
+        $data = [
+            'title'                   => 'Login Admin PMB',
+            'menu'                    => 'Login Admin PMB',
+            'app_name'                => config('app.name', 'TSU PMB'),
+            'existing_sso_seconds'    => $ssoSeconds,
+            'existing_manual_seconds' => $manualSeconds,
+        ];
+
+        return view('admin::login.loginform', $data);
     }
 
     public function loginaction(Request $post)
     {
-        $credentials = $post->validate([
-            'email' => ['required', 'email'],
+        $post->validate([
+            'identity' => ['required'],
             'password' => ['required'],
         ]);
-        // dd($this->loginChance());
-        if (Auth::attempt(['email' => $post->email, 'password' => $post->password])) {
-            $cek = User::where('email', $post->email)->where('isactive',1)->first();
-            if ($cek == null) {
-                Session::flash('alert', ['title' => 'Error', 'message' => 'Email belum terdaftar, Kesempatan : ' . $this->loginChance() . ' kali', 'status' => 'error']);
-                return redirect()->back();
-            }
 
-            $pass = null;
+        $throttleKey = 'manual-login:' . $post->ip();
+        $maxAttempts = 5;
 
-            if (Hash::check($post->password, $cek->password)) {
-                $pass = TRUE;
-            }
+        // Anti Brute Force Lockdown
+        if (\Illuminate\Support\Facades\RateLimiter::tooManyAttempts($throttleKey, $maxAttempts)) {
+            $seconds = \Illuminate\Support\Facades\RateLimiter::availableIn($throttleKey);
+            session()->put('manual_block_until', now()->addSeconds($seconds)->timestamp);
 
-            if (($post->email == $cek->email) && $pass == TRUE) {
-                $nama = null;
-                $groupuser = GroupUserModel::where('KodeGroupUser', $cek->privilege_pmb)->get();
-                $mastergroup = MasterGroupModel::where('KodeGroupUser', $cek->privilege_pmb)->first();
-
-                    $cek2 = PegawaiModel::where('nik', $cek->nik)->first();
-                    $nama = $cek2->nama;
-                if(Hash::check(defaultpassword(),$cek->password)){
-                    $session = array(
-                        'tmp_nik'   => $cek->nik,
-                        'tmp_nama'  => $nama,
-                        'tmp_email' => $post->email,
-                        'tmp_role' => $cek->privilege_pmb,
-                    );
-
-                    Session::put('tmp', $session);
-                    return redirect('admin/NewPassword')->with('alert', ['title' => 'Information', 'message' => 'Silahkan Input Password Baru !', 'status' => 'info']);
-                }else{
-                    $post->session()->regenerate();
-                    $admin                = new Admin();
-                    $admin->nip           = $cek->nik;
-                    $admin->nama          = $nama;
-                    $admin->email         = $cek->email;
-
-                    Session::put('session', $admin);
-                    Session::put('namagroup', $mastergroup==null ? null : $mastergroup->NamaGroup);
-                    Session::put('groupuser',$groupuser);
-                    Session::put('appname','PMB');
-                    Session::flash('alert', ['title' => 'Success', 'message' => 'Berhasil Login!', 'status' => 'success']);
-                    return redirect()->intended(route('admin.dashboard'));
-                }
-            } else {
-                Session::flash('alert', ['title' => 'Error', 'message' => 'Password Salah, Kesempatan : ' . $this->loginChance() . ' kali', 'status' => 'error']);
-                return redirect()->back();
-            }
-        } else {
-            Session::flash('alert', ['title' => 'Gagal', 'message' => 'Silahkan Isi Email dan Password dengan benar, Kesempatan : ' . $this->loginChance() . ' kali', 'status' => 'error']);
-            return redirect()->back();
+            return back()
+                ->with('error', "SECURITY LOCKDOWN: Terlalu banyak percobaan salah. Tunggu <b id='sso-alert-timer'>$seconds</b> detik lagi.")
+                ->with('retry_seconds_manual', $seconds)
+                ->withInput($post->only('identity'));
         }
+
+        $identity = $post->identity;
+        $isEmail = filter_var($identity, FILTER_VALIDATE_EMAIL);
+
+        $user = null;
+        if ($isEmail) {
+            $user = User::where('email', $identity)->where('isactive', 1)->first();
+        } else {
+            $user = User::where('username', $identity)
+                ->orWhere('nik', $identity)
+                ->where('isactive', 1)
+                ->first();
+        }
+
+        if ($user && $user->password && Hash::check($post->password, $user->password)) {
+            $post->session()->regenerate();
+            Auth::login($user);
+
+            // Bersihkan limiter
+            \Illuminate\Support\Facades\RateLimiter::clear($throttleKey);
+            session()->forget('manual_block_until');
+
+            // Setup Sesi Admin PMB via Helper
+            \App\Helpers\AdminSessionHelper::setupSession($user);
+
+            return redirect()->intended(route('admin.dashboard'))
+                ->with('alert', [
+                    'title'   => 'Success',
+                    'message' => 'Berhasil Login!',
+                    'status'  => 'success'
+                ]);
+        }
+
+        \Illuminate\Support\Facades\RateLimiter::hit($throttleKey, 60);
+        $attemptsLeft = \Illuminate\Support\Facades\RateLimiter::retriesLeft($throttleKey, $maxAttempts);
+
+        return back()
+            ->with('error', "Username/Email atau Password salah! Sisa percobaan: <b>$attemptsLeft kali</b> lagi.")
+            ->withInput($post->only('identity'));
     }
 
     public function loginChance()
