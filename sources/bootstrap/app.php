@@ -14,9 +14,12 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         //
         $middleware->alias([
-        'checkuser' => \App\Http\Middleware\CheckUser::class,
-        'checkadmin' => \App\Http\Middleware\CheckAdmin::class,
-    ]);
+            'checkuser' => \App\Http\Middleware\CheckUser::class,
+            'checkadmin' => \App\Http\Middleware\CheckAdmin::class,
+            'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+        ]);
     $middleware->append(HandleCors::class);
     $middleware->append(\App\Http\Middleware\AllowPrivateNetwork::class);
     })

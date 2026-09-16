@@ -54,4 +54,12 @@ public/build
 /scratch
 scratch/
 /.claude
-/.agents
+/.agents
+
+# > Assets mentah FontAwesome (Ribuan file SVG yang tidak dipakai webfont)
+**/fontawesome*/**/svgs/
+**/fontawesome*/**/svgs-full/
+**/fontawesome*/**/sprites/
+**/fontawesome*/**/sprites-full/
+**/fontawesome*/**/metadata/
+**/fontawesome*/**/scss/

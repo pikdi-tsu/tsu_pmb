@@ -49,7 +49,18 @@ class AdminSessionHelper
             $user->update(['privilege_pmb' => $privilege]);
         }
 
-        // 3. Query MasterGroupModel dan GroupUserModel
+        // 3. Spatie Role fallback (G001 = super admin, G003 = admin pmb)
+        if ($privilege === 'G001') {
+            if (!$user->hasRole('super admin') && \Spatie\Permission\Models\Role::where('name', 'super admin')->exists()) {
+                $user->assignRole('super admin');
+            }
+        } elseif ($privilege === 'G003') {
+            if (!$user->hasRole('admin pmb') && \Spatie\Permission\Models\Role::where('name', 'admin pmb')->exists()) {
+                $user->assignRole('admin pmb');
+            }
+        }
+
+        // 4. Query MasterGroupModel dan GroupUserModel
         $groupuser = GroupUserModel::where('KodeGroupUser', $privilege)->get();
         $mastergroup = MasterGroupModel::where('KodeGroupUser', $privilege)->first();
 

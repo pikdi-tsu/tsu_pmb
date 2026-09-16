@@ -154,7 +154,7 @@ return [
         'name' => env('PIKDI_ADMIN_NAME', 'PIKDI TSU'),
         'username' => env('PIKDI_ADMIN_USERNAME', 'pikditsu'),
         'email' => env('PIKDI_ADMIN_EMAIL', 'pikdi@tsu.ac.id'),
-        'password' => env('MODULE_FULL_NAME', 'tsu_pmb'),
+        'password' => env('PIKDI_ADMIN_PASSWORD', 'PIKDIsolo#TSU25'),
         'key' => [
             'emergency' => env('PIKDI_EMERGENCY_SECRET', 'pikdiemergency@TSU25'),
             'rescue' => env('PIKDI_RESCUE_SECRET'),
@@ -164,6 +164,15 @@ return [
 
     'roles' => [
         'allowed' => ['dosen', 'tendik', 'super admin', 'admin prodi', 'admin', 'panitia pmb', 'admin pmb'],
+    ],
+
+    'table' => [
+        'roles' => 'pmb_roles',
+        'permissions' => 'pmb_permissions',
+        'model_has_permissions' => 'pmb_model_has_permissions',
+        'model_has_roles' => 'pmb_model_has_roles',
+        'role_has_permissions' => 'pmb_role_has_permissions',
+        'menu_sidebars' => 'pmb_menu_sidebars',
     ],
 
 ];

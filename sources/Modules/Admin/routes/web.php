@@ -394,6 +394,27 @@ use Illuminate\Support\Facades\Route;
                     Route::get('/ResetPassword/{params}', [SettingController::class, 'ResetPassword'])->name('admin.UserReset.ResetPassword');
                     Route::get('/ResetQA/{params}', [SettingController::class, 'ResetQA'])->name('admin.UserReset.ResetQA');
                 });
+
+                // System Management (Standar TSU HRIS: Users, Roles, Role Permissions, Menus Management)
+                Route::prefix('system')->name('admin.system.')->group(function () {
+                    // Roles
+                    Route::get('roles/json', [\Modules\Admin\Http\Controllers\System\RoleController::class, 'datatable'])->name('roles.json');
+                    Route::post('roles/sync', [\Modules\Admin\Http\Controllers\System\RoleController::class, 'sync'])->name('roles.sync');
+                    Route::resource('roles', \Modules\Admin\Http\Controllers\System\RoleController::class);
+
+                    // Permissions
+                    Route::get('permissions/json', [\Modules\Admin\Http\Controllers\System\PermissionController::class, 'datatable'])->name('permissions.json');
+                    Route::resource('permissions', \Modules\Admin\Http\Controllers\System\PermissionController::class)->except(['create', 'edit', 'show']);
+
+                    // Menus
+                    Route::get('menus/json', [\Modules\Admin\Http\Controllers\System\MenuController::class, 'datatable'])->name('menus.json');
+                    Route::resource('menus', \Modules\Admin\Http\Controllers\System\MenuController::class);
+
+                    // Users
+                    Route::get('users/json', [\Modules\Admin\Http\Controllers\System\UserController::class, 'datatable'])->name('users.json');
+                    Route::post('users/sync', [\Modules\Admin\Http\Controllers\System\UserController::class, 'sync'])->name('users.sync');
+                    Route::resource('users', \Modules\Admin\Http\Controllers\System\UserController::class);
+                });
             });
         });
     });

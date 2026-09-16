@@ -6,6 +6,8 @@ use App\Models\Admin\PegawaiModel;
 use App\Models\Admin\User;
 use Exception;
 use Illuminate\Support\Facades\Log;
+use Spatie\Permission\Models\Role;
+use Spatie\Permission\PermissionRegistrar;
 
 class UserSyncService
 {
@@ -133,12 +135,15 @@ class UserSyncService
                 $userDirty = $user->isDirty();
                 $user->save();
 
+                // Sinkronisasi Spatie Roles berdasarkan data role dari Homebase
+                $roleChanged = $this->syncUserRoles($user, $userData);
+
                 // Sinkronisasi ke data_karyawan (PegawaiModel) jika ada data baru
                 $this->syncPegawai($user, $userData);
 
                 return [
                     'user'     => $user,
-                    'affected' => $isNewUser || $userDirty,
+                    'affected' => $isNewUser || $userDirty || $roleChanged,
                 ];
             });
         } catch (\Throwable $e) {
@@ -178,5 +183,71 @@ class UserSyncService
                 $pegawai->save();
             }
         }
+    }
+
+    /**
+     * Logika Sinkronisasi Role Spatie dari Homebase Vault
+     */
+    private function syncUserRoles(User $user, array $userData): bool
+    {
+        $incomingRoleNames = [];
+
+        // Normalisasi Data Role dari payload Homebase
+        if (!empty($userData['roles']) && is_array($userData['roles'])) {
+            foreach ($userData['roles'] as $r) {
+                $rName = is_string($r) ? $r : ($r['name'] ?? '');
+                if ($rName) {
+                    $incomingRoleNames[] = strtolower(trim($rName));
+                }
+            }
+        }
+
+        // Fallback single role string
+        if (!empty($userData['role']) && is_string($userData['role'])) {
+            $incomingRoleNames[] = strtolower(trim($userData['role']));
+        }
+
+        $incomingRoleNames = array_unique($incomingRoleNames);
+
+        // Validasi hanya role yang terdaftar di tabel pmb_roles
+        $validLocalRoles = Role::query()
+            ->where('guard_name', 'web')
+            ->whereIn('name', $incomingRoleNames)
+            ->pluck('name')
+            ->toArray();
+
+        // Pengaman email pikdi (otomatis super admin)
+        if ($user->email === config('app.pikdi.email')) {
+            Role::query()->firstOrCreate(['name' => 'super admin', 'guard_name' => 'web'], ['is_identity' => 1]);
+            if (!in_array('super admin', $validLocalRoles, true)) {
+                $validLocalRoles[] = 'super admin';
+            }
+        }
+
+        // Pertahankan role lokal buatan modul PMB (is_identity = 0, contoh: admin pmb, panitia pmb)
+        $currentRoles = $user->getRoleNames()->toArray();
+        $rolesToKeep = [];
+        $roleObjects = Role::whereIn('name', $currentRoles)->get()->keyBy('name');
+
+        foreach ($currentRoles as $roleName) {
+            $roleModel = $roleObjects->get($roleName);
+            if ($roleModel && !$roleModel->is_identity) {
+                $rolesToKeep[] = $roleName;
+            }
+        }
+
+        $finalRoles = array_values(array_unique(array_merge($validLocalRoles, $rolesToKeep)));
+        $previousRoles = $user->getRoleNames()->toArray();
+
+        sort($previousRoles);
+        sort($finalRoles);
+
+        if ($previousRoles !== $finalRoles) {
+            $user->syncRoles($finalRoles);
+            app()[PermissionRegistrar::class]->forgetCachedPermissions();
+            return true;
+        }
+
+        return false;
     }
 }
