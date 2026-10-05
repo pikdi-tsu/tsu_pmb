@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Admin\Http\Controllers\Masterdata;
+namespace Modules\Admin\Http\Controllers\masterdata;
 
 use App\Models\MasterData\Master_Fakultas;
 use App\Models\MasterData\Master_Jenjang;
