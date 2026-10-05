@@ -107,10 +107,10 @@ class DaftarRekomendatorController extends Controller
         $emailTerkirim = DaftarRekomendatorController::sendEmail($post->email, $post->nama_rekomendator, $kode, "Notifikasi Kode Rekomendator");
 
         $status = $emailTerkirim
-            ? ['title' => 'Berhasil', 'status' => 'success', 'message' => 'Pendaftaran berhasil. Kode Rekomendator telah dikirim ke ' . $post->email . '.']
-            : ['title' => 'Tersimpan', 'status' => 'warning', 'message' => 'Pendaftaran tersimpan dengan kode ' . $kode . ', namun email gagal dikirim. Silakan simpan kode ini atau hubungi panitia PMB.'];
+            ? ['title' => 'Berhasil', 'status' => 'success', 'toast' => true, 'message' => 'Pendaftaran berhasil. Kode Rekomendator telah dikirim ke ' . $post->email . '.']
+            : ['title' => 'Tersimpan', 'status' => 'warning', 'toast' => true, 'message' => 'Pendaftaran tersimpan dengan kode ' . $kode . ', namun email gagal dikirim. Silakan simpan kode ini atau hubungi panitia PMB.'];
 
-        return redirect()->route('daftarrekomendator.index')->with('alert', $status);
+        return redirect()->route('indexing')->with('alert', $status);
     }
 
     public static function sendEmail($email, $nama, $kode, $subject)
