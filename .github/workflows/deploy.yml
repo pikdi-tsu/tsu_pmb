@@ -138,7 +138,27 @@ jobs:
             }
             trap cleanup EXIT
 
-            command -v rsync >/dev/null 2>&1 || { echo "rsync tidak tersedia di server."; exit 1; }
+            # Sinkronisasi folder tanpa rsync (tidak tersedia di server):
+            # salin semua file rilis, lalu hapus file di tujuan yang tidak ada di rilis.
+            # Argumen ke-3 dst. = path relatif di tujuan yang dilindungi (tidak disalin & tidak dihapus)
+            sync_dir() {
+                local src="$1" dst="$2" p
+                shift 2
+                local tar_ex=() prune=()
+                for p in "$@"; do
+                    tar_ex+=( --exclude="./$p" )
+                    prune+=( -path "./$p" -o )
+                done
+                mkdir -p "$dst"
+                (cd "$src" && tar -cf - "${tar_ex[@]}" .) | (cd "$dst" && tar -xf -)
+                (cd "$dst" && find . -mindepth 1 \( "${prune[@]}" -false \) -prune -o -print) > "$STAGE_PATH/.sync_list"
+                while IFS= read -r p; do
+                    if [ ! -e "$src/$p" ] && [ ! -L "$src/$p" ]; then
+                        rm -rf "${dst:?}/$p"
+                    fi
+                done < "$STAGE_PATH/.sync_list"
+                rm -f "$STAGE_PATH/.sync_list"
+            }
 
             # Muat nilai .env dari paket base64 hasil upload, lalu hapus filenya
             [ -f "$ENV_FILE" ] || { echo "deploy.env tidak ditemukan di server."; exit 1; }
@@ -179,23 +199,16 @@ jobs:
 
             # B1. Sinkronisasi kode core (file yang dihapus di repo ikut terhapus di server)
             #     Data server (.env, storage upload, vendor, cache) tidak disentuh
-            rsync -a --delete \
-                --exclude='/.env' \
-                --exclude='/.env.backup' \
-                --exclude='/.env.production' \
-                --exclude='/storage/' \
-                --exclude='/vendor/' \
-                --exclude='/bootstrap/cache/' \
-                --exclude='/public' \
-                --exclude='/node_modules/' \
-                "$STAGE_PATH/core/" "$CORE_PATH/"
+            sync_dir "$STAGE_PATH/core" "$CORE_PATH" \
+                .env .env.backup .env.production .env.tmp \
+                storage vendor bootstrap/cache public node_modules
 
             # B2. Sinkronisasi public_html
             #     index.php & .htaccess ditimpa, folder public/ disinkronkan penuh (kecuali symlink storage)
             #     File lain di public_html (.well-known, dsb.) tidak disentuh
             cp -f "$STAGE_PATH/public/index.php" "$STAGE_PATH/public/.htaccess" "$PUBLIC_PATH/"
             mkdir -p "$PUBLIC_PATH/public"
-            rsync -a --delete --exclude='/storage' "$STAGE_PATH/public/public/" "$PUBLIC_PATH/public/"
+            sync_dir "$STAGE_PATH/public/public" "$PUBLIC_PATH/public" storage
 
             # Sesuaikan path autoloader index.php di public_html agar mengarah ke folder core
             cd "$PUBLIC_PATH"
