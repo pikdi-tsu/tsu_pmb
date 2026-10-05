@@ -53,9 +53,6 @@ class DaftarRekomendatorController extends Controller
 
     public function save(Request $post)
     {
-        DB::beginTransaction();
-        $kode = $this->generateKodeRekomendator($post->kategori);
-
         $post->validate([
             'nama_rekomendator' => 'required',
             'kategori' => 'required',
@@ -79,7 +76,9 @@ class DaftarRekomendatorController extends Controller
             'nama_bank.required' => 'Nama Bank wajib diisi',
         ]);
 
+        DB::beginTransaction();
         try {
+            $kode = $this->generateKodeRekomendator($post->kategori);
             $arrayIn = array(
                 'kode_rekomendator' => $kode,
                 'kategori'          => $post->kategori,
@@ -96,17 +95,22 @@ class DaftarRekomendatorController extends Controller
                 'isactive'          => '0'
             );
             Master_Rekomendator::insert($arrayIn);
-            DaftarRekomendatorController::sendEmail($post->email, $post->nama_rekomendator, $kode, "Notifikasi Kode Rekomendator");
             DB::commit();
-
-            $status = ['title' => 'Berhasil', 'status' => 'success', 'message' => 'Data Rekomendator Berhasil Disimpan'];
-            return redirect()->route('indexing')->with('alert', $status);
         } catch (\Exception $e) {
             DB::rollback();
             \Illuminate\Support\Facades\Log::error('Gagal simpan data rekomendator: ' . $e->getMessage());
             $status = ['title' => 'Gagal', 'status' => 'error', 'message' => 'Data Rekomendator Gagal Disimpan. Silakan coba kembali.'];
-            return redirect()->back()->with('alert', $status);
+            return redirect()->back()->withInput()->with('alert', $status);
         }
+
+        // Email dikirim setelah commit: kegagalan SMTP tidak membatalkan data yang sudah tersimpan
+        $emailTerkirim = DaftarRekomendatorController::sendEmail($post->email, $post->nama_rekomendator, $kode, "Notifikasi Kode Rekomendator");
+
+        $status = $emailTerkirim
+            ? ['title' => 'Berhasil', 'status' => 'success', 'message' => 'Pendaftaran berhasil. Kode Rekomendator telah dikirim ke ' . $post->email . '.']
+            : ['title' => 'Tersimpan', 'status' => 'warning', 'message' => 'Pendaftaran tersimpan dengan kode ' . $kode . ', namun email gagal dikirim. Silakan simpan kode ini atau hubungi panitia PMB.'];
+
+        return redirect()->route('daftarrekomendator.index')->with('alert', $status);
     }
 
     public static function sendEmail($email, $nama, $kode, $subject)

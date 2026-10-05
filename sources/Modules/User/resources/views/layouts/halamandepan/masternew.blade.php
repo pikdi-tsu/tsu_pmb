@@ -35,8 +35,11 @@
 
     <script>
         @if (Session::has('alert'))
-            Swal.fire('{{ session('alert')['title'] }}', '{{ session('alert')['message'] }}',
-                '{{ session('alert')['status'] }}')
+            // sweetalert.js dimuat di bagian bawah halaman, tunggu sampai siap
+            document.addEventListener('DOMContentLoaded', function () {
+                Swal.fire(@json(session('alert')['title']), @json(session('alert')['message']),
+                    @json(session('alert')['status']));
+            });
         @endif
         // Swal.fire('halo', 'test alert',
         //         'success')
