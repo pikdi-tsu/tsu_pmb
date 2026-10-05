@@ -354,6 +354,7 @@ use Illuminate\Support\Facades\Route;
                     Route::get('/Tabel', [LogAktivitasController::class, 'tabel'])->name('admin.logaktivitas.tabel');
                     Route::get('/ModulList', [LogAktivitasController::class, 'modulList'])->name('admin.logaktivitas.modullist');
                 });
+                Route::get('/LogAktivitas/show', [LogAktivitasController::class, 'index'])->name('admin.log.show');
 
                 Route::prefix('Tools')->group(function () {
                     //Change Password

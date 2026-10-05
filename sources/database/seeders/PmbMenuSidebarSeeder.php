@@ -367,7 +367,7 @@ class PmbMenuSidebarSeeder extends Seeder
         MenuSidebar::create([
             'name'            => 'Log Aktivitas',
             'icon'            => 'fas fa-history',
-            'route'           => 'admin.log.show',
+            'route'           => 'admin.logaktivitas.index',
             'permission_name' => 'system:log:view',
             'parent_id'       => $system->id,
             'order'           => 5,
