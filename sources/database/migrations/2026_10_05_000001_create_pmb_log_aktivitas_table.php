@@ -26,12 +26,13 @@ return new class extends Migration
             });
         }
 
-        // Daftarkan menu "Log Aktivitas" ke pmb_modul agar bisa dikontrol via Group User & Privilege
-        if (Schema::hasTable('pmb_modul') && !DB::table('pmb_modul')->where('alias', 'log-aktivitas')->exists()) {
-            DB::table('pmb_modul')->insert([
+        // Daftarkan menu "Log Aktivitas" ke pmb_admin_modul agar bisa dikontrol via Group User & Privilege
+        if (Schema::hasTable('pmb_admin_modul')
+            && !DB::table('pmb_admin_modul')->where('modul', 'Tools')->where('menu', 'Log Aktivitas')->exists()) {
+            DB::table('pmb_admin_modul')->insert([
                 'modul'      => 'Tools',
                 'menu'       => 'Log Aktivitas',
-                'alias'      => 'log-aktivitas',
+                'alias'      => 'Log Aktivitas',
                 'MenuAktif'  => 'Y',
                 'created_at' => now(),
                 'created_by' => 'system',
