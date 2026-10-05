@@ -51,9 +51,15 @@
                         </div>
                         </div>
                 </form>
-                <p style="margin-top:10px;">
+                <p style="margin-top:10px;" class="mb-2">
                     <a href="{{ route('register') }}" class="text-center">Registrasi Akun Baru</a>
                 </p>
+                <div class="mt-3 pt-2 border-top text-center">
+                    <span class="text-xs text-muted">Dosen / Panitia PMB?</span><br>
+                    <a href="{{ route('login') }}" class="text-sm font-weight-bold text-info">
+                        <i class="fas fa-fingerprint mr-1"></i> Masuk via SSO TSU
+                    </a>
+                </div>
             </div>
             </div>
     </div>

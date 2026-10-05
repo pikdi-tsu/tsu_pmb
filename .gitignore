@@ -44,3 +44,22 @@ sources/yarn-error.log
 public/storage
 public/hot
 public/build
+
+# --- 5. STANDAR HIGIENITAS REPOSITORI & DEPLOYMENT (SOP IT TSU) ---
+*.sql
+*.sqlite
+*.zip
+*.tar.gz
+*.rar
+/scratch
+scratch/
+/.claude
+/.agents
+
+# > Assets mentah FontAwesome (Ribuan file SVG yang tidak dipakai webfont)
+**/fontawesome*/**/svgs/
+**/fontawesome*/**/svgs-full/
+**/fontawesome*/**/sprites/
+**/fontawesome*/**/sprites-full/
+**/fontawesome*/**/metadata/
+**/fontawesome*/**/scss/

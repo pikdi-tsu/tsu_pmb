@@ -30,6 +30,22 @@
                 data-accordion="false">
                 <!-- Add icons to the links using the .nav-icon class with font-awesome or any other icon font library -->
                 <li class="nav-header">Main Navigation</li>
+                @php
+                    $dynamicSidebarMenus = \Modules\Admin\Models\MenuSidebar::query()
+                        ->whereNull('parent_id')
+                        ->where('isactive', 1)
+                        ->with(['children' => function ($query) {
+                            $query->where('isactive', 1)->orderBy('order', 'asc');
+                        }])
+                        ->orderBy('order', 'asc')
+                        ->get();
+                @endphp
+
+                @if($dynamicSidebarMenus->isNotEmpty())
+                    @foreach ($dynamicSidebarMenus as $menu)
+                        @include('admin::components.layouts.sidebar-item', ['menu' => $menu, 'level' => 0])
+                    @endforeach
+                @else
                 <li class="nav-item">
                     <a href="{{ route('admin.dashboard') }}" class="nav-link {{ request()->is('admin/dashboard*') ? 'active' : '' }}">
                         <i class="nav-icon fas fa-tachometer-alt"></i>
@@ -479,6 +495,8 @@
                             @endif
                         </ul>
                     </li>
+                @endif
+
                 @endif
 
             </ul>

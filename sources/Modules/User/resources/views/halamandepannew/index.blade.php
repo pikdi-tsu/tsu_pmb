@@ -30,7 +30,7 @@
                 <h2 class="text-white">Selamat datang di Portal Penerimaan Mahasiswa Baru</h2>
                 <h2 class="text-white">Tiga Serangkai University</h2>
                 <h4 class="mb-3 text-white">Tahun Akademik {{ $thnakademik }}</h4>
-                <a href="{{ route('register') }}" class="btn btn-warning btn-lg text-bold text-white">Daftar Sekarang</a>
+                {{-- <a href="{{ route('register') }}" class="btn btn-warning btn-lg text-bold text-white">Daftar Sekarang</a> --}}
             </div>
         </div>
 
