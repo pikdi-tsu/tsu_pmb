@@ -24,6 +24,10 @@
 
     <!-- Main CSS File -->
     <link href="{{ asset('public/assets/user/css/main.css') }}" rel="stylesheet">
+    <style>
+        /* Alert/toast selalu di atas #preloader (z-index 999999) */
+        .swal-above-preloader { z-index: 1000000 !important; }
+    </style>
 </head>
 
 <body class="index-page">
@@ -36,25 +40,51 @@
     <script>
         @if (Session::has('alert'))
             // sweetalert.js dimuat di bagian bawah halaman, tunggu sampai siap
-            document.addEventListener('DOMContentLoaded', function () {
-                @if (!empty(session('alert')['toast']))
-                    Swal.mixin({
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        showCloseButton: true,
-                        timer: {{ session('alert')['status'] === 'success' ? 6000 : 15000 }},
-                        timerProgressBar: true,
-                    }).fire({
-                        icon: @json(session('alert')['status']),
-                        title: @json(session('alert')['title']),
-                        text: @json(session('alert')['message']),
-                    });
-                @else
-                    Swal.fire(@json(session('alert')['title']), @json(session('alert')['message']),
-                        @json(session('alert')['status']));
-                @endif
-            });
+            // Tampilkan setelah preloader hilang (window load), atau paling lambat 4 detik
+            // agar alert tidak tertutup preloader & timer tidak habis sebelum terlihat
+            (function () {
+                var shown = false;
+                function showSessionAlert() {
+                    if (shown || typeof Swal === 'undefined') return;
+                    shown = true;
+                    @if (!empty(session('alert')['toast']))
+                        Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            showCloseButton: true,
+                            timer: {{ session('alert')['status'] === 'success' ? 8000 : 'undefined' }},
+                            timerProgressBar: true,
+                            customClass: { container: 'swal-above-preloader' },
+                            didOpen: function (toast) {
+                                toast.addEventListener('mouseenter', Swal.stopTimer);
+                                toast.addEventListener('mouseleave', Swal.resumeTimer);
+                                toast.addEventListener('touchstart', Swal.stopTimer, { passive: true });
+                            },
+                        }).fire({
+                            icon: @json(session('alert')['status']),
+                            title: @json(session('alert')['title']),
+                            text: @json(session('alert')['message']),
+                        });
+                    @else
+                        Swal.fire({
+                            title: @json(session('alert')['title']),
+                            text: @json(session('alert')['message']),
+                            icon: @json(session('alert')['status']),
+                            customClass: { container: 'swal-above-preloader' },
+                        });
+                    @endif
+                }
+                // Hentikan hitung mundur saat tab tidak aktif
+                document.addEventListener('visibilitychange', function () {
+                    if (typeof Swal === 'undefined' || !Swal.isVisible()) return;
+                    document.hidden ? Swal.stopTimer() : Swal.resumeTimer();
+                });
+                window.addEventListener('load', showSessionAlert);
+                document.addEventListener('DOMContentLoaded', function () {
+                    setTimeout(showSessionAlert, 4000);
+                });
+            })();
         @endif
         // Swal.fire('halo', 'test alert',
         //         'success')
