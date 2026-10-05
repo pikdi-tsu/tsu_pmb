@@ -32,10 +32,10 @@ scratch. This page gets rid of all links and provides the needed markup only.
         <!-- Navbar -->
         <nav class="main-header navbar navbar-expand-md navbar-light bg-teal">
             <div class="container">
-                <a href="#" class="navbar-brand">
+                <a href="{{ route('indexing') }}" class="navbar-brand">
                     <img src="{{ asset('public/assets/user/img/logotsu.png') }}" alt="AdminLTE Logo" class="brand-image"
                         style="opacity: .8">
-                    <span class="brand-text font-weight-light"><b>PENDAFTARAN PMB TSU 2025/2026</b></span>
+                    <span class="brand-text font-weight-light"><b>PENDAFTARAN PMB TSU {{ date('Y') }}/{{ date('Y') + 1 }}</b></span>
                 </a>
             </div>
         </nav>
@@ -87,7 +87,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
             });
         }
 
-        $("#password,#a_1,#a_2").keypress(function(event){
+        $("#a_1,#a_2").keypress(function(event){
             var ew = event.which;
 
             if(48 <= ew && ew <= 57)

@@ -120,7 +120,7 @@ class OnlineTestController extends Controller
 
         if($count==0&&$updt){
             DB::commit();
-            $status = ['title' => 'Berhasil !', 'status' => 'success', 'message' => 'Selamat ! Skor Anda adalah '.$finalskor.' dari '.count($ceksoal).' Soal !'];
+            $status = ['title' => 'Berhasil!', 'status' => 'success', 'message' => 'Selamat, Anda sudah menyelesaikan test!'];
             return redirect()->route('Dashboard')->with('alert', $status);
         }else{
             DB::rollback();;

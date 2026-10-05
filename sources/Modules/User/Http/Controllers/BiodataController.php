@@ -9,8 +9,10 @@ use App\Models\MasterData\Master_Kabupaten;
 use App\Models\MasterData\Master_Kecamatan;
 use App\Models\MasterData\Master_Kelurahan;
 use App\Models\MasterData\Master_Provinsi;
+use App\Models\MasterData\Master_Berkas;
 use App\Models\Parameter;
 use App\Models\User\Biodata;
+use App\Models\User\BerkasPendaftaran;
 use App\Models\User\Pendaftaran;
 use App\Models\User\Saudara;
 use Symfony\Component\HttpFoundation\Response;
@@ -96,31 +98,29 @@ class BiodataController extends Controller
     }
 
     public function save_biodata(Request $post)
-    {
-        $jmlsaudara = $post->jumlah_saudara;
-        if($jmlsaudara!=count($post->nama_saudara)){
-            return redirect()->back()->with('alert',['title' => 'Information', 'message' => 'Jumlah saudara harus sama dengan data saudara !', 'status' => 'warning']);
+{
+    $jmlsaudara = (int)($post->jumlah_saudara ?? 0);
+    $namaSaudara = $post->nama_saudara ?? [];
+    if($jmlsaudara != count($namaSaudara)){
+        return redirect()->back()->with('alert',['title' => 'Information', 'message' => 'Jumlah saudara harus sama dengan data saudara !', 'status' => 'warning']);
+    }
+
+    $cek = Pendaftaran::where('KodePendaftaran', $post->kodedaftar)->first();
+    $bioId = decrypt(session('user')->_biodata);
+    $cek1 = Biodata::where('biodata_id', $bioId)->where('isactive', 1)->first();
+    $parameter = Parameter::where('id', 1)->first();
+
+    // Hapus file lama jika sebelumnya pernah menggunakan sistem 1 file pdf
+    if($cek1->berkas_umum != null){
+        $path = $parameter->file_umum.'/'.$cek1->berkas_umum;
+        if (Storage::exists($path)) {
+            Storage::delete($path);
         }
+    }
 
-        $cek = Pendaftaran::where('KodePendaftaran',$post->kodedaftar)->first();
-        $file = $post->file('berkasumum');
-        $ext = $file->getClientOriginalExtension();
-        $filename = 'BERKAS_UMUM_'.$cek->KodePendaftaran.'_'.date('YmdHis').'.'.$ext;
+    DB::beginTransaction();
 
-        $bioId = decrypt(session('user')->_biodata);
-        $cek1 = Biodata::where('biodata_id',$bioId)->where('isactive',1)->first();
-        // dd($post->pekerjaan_saudara[0],$post,$file,$jmlsaudara>0);
-
-        $parameter = Parameter::where('id',1)->first();
-        if($cek1->berkas_umum!=null){
-            $path = $parameter->file_umum.'/'.$cek1->berkas_umum;
-            if (Storage::exists($path)) {
-                Storage::delete($path);
-            }
-        }
-
-        DB::beginTransaction();
-
+    try {
         $databio = array(
             'nik' => $post->nik,
             'nokk' => $post->nokk,
@@ -129,8 +129,8 @@ class BiodataController extends Controller
             'jenkel' => $post->jenkel,
             'tempat_lahir' => $post->tempat_lahir,
             'tgl_lahir' => $post->tgl_lahir,
-            'tinggi_badan' => $post->tinggi_badan,
-            'berat_badan' => $post->berat_badan,
+            // 'tinggi_badan' => $post->tinggi_badan,
+            // 'berat_badan' => $post->berat_badan,
             'agama' => $post->agama,
             'ukuran_jas' => $post->ukuran_jas,
             'provinsi' => $post->provinsi,
@@ -148,7 +148,7 @@ class BiodataController extends Controller
             'statushidup_ayah' => $post->statushidup_ayah,
             'nohp_ayah' => $post->nohp_ayah,
             'pekerjaan_ayah' => $post->pekerjaan_ayah,
-            'penghasilan_ayah' => $post->penghasilan_ayah,
+            'penghasilan_ayah' => !empty($post->penghasilan_ayah) ? (preg_replace('/[^0-9]/', '', (string)$post->penghasilan_ayah) ?: 0) : 0,
             'alamat_ayah' => $post->alamat_ayah,
             'nama_ibu' => $post->nama_ibu,
             'tempat_lahir_ibu' => $post->tempat_lahir_ibu,
@@ -157,7 +157,7 @@ class BiodataController extends Controller
             'statushidup_ibu' => $post->statushidup_ibu,
             'nohp_ibu' => $post->nohp_ibu,
             'pekerjaan_ibu' => $post->pekerjaan_ibu,
-            'penghasilan_ibu' => $post->penghasilan_Ibu,
+            'penghasilan_ibu' => !empty($post->penghasilan_ibu ?? $post->penghasilan_Ibu) ? (preg_replace('/[^0-9]/', '', (string)($post->penghasilan_ibu ?? $post->penghasilan_Ibu)) ?: 0) : 0,
             'alamat_ibu' => $post->alamat_ibu,
             'jumlah_saudara' => $jmlsaudara,
             'nama_sekolah' => $post->nama_sekolah,
@@ -167,47 +167,106 @@ class BiodataController extends Controller
             'npsn' => $post->npsn,
             'nisn' => $post->nisn,
             'nilai_akhir' => $post->nilai_akhir,
-            'berkas_umum' => $filename,
+            'berkas_umum' => null, // <- Set null karena sudah dipindah ke tabel detail
             'updated_at' => now()
         );
 
-        $upbio = Biodata::where('biodata_id',$bioId)->where('isactive',1)->update($databio);
+        // Update Biodata
+        Biodata::where('biodata_id', $bioId)->where('isactive', 1)->update($databio);
 
-        $updaftar = Pendaftaran::where('KodePendaftaran',$post->kodedaftar)->update([
-            'current_step' => $cek->current_step+1,
+        // Update Pendaftaran
+        Pendaftaran::where('KodePendaftaran', $post->kodedaftar)->update([
+            'current_step' => $cek->current_step + 1,
             'tahun_lulus' => $post->tahun_lulus,
             'updated_at' => now()
         ]);
 
-        $count = 0;
-        if($jmlsaudara>0){
-            $cek2 = Saudara::where('bio_id',$bioId);
-            if($cek2->exists()){
-                $cek2->delete();
-            }
+        // Simpan Data Saudara
+        $countSaudara = 0;
+        if($jmlsaudara > 0){
+            Saudara::where('bio_id', $bioId)->delete(); // Langsung delete jika ada (karena diganti baru)
             foreach ($post->nama_saudara as $key => $p) {
-                $saudara = array(
+                $ups = Saudara::create([ // Gunakan Create jika Eloquent
                     'bio_id' => $bioId,
                     'nama' => $p,
                     'pekerjaan' => $post->pekerjaan_saudara[$key],
                     'status_hidup' => $post->statushidup_saudara[$key],
                     'status_kekerabatan' => $post->statuskekerabatan_saudara[$key],
-                    'created_at' => now()
-                );
-                $ups = Saudara::insert($saudara);
-                if($ups){
-                    $count++;
-                }
+                ]);
+                if($ups) $countSaudara++;
             }
         }
 
-        if($upbio&&$updaftar&&$count==$jmlsaudara){
-            $file->storeAs($parameter->file_umum, $filename);
+        if ($post->hasFile('berkas_pendaftaran')) {
+            // Tangkap data format dari hidden input
+            $formatWajibArray = $post->format_wajib;
+
+            foreach ($post->file('berkas_pendaftaran') as $kodeBerkas => $file) {
+                
+                // JURUS SAKTI: Bersihkan "brks_"
+                $cleanIdBerkas = str_replace('brks_', '', $kodeBerkas);
+
+                // Ambil ekstensi file yang diupload user
+                $ext = strtolower($file->getClientOriginalExtension());
+                
+                // --- START VALIDASI CERDAS ---
+                // Ambil format wajibnya, hilangkan titiknya (contoh: ".jpg" jadi "jpg")
+                $formatWajib = 'pdf'; // Default aman
+                if (isset($formatWajibArray[$kodeBerkas])) {
+                    $formatWajib = str_replace('.', '', strtolower($formatWajibArray[$kodeBerkas]));
+                }
+
+                // Proses pengecekan
+                if ($formatWajib == 'jpg' && !in_array($ext, ['jpg', 'jpeg'])) {
+                    DB::rollback();
+                    return redirect()->back()->with('alert',['title' => 'Gagal!', 'message' => 'Format file Pas Foto wajib berupa JPG/JPEG!', 'status' => 'error']);
+                } elseif ($formatWajib == 'pdf' && $ext != 'pdf') {
+                    DB::rollback();
+                    return redirect()->back()->with('alert',['title' => 'Gagal!', 'message' => 'Format berkas dokumen wajib berupa PDF!', 'status' => 'error']);
+                }
+                // --- END VALIDASI CERDAS ---
+
+                // Buat Format Nama File
+                $originalName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+                $cleanName = Str::slug($originalName); 
+                $filename = $post->kodedaftar . '_brks_' . $cleanIdBerkas . '_' . $cleanName . '.' . $ext;
+
+                // Cek file lama untuk ditimpa
+                $existingBerkas = BerkasPendaftaran::where('kode_daftar', $post->kodedaftar)
+                                                    ->where('id_berkas', $cleanIdBerkas)
+                                                    ->first();
+                if ($existingBerkas) {
+                    Storage::delete($parameter->file_umum . '/' . $existingBerkas->nama_berkas);
+                    $existingBerkas->delete();
+                }
+
+                BerkasPendaftaran::create([
+                    'kode_daftar'         => $post->kodedaftar,
+                    'id_berkas'           => $cleanIdBerkas,
+                    'nama_berkas'         => $filename,
+                    'status_berkas'       => null,
+                    'keterangan_berkas'   => null,
+                    'nik_validasi_berkas' => null,
+                    'created_by'          => $post->nama,
+                ]);
+
+                // Pindahkan file fisik
+                $file->storeAs($parameter->file_umum, $filename);
+            }
+        }
+
+        if($countSaudara == $jmlsaudara){
             DB::commit();
             return redirect()->route('Dashboard')->with('alert',['title' => 'Berhasil', 'message' => 'Update Biodata Berhasil !', 'status' => 'success']);
-        }else{
+        } else {
             DB::rollback();
-            return redirect()->back()->with('alert',['title' => 'Error', 'message' => 'Update Biodata Gagal ! Silahkan Input Kembali', 'status' => 'error']);
+            return redirect()->back()->with('alert',['title' => 'Error', 'message' => 'Update Biodata Gagal pada data Saudara ! Silahkan Input Kembali', 'status' => 'error']);
         }
+
+    } catch (\Exception $e) {
+        DB::rollback();
+        // Return error message asli dari try-catch untuk memudahkan debugging
+        return redirect()->back()->with('alert',['title' => 'Error', 'message' => 'Sistem Error: ' . $e->getMessage(), 'status' => 'error']);
     }
+}
 }

@@ -65,6 +65,10 @@ class JurusanController extends Controller
             $nama = $d->JurusanSekolah->sekolah.' - '.$d->JurusanSekolah->jurusan_sekolah;
             return $nama;
         })
+        // TAMBAHAN: Kolom Format NIM
+        ->addColumn('format_nim', function ($d) {
+            return $d->format_nim ?? '-';
+        })
         ->addColumn('aktif', function ($d) {
             $role = '-';
             $warna = '';
@@ -99,14 +103,16 @@ class JurusanController extends Controller
 
     public function StoreJurusan(Request $post)
     {
+        // Perbaikan: Hanya cek duplikat jika ini adalah simpan baru (IdJurusan == null)
         $cek = Master_JurusanKuliah::where('isactive',1)
         ->where('jurusan',$post->namajurusan)
         ->where('idjenjang',$post->jenjang)
         ->where('idjurusansekolah',$post->jurusansekolah)
         ->where('idfakultas',$post->fakultas)
         ->first();
+        
         $alert = null;
-        if($cek){
+        if($cek && $post->IdJurusan == null){
             $alert = array(
                 'title' => 'Gagal!',
                 'message' => 'Jurusan Sudah Ada !',
@@ -120,9 +126,7 @@ class JurusanController extends Controller
             }
         }
 
-
         return redirect()->route('admin.Jurusan.show')->with('alert',$alert);
-
     }
 
     public function Save($post)
@@ -133,23 +137,25 @@ class JurusanController extends Controller
             'idjenjang'    => $post->jenjang,
             'idjurusansekolah'    => $post->jurusansekolah,
             'jurusan'    => $post->namajurusan,
+            'format_nim' => $post->format_nim, // TAMBAHAN: Simpan Format NIM
             'created_at'   => date('Y-m-d H:i:s'),
-            'created_by'   => session('session')->nip,
+            'created_by'   => optional(session('session'))->nip ?? 'System', // Menggunakan optional
         );
+        
         DB::beginTransaction();
-        $save = Master_JurusanKuliah::insert($up);
-        if($save){
+        try {
+            $save = Master_JurusanKuliah::insert($up);
             DB::commit();
             $alert = array(
                 'title' => 'Berhasil!',
                 'message' => 'Data Jurusan Tersimpan !',
                 'status' => 'success'
             );
-        }else{
+        } catch (\Throwable $e) {
             DB::rollback();
             $alert = array(
                 'title' => 'Gagal!',
-                'message' => 'Data Jurusan Gagal Disimpan !',
+                'message' => 'Data Jurusan Gagal Disimpan ! ',
                 'status' => 'error'
             );
         }
@@ -165,11 +171,11 @@ class JurusanController extends Controller
         if($check){
             $data['hasil'] = 1;
             $data['jurusan'] = $check;
-            $data['IdJurusan'] = $params;
+            $data['IdJurusan'] = encrypt($check->KodeJurusan); // Perbaikan enkripsi ID
         }else{
             $data['hasil'] = 0;
             $data['jurusan'] = $check;
-            $data['IdJurusan'] = $params;
+            $data['IdJurusan'] = null;
         }
         return response()->json($data, Response::HTTP_OK);
     }
@@ -185,23 +191,26 @@ class JurusanController extends Controller
             'idjenjang'    => $post->jenjang,
             'idjurusansekolah'    => $post->jurusansekolah,
             'jurusan'    => $post->namajurusan,
+            'format_nim' => $post->format_nim, // TAMBAHAN: Update Format NIM
             'updated_at'   => date('Y-m-d H:i:s'),
-            'updated_by'   => session('session')->nip,
+            'updated_by'   => optional(session('session'))->nip ?? 'System',
         );
+        
         DB::beginTransaction();
-        $update = Master_JurusanKuliah::where('isactive',1)->where('KodeJurusan',$id)->update($up);
-        if($update){
+        try {
+            // Gunakan $id (KodeJurusan) sebagai identifier update
+            $update = Master_JurusanKuliah::where('isactive',1)->where('KodeJurusan',$id)->update($up);
             DB::commit();
             $alert = array(
                 'title' => 'Berhasil!',
                 'message' => 'Data Jurusan Diperbarui !',
                 'status' => 'success'
             );
-        }else{
+        } catch (\Throwable $e) {
             DB::rollback();
             $alert = array(
                 'title' => 'Gagal!',
-                'message' => 'Data Jurusan Gagal Diperbarui !',
+                'message' => 'Data Jurusan Gagal Diperbarui ! ',
                 'status' => 'error'
             );
         }
@@ -212,17 +221,23 @@ class JurusanController extends Controller
     {
         $id = decrypt($params1);
         $aktif = decrypt($params2);
-        $cek = Pendaftaran::where('pilihan1',$id)->orwhere('pilihan2',$id)->first();
+        
+        // Perbaiki pengecekan di tabel Pendaftaran
+        $cek = Pendaftaran::where('pilihan1', $id)
+            ->orWhere('pilihan2', $id)
+            ->first();
+            
         // dd($cek);
         if($cek){
             $alert = ['title' => 'Gagal','message' => 'Jurusan Sudah Ada yang mendaftar !','status' => 'error'];
             return redirect()->route('admin.Jurusan.show')->with('alert',$alert);
         }
+        
         DB::beginTransaction();
         $up = array(
             'isactive' => $aktif,
             'updated_at' => date('Y-m-d H:i:s'),
-            'updated_by' => session('session')->nip
+            'updated_by' => optional(session('session'))->nip ?? 'System'
         );
 
         $update = Master_JurusanKuliah::where('KodeJurusan',$id)->update($up);

@@ -24,7 +24,7 @@
   --background-color: #f1f5f4; /* Background color for the entire website, including individual sections */
   --default-color: #212529; /* Default color used for the majority of the text content across the entire website */
   --heading-color: #2d465e; /* Color for headings, subheadings and title throughout the website */
-  --accent-color: #08915e; /* Accent color that represents your brand on the website. It's used for buttons, links, and other elements that need to stand out */
+  --accent-color: #126c84; /* Accent color that represents your brand on the website. It's used for buttons, links, and other elements that need to stand out */
   --surface-color: #ffffff; /* The surface color is used as a background of boxed elements within sections, such as cards, icon boxes, or other elements that require a visual separation from the global background. */
   --contrast-color: #ffffff; /* Contrast color for text, ensuring readability against backgrounds of accent, heading, or default colors. */
 }
@@ -32,11 +32,11 @@
 /* Nav Menu Colors - The following color variables are used specifically for the navigation menu. They are separate from the global colors to allow for more customization options */
 :root {
   --nav-color: rgba(255, 255, 255, 0.75);  /* The default color of the main navmenu links */
-  --nav-hover-color: #08915e; /* Applied to main navmenu links when they are hovered over or active */
+  --nav-hover-color: #126c84; /* Applied to main navmenu links when they are hovered over or active */
   --nav-mobile-background-color: #ffffff; /* Used as the background color for mobile navigation menu */
   --nav-dropdown-background-color: #ffffff; /* Used as the background color for dropdown items that appear when hovering over primary navigation items */
   --nav-dropdown-color: #212529; /* Used for navigation links of the dropdown items in the navigation menu. */
-  --nav-dropdown-hover-color: #08915e; /* Similar to --nav-hover-color, this color is applied to dropdown navigation links when they are hovered over. */
+  --nav-dropdown-hover-color: #126c84; /* Similar to --nav-hover-color, this color is applied to dropdown navigation links when they are hovered over. */
 }
 
 /* Color Presets - These classes override global colors when applied to any section or element, providing reuse of the sam color scheme. */
@@ -8223,4 +8223,646 @@ section,
 .starter-section {
   /* Add your styles here */
 }
+/* --- 1. Container Utama --- */
+    .social-widget-container {
+        position: fixed;
+        bottom: 25px; /* Jarak dari bawah */
+        left: 25px;   /* Jarak dari kiri */
+        z-index: 9999;
+        display: flex;
+        flex-direction: column; /* Susun vertikal */
+        align-items: center;    /* Rata tengah */
+        gap: 5px;               /* Jarak antar elemen */
+    }
+
+    /* --- 2. Tombol WhatsApp (Standby) --- */
+    .main-whatsapp-btn {
+        width: 60px;
+        height: 60px;
+        background-color: #25d366; /* Hijau WA */
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 32px;
+        box-shadow: 2px 4px 10px rgba(0,0,0,0.2);
+        text-decoration: none;
+        transition: transform 0.3s ease;
+        z-index: 20; /* Harus paling atas tumpukannya di dalam container */
+    }
+
+    /* Efek saat WA di-hover */
+    .social-widget-container:hover .main-whatsapp-btn {
+        transform: scale(1.05); /* Membesar sedikit */
+    }
+
+    /* --- 3. Tanda Panah Minimalis --- */
+    .expand-arrow {
+        font-size: 20px;
+        /* Menggunakan Variable CSS Anda */
+        color: var(--accent-color, #333); /* Fallback ke hitam jika var tidak terbaca */
+        cursor: pointer;
+        
+        /* Animasi Transisi */
+        transition: all 0.3s ease;
+        opacity: 0.7; /* Sedikit transparan agar tidak mengganggu */
+        
+        /* Animasi Naik Turun Kecil (Bouncing) supaya user sadar bisa diklik */
+        animation: bounce-arrow 2s infinite;
+    }
+
+    @keyframes bounce-arrow {
+        0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+        40% {transform: translateY(-5px);}
+        60% {transform: translateY(-3px);}
+    }
+
+    /* Saat menu terbuka, panah berputar & stop loncat */
+    .social-widget-container:hover .expand-arrow {
+        transform: rotate(180deg); /* Panah jadi menghadap bawah */
+        animation: none; /* Stop animasi bounce */
+        opacity: 1; /* Jadi jelas warnanya */
+    }
+
+    /* --- 4. Daftar Sosial Media (Extended) --- */
+    .social-list-extended {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 5px; /* Jarak antara list dengan panah */
+        
+        /* Keadaan Awal: Sembunyi */
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(20px); /* Geser ke bawah sedikit */
+        transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+
+    /* Keadaan Saat Hover: Muncul */
+    .social-widget-container:hover .social-list-extended {
+        opacity: 1;
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    /* Styling Item Sosial Media Tambahan */
+    .social-item {
+        width: 45px; /* Sedikit lebih kecil dari WA utama */
+        height: 45px;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        text-decoration: none;
+        font-size: 20px;
+        box-shadow: 2px 2px 8px rgba(0,0,0,0.15);
+        transition: transform 0.2s;
+    }
+
+    .social-item:hover {
+        transform: scale(1.15);
+    }
+
+    /* Warna Background Sosmed */
+    .instagram-bg { background: radial-gradient(circle at 30% 107%, #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%); }
+    .tiktok-bg    { background-color: #000000; }
+    .youtube-bg   { background-color: #FF0000; }  
+
+   /* 1. Wrapper Utama */
+.custom-hero-wrapper {
+    position: relative;
+    width: 100%;
+    height: 90vh; /* Atau sesuaikan tingginya */
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+}
+
+/* 2. Layer Slider (Paling Belakang) */
+.custom-slider-layer {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+/* 3. Gambar Background */
+.custom-bg-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+}
+
+/* --- CSS CUSTOM OVERLAY YANG LAMA SUDAH DIHAPUS --- */
+
+/* 4. Layer Konten (Paling Depan) */
+.custom-content-layer {
+    position: relative;
+    z-index: 2; /* Di depan slider */
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    pointer-events: none; /* Agar klik tembus ke bawah, kecuali pada elemen yang punya pointer-events: auto */
+}
+
+/* 5. CLASS BARU: Kotak Efek Kaca Buram (Frosted Glass) */
+.glass-effect-box {
+    pointer-events: auto; /* Mengaktifkan kembali klik di area ini */
+    padding: 20px; /* Memberi jarak antara teks dan pinggiran kotak buram */
+    border-radius: 20px; /* Membuat sudut kotak melengkung */
+    
+    /* KUNCI EFEK BLUR: */
+    /* Latar belakang semi-transparan gelap agar teks putih terbaca */
+    background-color: rgba(0, 0, 0, 0.25); 
+    /* Efek blur pada apapun yang ada di BELAKANG kotak ini */
+    backdrop-filter: blur(1px); 
+    -webkit-backdrop-filter: blur(1px); /* Untuk dukungan Safari */
+    
+    /* Tambahan estetika */
+    border: 1px solid rgba(255, 255, 255, 0.15); /* Garis tipis halus */
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.1); /* Bayangan lembut */
+    max-width: 700px; /* Membatasi lebar box agar tidak terlalu lebar di layar besar */
+}
+
+/* 6. Custom Dots (Indikator) */
+.custom-dots {
+    z-index: 3;
+    bottom: 30px;
+}
+
+.custom-dots button {
+    width: 12px !important;
+    height: 12px !important;
+    border-radius: 50%;
+    margin: 0 6px !important;
+    background-color: #fff !important;
+    border: 2px solid transparent;
+    opacity: 0.5;
+    transition: all 0.3s;
+}
+
+.custom-dots button.active {
+    opacity: 1;
+    background-color: #ffc107 !important;
+    transform: scale(1.3);
+}
+
+/* General Section Styling */
+/* --- Section Styling --- */
+.info-section .section-title {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.info-section .section-title h2 {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #333;
+}
+
+.info-section .section-title p {
+  color: #6c757d;
+  font-size: 1.1rem;
+}
+
+/* --- Card Main Styling --- */
+.info-section .info-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+  height: 100%;
+  border: 1px solid #eef0f2;
+  transition: all 0.3s ease-in-out;
+  position: relative;
+}
+
+.info-section .info-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* --- Image Area --- */
+.info-section .info-img {
+  width: 100%;
+  height: 220px; /* Tinggi gambar */
+  overflow: hidden;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #eee;
+}
+
+.info-section .info-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+/* Efek zoom gambar saat hover (opsional) */
+.info-section .info-card:hover .info-img img {
+  transform: scale(1.05);
+}
+
+/* --- Body Area --- */
+.info-section .info-body {
+  padding: 1.5rem;
+  text-align: left;
+}
+
+.info-section .info-body h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #222;
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+  /* Membatasi judul max 2 baris */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.info-section .info-body .subtitle {
+  color: #6495ED; /* Biru muda */
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin-bottom: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-section .info-body hr {
+  margin: 1rem 0;
+  border-top: 1px solid #eaeaea;
+  opacity: 1;
+}
+
+/* --- Meta Data (Icon + Text) --- */
+.info-section .info-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.info-section .info-meta .meta-item {
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  color: #555;
+}
+
+.info-section .info-meta .meta-item i {
+  font-size: 1.1rem;
+  margin-right: 12px;
+  width: 20px;
+  text-align: center;
+}
+
+/* Utility Colors for Icons */
+.text-success { color: #28a745 !important; }
+.text-warning { color: #ffc107 !important; }
+.text-primary { color: #0d6efd !important; }
+
+/* Pastikan tinggi slide sama rata */
+.swiper-slide {
+  height: auto;
+}
+
+.swiper-pagination {
+  position: relative;
+  margin-top: 20px;
+}
+
+/* Warna bullet pagination */
+.swiper-pagination-bullet {
+  background-color: #ccc;
+  opacity: 1;
+}
+
+.swiper-pagination-bullet-active {
+  background-color: #0d6efd; /* Warna biru aktif */
+}
+
+/* Mengatur posisi tombol panah agar di luar konten (opsional) */
+.swiper-button-next, .swiper-button-prev {
+  color: #0d6efd; /* Warna panah */
+  background: rgba(255, 255, 255, 0.8);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.swiper-button-next:after, .swiper-button-prev:after {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+/* --- 1. Reset Link Style pada Card --- */
+a.info-card {
+  text-decoration: none; /* Hilangkan garis bawah */
+  color: inherit; /* Ikuti warna teks default */
+  display: block; /* Agar full width */
+}
+
+a.info-card:hover h3 {
+  color: #0d6efd; /* Ubah warna judul saat hover (opsional) */
+}
+
+/* --- 2. Styling Panah Navigasi (Custom Position) --- */
+.slider-container {
+  padding: 0 50px; /* Memberi ruang di kiri-kanan container untuk panah */
+}
+
+.swiper-button-prev.custom-prev,
+.swiper-button-next.custom-next {
+  width: 45px;
+  height: 45px;
+  background-color: #fff;
+  border-radius: 50%;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  color: #333;
+  transition: all 0.3s ease;
+}
+
+.swiper-button-prev.custom-prev:hover,
+.swiper-button-next.custom-next:hover {
+  background-color: #0d6efd; /* Warna hover */
+  color: #fff;
+}
+
+.swiper-button-prev.custom-prev:after,
+.swiper-button-next.custom-next:after {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+/* Menggeser panah ke luar area kartu */
+.swiper-button-prev.custom-prev {
+  left: 0; /* Menempel di tepi kiri container utama */
+}
+
+.swiper-button-next.custom-next {
+  right: 0; /* Menempel di tepi kanan container utama */
+}
+
+/* --- 3. Styling Tombol View More --- */
+.btn-view-more {
+  display: inline-block;
+  padding: 12px 35px;
+  background-color: #0d6efd; /* Warna tombol */
+  color: #fff;
+  border-radius: 50px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(13, 110, 253, 0.2);
+}
+
+.btn-view-more:hover {
+  background-color: #0b5ed7;
+  transform: translateY(-2px);
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(13, 110, 253, 0.3);
+}
+
+.btn-view-more i {
+  margin-left: 8px;
+  transition: margin-left 0.3s;
+}
+
+.btn-view-more:hover i {
+  margin-left: 12px; /* Efek panah bergerak saat hover */
+}
+
+/* --- 4. Responsif Mobile (Penting) --- */
+@media (max-width: 768px) {
+  .slider-container {
+    padding: 0; /* Di HP, hilangkan padding */
+  }
+  
+  /* Sembunyikan panah samping di HP agar tidak menutupi konten/layar sempit */
+  .swiper-button-prev.custom-prev,
+  .swiper-button-next.custom-next {
+    display: none; 
+  }
+}
+
+/* Transisi halus */
+.img-zoom {
+    transition: transform 0.5s ease;
+}
+
+/* Selector ini sekarang mencakup card besar (.post-img) dan kecil (.post-img-wrapper) */
+.post-img:hover .img-zoom,
+.post-img-wrapper:hover .img-zoom {
+    transform: scale(1.1);
+}
+
+/* --- STYLE KARTU UTAMA (AGENDA) --- */
+.agenda-card {
+    display: block;
+    background: #fff;
+    border-radius: 12px;       /* Sudut membulat */
+    overflow: hidden;          /* Agar isi tidak keluar dari sudut */
+    box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+    text-decoration: none;     /* Hapus garis bawah link */
+    color: inherit;
+    height: 100%;              /* Tinggi kartu mengikuti slide */
+    border: 1px solid #eee;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Efek Hover: Kartu naik sedikit */
+.agenda-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+}
+
+/* --- BAGIAN GAMBAR (KUNCI UTAMA) --- */
+.agenda-img {
+    width: 100%;
+    height: 200px;  /* <--- TINGGI TETAP (FIXED). Ubah angka ini jika ingin lebih tinggi/pendek */
+    position: relative;
+    background-color: #f0f0f0; /* Warna cadangan jika gambar gagal load */
+}
+
+.agenda-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;    /* <--- MAGIC CODE: Memotong gambar agar pas memenuhi kotak */
+    object-position: top; /* Fokus crop ke bagian atas gambar (biasanya wajah/judul ada di atas) */
+    transition: transform 0.5s ease;
+}
+
+/* Efek Zoom halus pada gambar saat hover */
+.agenda-card:hover .agenda-img img {
+    transform: scale(1.05);
+}
+
+/* --- BAGIAN KONTEN (BODY) --- */
+.agenda-body {
+    padding: 20px;
+}
+
+.agenda-body h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 5px;
+    color: #333;
+    /* Membatasi judul max 2 baris (opsional) */
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.agenda-body .subtitle {
+    font-size: 0.85rem;
+    color: #0d6efd; /* Warna biru */
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 15px;
+    display: block;
+}
+
+/* Garis Pembatas */
+.agenda-divider {
+    height: 1px;
+    background-color: #eee;
+    margin: 10px 0;
+}
+
+/* --- BAGIAN INFO (TANGGAL & JAM) --- */
+.agenda-meta {
+    font-size: 0.9rem;
+    color: #666;
+}
+
+.agenda-meta .meta-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.agenda-meta .meta-item i {
+    margin-right: 8px;
+    width: 20px;
+    text-align: center;
+}
+/* --- PERBAIKAN POSISI (CENTERING) --- */
+
+/* 1. Paksa wrapper swiper agar kontennya rata tengah */
+.init-swiper .swiper-wrapper {
+    justify-content: flex-start; 
+}
+
+/* 2. (Opsional) Pastikan slide tidak melebar sembarangan */
+.swiper-slide {
+    max-width: 1100px; 
+    margin: 0 auto;   
+    position: relative;
+    padding: 0 40px; 
+}
+
+/* 3. (Opsional) Menyesuaikan posisi panah navigasi agar lebih rapi */
+.slider-container {
+    padding: 0 50px; /* Memberi jarak aman kiri-kanan agar panah tidak menabrak kartu */
+}
+
+.custom-prev, .custom-next {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    cursor: pointer;
+    /* Sesuaikan posisi keluar sedikit dari container */
+}
+.custom-prev { left: -10px; }
+.custom-next { right: -10px; }
+/* --- STYLE CARD BERITA DOMINAN GAMBAR (75:25) --- */
+
+/* --- STYLE CARD BESAR (FIXED CONTAINER) --- */
+
+.big-news-card {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    
+    /* [PENTING] Ubah dari px menjadi 100% */
+    /* Ini membuat kartu mengisi penuh tinggi kolom induknya (col-lg-7) */
+    /* Karena col-lg-7 tingginya sama dengan col-lg-5 (tetangga), maka otomatis rata */
+    height: 100%; 
+    min-height: 450px; /* Jaga-jaga agar tidak terlalu pendek di layar HP */
+    
+    border: 1px solid #eee;
+    background-color: #fff;
+    position: relative;
+}
+
+/* --- BAGIAN ATAS: GAMBAR (75%) --- */
+.big-news-card .img-container {
+    display: block;
+    width: 100%;
+    height: 75%; /* Tetap 75% */
+    overflow: hidden;
+    position: relative;
+}
+
+.big-news-card .img-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    transition: transform 0.5s ease;
+}
+
+/* Efek Zoom Halus */
+.big-news-card:hover .img-container img {
+    transform: scale(1.05);
+}
+
+/* --- BAGIAN BAWAH: TEKS (25%) --- */
+.big-news-card .text-container {
+    width: 100%;
+    height: 25%; /* Tetap 25% */
+    padding: 20px;
+    
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+/* Style Huruf */
+.big-news-card .title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.big-news-card .title a {
+    text-decoration: none;
+    color: #333;
+}
+
+.big-news-card .title a:hover {
+    color: #0d6efd;
+}
+
+/* berkas khusus */
+div.dataTables_processing {
+        display: none !important;
+    }
 

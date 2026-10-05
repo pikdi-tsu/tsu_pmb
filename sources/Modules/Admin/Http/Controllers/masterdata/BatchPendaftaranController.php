@@ -3,6 +3,7 @@
 namespace Modules\Admin\Http\Controllers\masterdata;
 
 use App\Models\MasterData\Master_Batch;
+use App\Models\MasterData\Master_TarifUKT;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -26,7 +27,7 @@ class BatchPendaftaranController extends Controller
 
     public function TabelBatch()
     {
-        $data = Master_Batch::where('isactive',1)->get();
+        $data = Master_Batch::orderBy('id','desc')->get();
         return DataTables::of($data)
         ->addIndexColumn()
         ->addColumn('kode', function ($d) {
@@ -52,17 +53,20 @@ class BatchPendaftaranController extends Controller
             return $nama;
         })
         ->addColumn('aktif', function ($d) {
-            $role = '-';
-            $warna = '';
-            if($d->isactive==1){
-                $role = 'Aktif';
-                $warna = 'success';
-            }else{
-                $role = 'Tidak Aktif';
-                $warna = 'danger';
+            $today = now()->toDateString();
+            if ($d->isactive != 1) {
+                return '<span class="badge badge-secondary">Tidak Aktif</span>';
             }
-            $show = '<span class="badge bg-'.$warna.'">'.$role.'</span>';
-            return $show;
+            if ($today < $d->tglmulai) {
+                $sisaHari = now()->diffInDays($d->tglmulai, false);
+                return '<span class="badge badge-warning text-dark">Akan Datang</span><br><small class="text-muted">Mulai ' . tglIndo($d->tglmulai) . '</small>';
+            } elseif ($today > $d->tglselesai) {
+                return '<span class="badge badge-secondary">Berakhir</span>';
+            } else {
+                $sisaHari = now()->diffInDays($d->tglselesai, false);
+                $warna    = $sisaHari <= 3 ? 'danger' : 'success';
+                return '<span class="badge badge-' . $warna . '">Aktif</span><br><small class="text-' . $warna . '">Sisa ' . $sisaHari . ' hari</small>';
+            }
         })
         ->addColumn('action', function ($d) {
             $id = encrypt($d->id);
@@ -83,6 +87,7 @@ class BatchPendaftaranController extends Controller
         ->rawColumns(['action','aktif'])
         ->make(true);
     }
+
 
     public function StoreBatch(Request $post)
     {
@@ -242,10 +247,16 @@ class BatchPendaftaranController extends Controller
 
         $update = Master_Batch::where('id',$id)->update($up);
 
+        $upukt = Master_TarifUKT::where('idbatch',$id)->update([
+            'isactive' => $aktif,
+            'updated_at' => date('Y-m-d H:i:s'),
+            'updated_by' => session('session')->nip
+        ]);
+
         $kata = $aktif=='1' ? 'Berhasil Mengaktifkan Data': 'Berhasil Menghapus Data';
         $del = $aktif=='1' ? 'Gagal Mengaktifkan Data': 'Gagal Menghapus Data';
 
-        if($update){
+        if($update&&$upukt){
             DB::commit();
             $master['message'] = $kata;
             $master['type'] = 'success';

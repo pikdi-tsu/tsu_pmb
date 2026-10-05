@@ -147,6 +147,9 @@ class TestPMBController extends Controller
                 'prodi2'=>function($q){
                     $q->with('jenjang');
                 },
+                'prodi3'=>function($q){
+                    $q->with('jenjang');
+                },
                 'jurusan_acc'=>function($q){
                     $q->with('jenjang');
                 },
@@ -171,10 +174,23 @@ class TestPMBController extends Controller
             $mhs = Pendaftaran::where('KodePendaftaran',$id)->first();
             $jurusan = array();
             // $jurusan = Master_JurusanKuliah::where('KodeJurusan',$mhs->pilihan1)->orwhere('KodeJurusan',$mhs->pilihan2)->with('jenjang')->get();
-            $jurusan1 = Master_JurusanKuliah::where('KodeJurusan',$mhs->pilihan1)->with('jenjang')->first();
-            array_push($jurusan,$jurusan1);
-            $jurusan2 = Master_JurusanKuliah::where('KodeJurusan',$mhs->pilihan2)->with('jenjang')->first();
-            array_push($jurusan,$jurusan2);
+           // Pilihan 1
+            if ($mhs->pilihan1 != null) {
+                $jurusan1 = Master_JurusanKuliah::where('KodeJurusan',$mhs->pilihan1)->with('jenjang')->first();
+                if ($jurusan1) array_push($jurusan, $jurusan1);
+            }
+            
+            // Pilihan 2
+            if ($mhs->pilihan2 != null) {
+                $jurusan2 = Master_JurusanKuliah::where('KodeJurusan',$mhs->pilihan2)->with('jenjang')->first();
+                if ($jurusan2) array_push($jurusan, $jurusan2);
+            }
+
+            // Pilihan 3 
+            if ($mhs->pilihan3 != null) {
+                $jurusan3 = Master_JurusanKuliah::where('KodeJurusan',$mhs->pilihan3)->with('jenjang')->first();
+                if ($jurusan3) array_push($jurusan, $jurusan3);
+            }
             $data['hasil'] = 1;
             $data['jurusan'] = $jurusan;
         }
@@ -207,12 +223,11 @@ class TestPMBController extends Controller
         $updt = Pendaftaran::where('KodePendaftaran',$id)->update($data);
 
         $t1=0;
-        $t2=0;
+        // $t2=0;
         if($post->status_diterima=='1'){
             $kode = 'UKT-'.$id.'-'.date('YmdHis');
             $jurusan = Master_JurusanKuliah::where('KodeJurusan',$post->jurusan_diterima)->first();
             $biaya = Master_TarifUKT::where('idbatch',$cek->batch_daftar)->where('idjalur',$cek->jalur_daftar)->where('idjurusan',$jurusan->id)->first();
-
             $transaksi = Transaksi::insert([
                 'user_id' => $cek->biodata_id,
                 'kategori' => 'ukt',
@@ -220,7 +235,7 @@ class TestPMBController extends Controller
                 'kode_transaksi' => $kode,
                 'jumlah' => $biaya->biaya_ukt,
                 'status' => $biaya->biaya_ukt == 0 ? 'paid' : 'pending',
-                'keterangan' => $biaya->keterangan,
+                // 'keterangan' => $biaya->keterangan,
                 'created_at' => date('Y-m-d H:i:s')
             ]);
 
@@ -230,26 +245,26 @@ class TestPMBController extends Controller
 
             $cek2 = Transaksi::orderby('id','desc')->latest()->first();
             // Simpan history
-            $historyTransaksi = TransaksiHistory::insert([
-                'transaksi_id' => $cek2->id,
-                'status' => $cek2->status,
-                'keterangan' => $biaya->biaya_ukt == 0 ? 'Gratis / Beasiswa' : 'Menunggu pembayaran',
-                'created_at' => date('Y-m-d H:i:s')
-            ]);
-            if(!$historyTransaksi){
-                $t2++;
-            }
+            // $historyTransaksi = TransaksiHistory::insert([
+            //     'transaksi_id' => $cek2->id,
+            //     'status' => $cek2->status,
+            //     'keterangan' => $biaya->biaya_ukt == 0 ? 'Gratis / Beasiswa' : 'Menunggu pembayaran',
+            //     'created_at' => date('Y-m-d H:i:s')
+            // ]);
+            // if(!$historyTransaksi){
+            //     $t2++;
+            // }
             if($biaya->biaya_ukt==0){
                 $ceklagi = Pendaftaran::where('KodePendaftaran',$id)->first();
                 Pendaftaran::where('KodePendaftaran',$id)->update([
-                    'current_step' => $ceklagi->current_step+1,
+                    'current_step' => $ceklagi->current_step+2,
                     'updated_at' => now()
                 ]);
             }
         }
 
 
-        if($updt&&$t1==0&&$t2==0){
+        if($updt&&$t1==0){ //&&$t2==0
             DB::commit();
             $data['title'] = 'Berhasil';
             $data['message'] = 'Data Test Online Sudah divalidasi !';

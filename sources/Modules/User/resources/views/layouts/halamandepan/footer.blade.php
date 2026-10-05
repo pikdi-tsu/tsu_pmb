@@ -1,4 +1,4 @@
-<footer id="footer" class="footer position-relative dark-background">
+<footer id="footer" class="footer position-relative light-background">
 
     <div class="container footer-top">
         <div class="row gy-4">
@@ -12,7 +12,7 @@
             <div class="col-lg-4 col-md-3 footer-links">
                 <h4>Informasi Pendaftaran</h4><hr>
                 <ul>
-                    <li><a href="#">Informasi Pendaftaran Mahasiswa Baru 2025 Universitas Tiga Serangkai</a></li>
+                    <li><a href="#">Informasi Pendaftaran Mahasiswa Baru {{date('Y')}} Universitas Tiga Serangkai</a></li>
                 </ul>
             </div>
 

@@ -4,22 +4,20 @@ namespace Modules\User\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\MasterData\Master_TarifUKT;
+use App\Models\MasterData\Master_Rekomendator;
+use App\Models\Parameter;
 use App\Models\Transaksi;
 use App\Models\TransaksiHistory;
-use App\Models\User\Biodata;
-use App\Models\User\Maba;
 use App\Models\User\Pendaftaran;
-use App\Models\User\Master_Akun;
-use App\Models\User\Master_JenisPendaftaran;
-use App\Models\User\Master_JurusanKuliah;
-use App\Models\User\Master_JurusanSekolah;
-use App\Models\User\Master_WaktuKuliah;
+use App\Models\MasterData\Master_JenisPendaftaran;
 use Symfony\Component\HttpFoundation\Response;
 use Session, Crypt, DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Midtrans\Snap;
+use Illuminate\Support\Facades\Storage;
+
 use Midtrans\Config;
 use Midtrans\Transaction;
 use Yajra\DataTables\DataTables;
@@ -78,14 +76,10 @@ class PembayaranUKTController extends Controller
             $nama = rupiah($d->jumlah) ;
             return $nama;
         })
-        ->addColumn('keterangan', function ($d) {
-            $nama = $d->keterangan;
-            return $nama;
-        })
         ->addColumn('status', function ($d) {
             $role = $d->status;
             $warna = 'warning';
-            if($role=='pending'){
+            if($role=='pending'||$role=='waiting'){
                 $warna = 'warning';
             }elseif($role=='paid'){
                 $warna = 'success';
@@ -95,36 +89,170 @@ class PembayaranUKTController extends Controller
             $show = '<span class="badge bg-'.$warna.'">'.$role.'</span>';
             return $show;
         })
+        ->addColumn('keterangan', function ($d) {
+            $nama = '-';
+            if($d->keterangan){
+                $nama = $d->keterangan;
+            }
+            return $nama;
+        })
         ->addColumn('action', function ($d) {
             $id = encrypt($d->id);
             $daftarId = encrypt($d->id_referensi);
 
-            $aktif = '';
+            $show = '';
             $detail = '';
-            $konfirm = '';
-            $edit = '';
+            $bayar = '';
+            $show = '';
             if($d->status!='paid'){
-                $edit = '<a href="#" data-id="'.$id.'" class="btn_bayar"><i title="Bayar Sekarang" class="fas fa-money-bill text-green"></i></a>';
+                $bayar = '<a href="#" data-id="'.$id.'" class="btn_bayar"><i title="Bayar Sekarang" class="fas fa-money-bill text-green"></i></a>';
             }
-            // if($d->isactive==1){
-            //     if($d->konfirm_pendaftaran==0){
-            //         $aktif = '<a href="#" class="btn_delete" data-id="'.$id.'"><i title="Hapus Pendaftaran" class="fa fa-trash text-red"></i></a>';
-            //         $konfirm = '<a href="#" data-id="'.$id.'" class="btn_konfirm"><i title="Konfirmasi Pendaftaran" class="fas fa-check-circle text-green"></i></a>';
-            //         $edit   = '<a href="#" data-id="'.$id.'" class="btn_edit"><i title="Edit" class="fa fa-edit text-orange"></i></a>';
-            //     }
-            // }
-            // else{
-            //     $aktif  = '<a href="#" class="btn_delete" data-id="'.$id.'" data-status="'.encrypt('1').'"><i title="Aktifkan" class="fas fa-check-circle text-green"></i></a>';
-            // }
             $detail = '<a href="#" data-id="'.$id.'" data-daftarid="'.$daftarId.'" class="btn_detail"><i title="Detail" class="fa fa-info-circle"></i></a>';
+            if($d->bukti_pembayaran){
+                $params1 = Parameter::where('id',1)->first();
+                $linkkhusus = asset('sources/storage/app/'.$params1->bukti_bayar_ukt.'/'.$d->bukti_pembayaran);
+                $show = '<a href="'.$linkkhusus.'" target="_blank"><i title="Lihat Bukti Pembayaran UKT" class="fa fa-eye"></i></a>';
+            }
 
-            return $detail.' '.$edit.' '.$aktif.' '.$konfirm;
+            return $detail.' '.$bayar.' '.$show;
         })
         ->rawColumns(['action','status'])
         ->make(true);
     }
 
-    public function PaymentUKT($params){
+    public function showPayment($params)
+    {
+        $id = decrypt($params);
+        $bioId = decrypt(session('user')->_biodata);
+        //->where('isactive',1)
+        $cek1 = Pendaftaran::where('KodePendaftaran',$id)->where('biodata_id',$bioId)->with(['biodata','batch',
+        'jalur'
+        // =>function($q){
+        //     $q->with(['berkasumum'=>function($q){
+        //             $q->with('berkas');
+        //         },
+
+        //     'berkaskhusus'=>function($q){
+        //             $q->with('berkas');
+        //         }
+        //     ]);
+        // }
+        ,
+        'jenisbeasiswa'=>function($q){
+            $q->with('tingkat');
+        },
+        'jurusansekolah',
+        'prodi1'=>function($q){
+            $q->with('jenjang');
+        },
+        'prodi2'=>function($q){
+            $q->with('jenjang');
+        },
+        'prodi3'=>function($q){
+            $q->with('jenjang');
+        },
+        'waktukuliah','bayar'])->first();
+        $prodi1 = null;
+        if($cek1 && $cek1->prodi1){
+            $prodi1 = Master_TarifUKT::where('idbatch',$cek1->batch_daftar)->where('idjalur',$cek1->jalur_daftar)->where('idjurusan',$cek1->prodi1->id)->where('isactive',1)->first();
+        }
+
+        $prodi2 = null;
+        if($cek1 && $cek1->prodi2){
+            $prodi2 = Master_TarifUKT::where('idbatch',$cek1->batch_daftar)->where('idjalur',$cek1->jalur_daftar)->where('idjurusan',$cek1->prodi2->id)->where('isactive',1)->first();
+        }
+        
+        $prodi3 = null;
+        if($cek1 && $cek1->prodi3){
+            $prodi3 = Master_TarifUKT::where('idbatch',$cek1->batch_daftar)->where('idjalur',$cek1->jalur_daftar)->where('idjurusan',$cek1->prodi3->id)->where('isactive',1)->first();
+        }
+        $rekomendator_text = '-';
+        if ($cek1 && $cek1->rekomendator) {
+            $rek = Master_Rekomendator::where('kode_rekomendator', $cek1->rekomendator)->first();
+            if ($rek) {
+                // Tampilan: Nama Lengkap (Kode)
+                $rekomendator_text = $rek->nama_rekomendator . ' (' . $rek->kode_rekomendator . ')';
+            } else {
+                $rekomendator_text = $cek1->rekomendator;
+            }
+        }
+        if($cek1){
+            $data['hasil'] = 1;
+            $data['daftar'] = $cek1;
+            $data['IdDaftar'] = $params;
+            $data['ukt1'] = $prodi1;
+            $data['ukt2'] = $prodi2;
+            $data['ukt3'] = $prodi3;
+            $data['rekomendator'] = $rekomendator_text;
+        }else{
+            $data['hasil'] = 0;
+            $data['daftar'] = $cek1;
+            $data['IdDaftar'] = null;
+            $data['ukt1'] = $prodi1;
+            $data['ukt2'] = $prodi2;
+            $data['ukt3'] = null;
+            $data['rekomendator'] = '-';
+        }
+        return response()->json($data, Response::HTTP_OK);
+    }
+
+    public function upload_bayar(Request $post)
+    {
+        $post->validate([
+            'idtransaksi' => 'required',
+            'bukti_ukt' => 'required|file|mimes:jpg,jpeg,png,pdf|max:3072',
+        ], [
+            'bukti_ukt.required' => 'File bukti pembayaran UKT belum dipilih!',
+            'bukti_ukt.file' => 'Upload harus berupa file yang valid!',
+            'bukti_ukt.mimes' => 'Format file bukti hanya boleh JPG, JPEG, PNG, atau PDF!',
+            'bukti_ukt.max' => 'Ukuran file bukti maksimal 3MB!',
+        ]);
+
+        $id = decrypt($post->idtransaksi);
+        $transaksi = Transaksi::findOrFail($id);
+        $file = $post->file('bukti_ukt');
+        $ext = strtolower($file->getClientOriginalExtension());
+        $filename = 'BUKTI_UKT_'.$transaksi->id_referensi.'_'.date('YmdHis').'.'.$ext;
+
+        $parameter = Parameter::where('id',1)->first();
+
+        $cek = Pendaftaran::where('KodePendaftaran',$transaksi->id_referensi)->where('biodata_id',$transaksi->user_id)->select('current_step','jalur_daftar')->first();
+
+        if($transaksi->bukti_pembayaran==null){
+            $transaksi->bukti_pembayaran = $filename;
+            $transaksi->status = 'waiting';
+            $transaksi->save();
+
+            $step = $cek->current_step+1;
+            $file->storeAs($parameter->bukti_bayar_ukt, $filename);
+        }else{
+            // if($transaksi->bukti_pembayaran!=null){
+            $path = $parameter->bukti_bayar_ukt.'/'.$transaksi->bukti_pembayaran;
+            if (Storage::exists($path)) {
+                Storage::delete($path);
+            }
+            // }
+            $transaksi->bukti_pembayaran = $filename;
+            $transaksi->save();
+
+            $step = $cek->current_step;
+            $file->storeAs($parameter->bukti_bayar_ukt, $filename);
+        }
+
+        Pendaftaran::where('KodePendaftaran',$transaksi->id_referensi)->where('biodata_id',$transaksi->user_id)->update([
+            'current_step' => $step,
+            'updated_at' => date('Y-m-d H:i:s')
+        ]);
+
+        // dd($file);
+        $alert = ['title' => 'Information', 'message' => 'Bukti Pembayaran Sudah diupload ! Silahkan Tunggu Konfirmasi Dari Admin PMB TSU.', 'status' => 'success'];
+        return redirect()->back()->with('alert',$alert);
+
+    }
+
+    //tdk dipake
+    public function PaymentUKT($params)
+    {
         $id = decrypt($params);
         $transaksi = Transaksi::findOrFail($id);
         $orderID = generateOrderId($transaksi->id);
@@ -163,54 +291,9 @@ class PembayaranUKTController extends Controller
 
     }
 
-    public function showPayment($params)
+    //tdk dipake
+    public function PaymentPMBnext($params)
     {
-        $id = decrypt($params);
-        $bioId = decrypt(session('user')->_biodata);
-        //->where('isactive',1)
-        $cek1 = Pendaftaran::where('KodePendaftaran',$id)->where('biodata_id',$bioId)->with(['biodata','batch',
-        'jalur'
-        // =>function($q){
-        //     $q->with(['berkasumum'=>function($q){
-        //             $q->with('berkas');
-        //         },
-
-        //     'berkaskhusus'=>function($q){
-        //             $q->with('berkas');
-        //         }
-        //     ]);
-        // }
-        ,
-        'jenisbeasiswa'=>function($q){
-            $q->with('tingkat');
-        },
-        'jurusansekolah',
-        'prodi1'=>function($q){
-            $q->with('jenjang');
-        },
-        'prodi2'=>function($q){
-            $q->with('jenjang');
-        },
-        'waktukuliah','bayar'])->first();
-        $prodi1 = Master_TarifUKT::where('idbatch',$cek1->batch_daftar)->where('idjalur',$cek1->jalur_daftar)->where('idjurusan',$cek1->prodi1->id)->where('isactive',1)->first();
-        $prodi2 = Master_TarifUKT::where('idbatch',$cek1->batch_daftar)->where('idjalur',$cek1->jalur_daftar)->where('idjurusan',$cek1->prodi2->id)->where('isactive',1)->first();
-        if($cek1){
-            $data['hasil'] = 1;
-            $data['daftar'] = $cek1;
-            $data['IdDaftar'] = $params;
-            $data['ukt1'] = $prodi1;
-            $data['ukt2'] = $prodi2;
-        }else{
-            $data['hasil'] = 0;
-            $data['daftar'] = $cek1;
-            $data['IdDaftar'] = null;
-            $data['ukt1'] = $prodi1;
-            $data['ukt2'] = $prodi2;
-        }
-        return response()->json($data, Response::HTTP_OK);
-    }
-
-    public function PaymentPMBnext($params){
         $id = decrypt($params);
         $transaksi = Transaksi::findOrFail($id);
 
@@ -252,6 +335,7 @@ class PembayaranUKTController extends Controller
 
     }
 
+    //tdk dipake
     public function test_bayar(Request $post)
     {
         Config::$serverKey = config('midtrans.server_key');

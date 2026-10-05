@@ -38,7 +38,7 @@
                                 <thead>
                                     <tr>
                                         <th>No</th>
-                                        <th>NIP</th>
+                                        <th>NIK</th>
                                         <th>Nama</th>
                                         <th>Email</th>
                                         <th>Role Access</th>
@@ -165,7 +165,7 @@
                             searchable: false
                         },
                         {
-                            data: 'nip'
+                            data: 'nik'
                         },
                         {
                             data: 'nama'
@@ -248,8 +248,8 @@
                             return {
                                 results: $.map(data, function(item) {
                                     return {
-                                        id: item.nip,
-                                        text: item.nip + '-' + item.nama
+                                        id: item.nik,
+                                        text: item.nik + '-' + item.nama
                                     }
                                 })
                             };

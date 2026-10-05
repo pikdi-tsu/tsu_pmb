@@ -48,6 +48,10 @@ class FakultasController extends Controller
             ->addColumn('singkatan', function ($d) {
                 return $d->singkatan;
             })
+            // TAMBAHAN: Kolom Format NIM
+            ->addColumn('format_nim', function ($d) {
+                return $d->format_nim ?? '-';
+            })
             ->addColumn('aktif', function ($d) {
                 $role = '-';
                 $warna = '';
@@ -82,13 +86,18 @@ class FakultasController extends Controller
 
     public function StoreFakultas(Request $post)
     {
-        // dd($post,session()->all());
-        $cek = Master_Fakultas::where('isactive',1)
-        ->where('namafakultas',$post->namafakultas)
-        ->orwhere('singkatan',$post->singkatanfakultas)
-        ->first();
+        // PERBAIKAN: Bungkus pencarian 'orWhere' agar tidak bertabrakan dengan 'isactive = 1'
+        $cek = Master_Fakultas::where('isactive', 1)
+            ->where(function($query) use ($post) {
+                $query->where('namafakultas', $post->namafakultas)
+                      ->orWhere('singkatan', $post->singkatanfakultas);
+            })
+            ->first();
+            
         $alert = null;
-        if($cek){
+        
+        // Hanya cek duplikat jika ini adalah simpan baru (IdFakultas == null)
+        if($cek && $post->IdFakultas == null){
             $alert = array(
                 'title' => 'Gagal!',
                 'message' => 'Nama Fakultas atau Singkatan Sudah Ada !',
@@ -102,9 +111,7 @@ class FakultasController extends Controller
             }
         }
 
-
         return redirect()->back()->with('alert',$alert);
-
     }
 
     public function Save($post)
@@ -113,23 +120,24 @@ class FakultasController extends Controller
             'KodeFakultas' => $post->kdfakultas,
             'namafakultas' => $post->namafakultas,
             'singkatan'    => $post->singkatanfakultas,
+            'format_nim'   => $post->format_nim, // TAMBAHAN: Simpan Format NIM
             'created_at'   => date('Y-m-d H:i:s'),
-            'created_by'   => session('session')->nip,
+            'created_by'   => optional(session('session'))->nip ?? 'System', // Menggunakan optional untuk keamanan
         );
         DB::beginTransaction();
-        $save = Master_Fakultas::insert($up);
-        if($save){
+        try {
+            $save = Master_Fakultas::insert($up);
             DB::commit();
             $alert = array(
                 'title' => 'Berhasil!',
                 'message' => 'Data Fakultas Tersimpan !',
                 'status' => 'success'
             );
-        }else{
+        } catch (\Throwable $e) {
             DB::rollback();
             $alert = array(
                 'title' => 'Gagal!',
-                'message' => 'Data Fakultas Gagal Disimpan !',
+                'message' => 'Data Fakultas Gagal Disimpan ! ',
                 'status' => 'error'
             );
         }
@@ -138,18 +146,18 @@ class FakultasController extends Controller
 
     public function ShowFakultas($params)
     {
-        $id = decrypt($params);
-        // dd($id);
-        $check = Master_Fakultas::where('KodeFakultas',$id)->first();
+        $id = decrypt($params); // Ini berisi KodeFakultas (contoh: 'F004')
+        $check = Master_Fakultas::where('KodeFakultas', $id)->first();
 
         if($check){
             $data['hasil'] = 1;
             $data['fakultas'] = $check;
-            $data['IdFakultas'] = $params;
+            // PERBAIKAN: Ambil IdFakultas yang asli (angka) lalu enkripsi
+            $data['IdFakultas'] = encrypt($check->IdFakultas); 
         }else{
             $data['hasil'] = 0;
             $data['fakultas'] = $check;
-            $data['IdFakultas'] = $params;
+            $data['IdFakultas'] = null;
         }
         return response()->json($data, Response::HTTP_OK);
     }
@@ -161,23 +169,24 @@ class FakultasController extends Controller
         $up = array(
             'namafakultas' => $post->namafakultas,
             'singkatan'    => $post->singkatanfakultas,
+            'format_nim'   => $post->format_nim, // TAMBAHAN: Update Format NIM
             'updated_at'   => date('Y-m-d H:i:s'),
-            'updated_by'   => session('session')->nip,
+            'updated_by'   => optional(session('session'))->nip ?? 'System',
         );
         DB::beginTransaction();
-        $update = Master_Fakultas::where('isactive',1)->where('IdFakultas',$id)->where('KodeFakultas',$post->kdfakultas)->update($up);
-        if($update){
+        try {
+            $update = Master_Fakultas::where('isactive',1)->where('IdFakultas',$id)->where('KodeFakultas',$post->kdfakultas)->update($up);
             DB::commit();
             $alert = array(
                 'title' => 'Berhasil!',
                 'message' => 'Data Fakultas Diperbarui !',
                 'status' => 'success'
             );
-        }else{
+        } catch (\Throwable $e) {
             DB::rollback();
             $alert = array(
                 'title' => 'Gagal!',
-                'message' => 'Data Fakultas Gagal Diperbarui !',
+                'message' => 'Data Fakultas Gagal Diperbarui ! ',
                 'status' => 'error'
             );
         }
@@ -198,7 +207,7 @@ class FakultasController extends Controller
         $up = array(
             'isactive' => $aktif,
             'updated_at' => date('Y-m-d H:i:s'),
-            'updated_by' => session('session')->nip
+            'updated_by' => optional(session('session'))->nip ?? 'System'
         );
 
         $update = Master_Fakultas::where('KodeFakultas',$id)->update($up);
@@ -212,6 +221,4 @@ class FakultasController extends Controller
         }
         return redirect()->back()->with('alert',$alert);
     }
-
-
 }

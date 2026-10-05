@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <link rel="icon" href="{{ asset('public/assets/user/img/logotsu.png') }}" type="image/png" />
-    <title>{{$title}}</title>
+    <title>{{ $title }}</title>
     <meta name="description" content="">
     <meta name="keywords" content="">
 
@@ -19,7 +19,8 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&family=Raleway:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap"
         rel="stylesheet">
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
     <!-- Vendor CSS Files -->
     <link href="{{ asset('public/assets/user/vendor/bootstrap/css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ asset('public/assets/user/vendor/bootstrap-icons/bootstrap-icons.css') }}" rel="stylesheet">
@@ -59,8 +60,50 @@
                 text: text,
             });
         }
+        new Swiper('.init-swiper', {
+            loop: true,
+            speed: 600,
+            autoplay: {
+                delay: 5000,
+            },
+
+            // MATIKAN centeredSlides agar kartu dimulai dari kiri container, 
+            // sehingga pas 3 biji berjajar rapi tanpa terpotong di pinggir.
+            centeredSlides: false,
+
+            // Pengaturan Responsif (KUNCI UTAMA)
+            breakpoints: {
+                // Saat di HP (lebar < 640px): Tampil 1 kartu
+                320: {
+                    slidesPerView: 1,
+                    spaceBetween: 20
+                },
+                // Saat di Tablet (lebar < 992px): Tampil 2 kartu
+                768: {
+                    slidesPerView: 2,
+                    spaceBetween: 30
+                },
+                // Saat di Laptop/PC (lebar > 1200px): Tampil PAS 3 KARTU
+                1200: {
+                    slidesPerView: 3,
+                    spaceBetween: 30 /* Jarak antar kartu */
+                }
+            },
+
+            // Navigasi & Pagination tetap sama
+            pagination: {
+                el: '.swiper-pagination',
+                type: 'bullets',
+                clickable: true
+            },
+            navigation: {
+                nextEl: '.custom-next',
+                prevEl: '.custom-prev',
+            }
+        });
     </script>
     @yield('script')
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 </body>
 
 

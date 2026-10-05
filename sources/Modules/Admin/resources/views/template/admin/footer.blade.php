@@ -78,8 +78,31 @@
             showConfirmButton: false
         });
     }
+
+    // FUNGSI GLOBAL FORMAT TANGGAL DAN WAKTU INDONESIA
+    function formatTanggalWaktuIndo(datetime) {
+        if (!datetime) return '-';
+        
+        // Pecah format "YYYY-MM-DD HH:mm:ss"
+        let t = datetime.split(/[- :]/);
+        if (t.length >= 5) {
+            const bulanIndo = [
+                "Januari", "Februari", "Maret", "April",
+                "Mei", "Juni", "Juli", "Agustus",
+                "September", "Oktober", "November", "Desember"
+            ];
+            
+            let tahun = t[0];
+            let bulan = bulanIndo[parseInt(t[1]) - 1];
+            let hari  = t[2];
+            let jam   = t[3];
+            let menit = t[4];
+
+            return hari + " " + bulan + " " + tahun + " " + jam + ":" + menit;
+        }
+        return datetime; // Kembalikan string asli jika formatnya tidak cocok
+    }
 </script>
 @yield('script')
 </body>
-
 </html>

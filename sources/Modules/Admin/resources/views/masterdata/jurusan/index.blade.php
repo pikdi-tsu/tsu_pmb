@@ -15,30 +15,21 @@
     table-layout: auto;
 }
 </style>
-    <!-- Content Header (Page header) -->
     <div class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
                     <h1>{{ $menu }}</h1>
-                </div><!-- /.col -->
-                <div class="col-sm-6">
+                </div><div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item active"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
                         <li class="breadcrumb-item active">Master Data</li>
                         <li class="breadcrumb-item active">{{ $menu }}</li>
                     </ol>
-                </div><!-- /.col -->
-            </div><!-- /.row -->
-        </div><!-- /.container-fluid -->
-    </div>
-    <!-- /.content-header -->
-
-    <!-- Main content -->
+                </div></div></div></div>
     <div class="content">
         <div class="container-fluid">
             <div class="row">
-                <!-- /.col-md-6 -->
                 <div class="col-md-12">
                     <div class="card card-primary card-outline">
                         <div class="card-header">
@@ -46,16 +37,13 @@
                         </div>
                         <div class="card-body">
                             <div class="row justify-content-center">
-                                <div class="col-md-6"> <!-- Ubah lebar form di sini -->
-                                    <form id="form-fakultas" method="POST" action="{{route('admin.Jurusan.Store')}}">
+                                <div class="col-md-6"> <form id="form-fakultas" method="POST" action="{{route('admin.Jurusan.Store')}}">
                                         @csrf
                                         <input type="hidden" id="IdJurusan" name="IdJurusan" value="">
-                                        <!-- Kode Jurusan -->
                                         <div class="form-group mb-3">
                                             <label for="kdjurusan">Kode Jurusan <code>*Otomatis Generate</code></label>
                                             <input type="text" id="kdjurusan" name="kdjurusan" class="form-control" value="{{$kdjurusan}}" readonly required>
                                         </div>
-                                        <!-- Jenjang -->
                                         <div class="form-group mb-3">
                                             <label for="jenjang">Jenjang</label>
                                             <select class="form-control select2" id="jenjang" name="jenjang" required>
@@ -66,7 +54,6 @@
                                             </select>
                                         </div>
 
-                                        <!-- Asal Jurusan Sekolah -->
                                         <div class="form-group mb-3">
                                             <label for="jurusansekolah">Asal Jurusan Sekolah</label>
                                             <select class="form-control select2" id="jurusansekolah" name="jurusansekolah" required>
@@ -77,7 +64,6 @@
                                             </select>
                                         </div>
 
-                                        <!-- Fakultas -->
                                         <div class="form-group mb-3">
                                             <label for="fakultas">Fakultas</label>
                                             <select class="form-control select2" id="fakultas" name="fakultas" required>
@@ -88,13 +74,16 @@
                                             </select>
                                         </div>
 
-                                        <!-- Nama Jurusan -->
                                         <div class="form-group mb-3">
                                             <label for="namajurusan">Nama Jurusan</label>
                                             <input type="text" id="namajurusan" name="namajurusan" placeholder="Nama Jurusan" class="form-control" required>
                                         </div>
 
-                                        <!-- Buttons -->
+                                        <div class="form-group mb-3">
+                                            <label for="format_nim">Format NIM Prodi</label>
+                                            <input type="text" id="format_nim" name="format_nim" placeholder="Contoh: 001, 002, dll (Max 5 Karakter)" class="form-control" maxlength="5">
+                                        </div>
+
                                         <div class="form-group">
                                             <button type="submit" class="btn btn-success float-right" style="margin-left:10px;"> <i class="fas fa-paper-plane"></i> Submit</button>
                                             <button id="btn-reset" class="btn btn-warning float-right">Reset</button>
@@ -112,7 +101,7 @@
                                             <th>Fakultas</th>
                                             <th>Jenjang</th>
                                             <th>Jurusan Sekolah</th>
-                                            <th>Aktif</th>
+                                            <th>Format NIM</th> <th>Aktif</th>
                                             <th>Action</th>
                                         </tr>
                                     </thead>
@@ -123,13 +112,9 @@
                         </div>
                     </div>
                 </div>
-                <!-- /.col-md-6 -->
-            </div>
-            <!-- /.row -->
-        </div><!-- /.container-fluid -->
-    </div>
-    <!-- /.content -->
-@endsection
+                </div>
+            </div></div>
+    @endsection
 
 @section('script')
     <script>
@@ -143,8 +128,7 @@
             $('.select2').select2()
 
             let otable;
-            // loadEvent()
-            // Tunda tabel hingga layout siap
+
             setTimeout(() => {
                 loadEvent()
             }, 1000);
@@ -164,7 +148,7 @@
                     scrollCollapse: true,
                     serverSide: true,
                     searchDelay: 500,
-                    responsive: true,
+                    responsive: false,
                     order: [[1,'asc']],
                     ajax: {
                         url: '{!! route('admin.Jurusan.Tabel') !!}',
@@ -190,6 +174,10 @@
                         {
                             data: 'jurusansekolah'
                         },
+                        // TAMBAHAN: Kolom Format NIM
+                        {
+                            data: 'format_nim'
+                        },
                         {
                             data: 'aktif'
                         },
@@ -212,10 +200,6 @@
                     $('[data-tooltip="tooltip"]').tooltip({trigger: "hover"});
 
                 });
-
-                // setTimeout(function () {
-                //     otable.columns.adjust().draw(false);
-                // }, 300); // ulangi sekali lagi untuk jaga-jaga
             }
 
             function EditJurusan(){
@@ -234,6 +218,7 @@
                             $('#jurusansekolah').val('-1').trigger('change')
                             $('#fakultas').val('-1').trigger('change')
                             $('#namajurusan').val(null)
+                            $('#format_nim').val(null) // Tambahan reset
                         },
                         success: function(data) {
                             $('#loading').hide()
@@ -246,6 +231,8 @@
                                 $('#jurusansekolah').val(data.jurusan.idjurusansekolah).trigger('change')
                                 $('#fakultas').val(data.jurusan.idfakultas).trigger('change')
                                 $('#namajurusan').val(data.jurusan.jurusan)
+                                // TAMBAHAN: Set nilai format NIM
+                                $('#format_nim').val(data.jurusan.format_nim)
                             }
                         }
                     });
@@ -262,6 +249,7 @@
                     $('#jurusansekolah').val('-1').trigger('change')
                     $('#fakultas').val('-1').trigger('change')
                     $('#namajurusan').val(null)
+                    $('#format_nim').val(null) // Tambahan reset
                 });
             }
 

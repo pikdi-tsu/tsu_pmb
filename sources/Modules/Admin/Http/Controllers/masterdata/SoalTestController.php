@@ -22,7 +22,8 @@ class SoalTestController extends Controller
     public function index()
     {
 
-        $linkfile = url('sources/storage/app/FILE_TEMPLATE/Template Soal Test.xlsx');
+        //$linkfile = url('sources/storage/app/FILE_TEMPLATE/Template Soal Test.xlsx');
+	  $linkfile = url('admin/file/FILE_TEMPLATE/Template Soal Test.xlsx');
 
         $data = array(
             'title' => 'Master Soal Test',

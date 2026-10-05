@@ -27,12 +27,12 @@ class Master_TarifUKT extends Model
     ];
 
     public function batch(){
-        return $this->hasOne('App\Models\MasterData\Master_Batch', 'id','idbatch')->where('isactive',1);
+        return $this->hasOne('App\Models\MasterData\Master_Batch', 'id','idbatch');
     }
     public function jalur(){
-        return $this->hasOne('App\Models\MasterData\Master_JenisPendaftaran', 'id','idjalur')->where('isactive',1);
+        return $this->hasOne('App\Models\MasterData\Master_JenisPendaftaran', 'id','idjalur');
     }
     public function jurusan(){
-        return $this->hasOne('App\Models\MasterData\Master_JurusanKuliah', 'id','idjurusan')->where('isactive',1);
+        return $this->hasOne('App\Models\MasterData\Master_JurusanKuliah', 'id','idjurusan');
     }
 }

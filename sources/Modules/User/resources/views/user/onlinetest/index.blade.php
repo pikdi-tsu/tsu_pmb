@@ -55,7 +55,7 @@
                                 <button type="button" id="btnMulai" class="btn btn-sm btn-primary">Mulai Test</button>
                             </div>
                             <hr>
-                            <span class="text-bold">Skor Test : {{$data->nilai_test ? $data->nilai_test : 0}}</span>
+                            <!-- <span class="text-bold">Skor Test : {{$data->nilai_test ? $data->nilai_test : 0}}</span> -->
                             <hr>
                             <div class="row justify-content-center" style="margin-top: 20px;display: none;" id="show-test">
                                 <div class="col-md-6">

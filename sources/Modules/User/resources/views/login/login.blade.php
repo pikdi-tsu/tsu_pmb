@@ -23,16 +23,21 @@
                             </div>
                         </div>
                     </div>
-                    {{-- <small><code id="warning"></code></small> --}}
+
+                    {{-- BAGIAN PASSWORD (DIUBAH) --}}
                     <div class="input-group mb-3">
                         <input type="password" class="form-control" placeholder="Password"
                             name="password" id="password" required>
                         <div class="input-group-append">
-                            <div class="input-group-text">
-                                <span class="fas fa-lock"></span>
+                            {{-- Tambahkan ID dan style cursor pointer --}}
+                            <div class="input-group-text" id="toggle-password" style="cursor: pointer;">
+                                {{-- Ubah default icon jadi mata (fa-eye) --}}
+                                <span class="fas fa-eye"></span>
                             </div>
                         </div>
                     </div>
+                    {{-- END BAGIAN PASSWORD --}}
+
                     <div class="row">
                         <div class="col-md-6">
                             <a href="{{route('ResetPassword')}}" class="btn btn-danger btn-block">
@@ -44,15 +49,19 @@
                                 Login
                             </button>
                         </div>
-                        <!-- /.col -->
-                    </div>
+                        </div>
                 </form>
-                <p style="margin-top:10px;">
+                <p style="margin-top:10px;" class="mb-2">
                     <a href="{{ route('register') }}" class="text-center">Registrasi Akun Baru</a>
                 </p>
+                <div class="mt-3 pt-2 border-top text-center">
+                    <span class="text-xs text-muted">Dosen / Panitia PMB?</span><br>
+                    <a href="{{ route('login') }}" class="text-sm font-weight-bold text-info">
+                        <i class="fas fa-fingerprint mr-1"></i> Masuk via SSO TSU
+                    </a>
+                </div>
             </div>
-            <!-- /.card-body -->
-        </div>
+            </div>
     </div>
 @endsection
 
@@ -65,17 +74,38 @@
                 }
             });
 
-            $('#password').keypress(function(event) {
-                var ew = event.which;
-                if (48 <= ew && ew <= 57)
-                    return true;
-                if (65 <= ew && ew <= 90)
-                    return true;
-                if (97 <= ew && ew <= 122)
-                    return true;
-                return false;
+            // --- FITUR SHOW PASSWORD ---
+            $('#toggle-password').click(function(){
+                var passwordField = $('#password');
+                var passwordIcon = $(this).find('span');
+
+                // Cek tipe input saat ini
+                if(passwordField.attr('type') === 'password'){
+                    // Ubah jadi text (terlihat)
+                    passwordField.attr('type', 'text');
+                    // Ubah icon jadi mata dicoret
+                    passwordIcon.removeClass('fa-eye').addClass('fa-eye-slash');
+                } else {
+                    // Balikin jadi password (tersembunyi)
+                    passwordField.attr('type', 'password');
+                    // Balikin icon jadi mata biasa
+                    passwordIcon.removeClass('fa-eye-slash').addClass('fa-eye');
+                }
             });
+            // ---------------------------
+
+            // $('#password').keypress(function(event) {
+            //     var ew = event.which;
+            //     if (48 <= ew && ew <= 57)
+            //         return true;
+            //     if (65 <= ew && ew <= 90)
+            //         return true;
+            //     if (97 <= ew && ew <= 122)
+            //         return true;
+            //     return false;
+            // });
         });
+
         function checkPassword() {
             var password = $('#password').val();
 
@@ -87,7 +117,7 @@
                 $('#submit').prop('disabled', false);
             } else {
                 pass_numb = password.replace(/[^0-9]/g, '').length;
-                pass_char = password.replace(/[0-9]/g, '').length;
+                // pass_char = password.replace(/[0-9]/g, '').length;
 
                 if (pass_numb == 0) {
                     $('#password').addClass('is-invalid');
@@ -95,13 +125,15 @@
 
                     $('#warning').html('*Must contain Number');
                     $('#submit').attr('disabled', 'disabled');
-                } else if (pass_char == 0) {
-                    $('#password').addClass('is-invalid');
-                    $('#password').removeClass('is-valid');
+                }
+                // else if (pass_char == 0) {
+                //     $('#password').addClass('is-invalid');
+                //     $('#password').removeClass('is-valid');
 
-                    $('#warning').html('*Must contain Letter');
-                    $('#submit').attr('disabled', 'disabled');
-                } else {
+                //     $('#warning').html('*Must contain Letter');
+                //     $('#submit').attr('disabled', 'disabled');
+                // }
+                else {
                     $('#password').removeClass('is-invalid');
                     $('#password').addClass('is-valid');
                     $('#warning').html('');

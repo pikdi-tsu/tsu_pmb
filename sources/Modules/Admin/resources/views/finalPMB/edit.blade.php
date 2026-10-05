@@ -91,10 +91,10 @@
                                             <input type="date" class="form-control pageku-1" name="tgl_lahir" id="tgl_lahir" value="{{$datadaftar->biodata->tgl_lahir}}">
                                         </div>
                                         <div class="col-md-4">
-                                            <label for="tinggi_badan"><code>*</code> Tinggi Badan</label>
+                                            <!-- <label for="tinggi_badan"><code>*</code> Tinggi Badan</label>
                                             <input type="number" min="0" class="form-control pageku-1" name="tinggi_badan" id="tinggi_badan" placeholder="Masukan Tinggi Badan" value="{{$datadaftar->biodata->tinggi_badan}}">
                                             <label for="berat_badan"><code>*</code> Berat Badan</label>
-                                            <input type="number" min="0" class="form-control pageku-1" name="berat_badan" id="berat_badan" placeholder="Masukan Berat Badan" value="{{$datadaftar->biodata->berat_badan}}">
+                                            <input type="number" min="0" class="form-control pageku-1" name="berat_badan" id="berat_badan" placeholder="Masukan Berat Badan" value="{{$datadaftar->biodata->berat_badan}}"> -->
                                             <label for="agama"><code>*</code> Agama</label>
                                             <select class="form-control select2 pageku-1" id="agama" name="agama">
                                                 <option value="" selected disabled>-- Pilih Agama --</option>
@@ -366,59 +366,66 @@
                                     </div>
                                 </div>
                                 <div id="page-4" style="display: none;">
-                                    <div class="step-header">
-                                        <div class="circle">4</div>
-                                        <label class="step-title">Berkas Pendaftaran</label>
-                                    </div>
-                                    <div class="row mt-3">
-                                        <div class="col-md-12 d-flex justify-content-center">
-                                            <div class="col-md-4">
-                                                <label><code>*</code> Format File <code>.pdf</code></label>
-                                                <div class="input-group">
-                                                    <div class="custom-file">
-                                                        <input type="file" class="custom-file-input" id="berkasumum" name="berkasumum" accept="application/pdf">
-                                                        <label class="custom-file-label" for="berkasumum">Choose file</label>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <br>
-                                        <div class="col-md-6" style="margin-top: 20px;">
-                                            <label>Berkas Calon Mahasiswa yang sudah di upload :
-                                                @if($datadaftar->biodata->berkas_umum==null)
-                                                    <span class="badge bg-warning">Belum Upload Berkas</span>
-                                                @else
-                                                    <a href="{{$berkas_umum}}" target="_blank"><span class="badge bg-success">{{$datadaftar->biodata->berkas_umum}}</span></a>
-                                                @endif
-                                            </label> <br>
-                                            <label><code>*</code> Perhatian</label><br>
-                                            <code>1. Semua berkas dijadikan dalam 1 file berbentuk PDF</code><br>
-                                            <code>2. Berkas Harus Sesuai Urutan Seperti Dibawah</code><br>
-                                            <code>2. Ukuran Maksimal berkas adalah 2 MB</code><br><br>
-                                            <label>Berikut Berkas yang harus di Upload :</label><br>
-                                            @foreach ($berkas->berkas as $row => $i)
-                                                @php
-                                                    if($i->keterangan=='Wajib'){
-                                                        $warna = 'warning';
-                                                    }else{
-                                                        $warna = 'secondary';
-                                                    }
-                                                @endphp
-                                                <label>{{$row+1}}. {{$i->nama_berkas}} <span class="badge bg-success">{{$i->formatfile}}</span> <span class="badge bg-{{$warna}}">{{$i->keterangan}}</span> </label><br>
-                                            @endforeach
-
-                                        </div>
-                                        {{-- <div class="col-md-3">
-                                            <label>Konfirmasi Password Baru</label>
-                                            <label>Konfirmasi Password Baru</label>
-                                        </div>
-                                        <div class="col-md-3">
-                                            <label>Konfirmasi Password Baru</label>
-                                            <label>Konfirmasi Password Baru</label>
-                                        </div> --}}
-
-                                    </div>
-                                </div>
+    <div class="step-header">
+        <div class="circle">4</div>
+        <label class="step-title">Berkas Pendaftaran</label>
+    </div>
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="alert alert-info">
+                <strong>Perhatian:</strong>
+                <ul>
+                    <li>Upload file baru HANYA jika ingin mengganti file yang sudah ada.</li>
+                    <li>Ukuran maksimal per berkas adalah 2 MB.</li>
+                </ul>
+            </div>
+            
+            <table class="table table-bordered table-striped mt-3">
+                <thead class="text-center">
+                    <tr>
+                        <th width="5%">No</th>
+                        <th width="35%">Nama Berkas</th>
+                        <th width="20%">Status Berkas</th>
+                        <th width="40%">Upload File Baru (Opsional)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach ($berkas->berkas as $row => $i)
+                        @php
+                            $warna = $i->keterangan == 'Wajib' ? 'danger' : 'secondary';
+                            // Cek apakah file sudah pernah diupload (Pastikan $berkasPendaftar dikirim dari fungsi Edit di Controller)
+                            $fileUploaded = $berkasPendaftar->firstWhere('id_berkas', $i->id);
+                        @endphp
+                        <tr>
+                            <td class="text-center">{{ $row + 1 }}</td>
+                            <td>
+                                {{ $i->nama_berkas }} <br>
+                                <span class="badge bg-{{ $warna }}">{{ $i->keterangan }}</span>
+                                <small class="text-muted">Format: {{ $i->formatfile }}</small>
+                            </td>
+                            <td class="text-center">
+                                @if($fileUploaded)
+                                    @php
+                                        $parameter = \App\Models\Parameter::where('id', 1)->first();
+                                        $pathFile = url('admin/file/' . strtoupper($parameter->file_umum) . '/' . $fileUploaded->nama_berkas);
+                                    @endphp
+                                    <a href="{{ $pathFile }}" target="_blank" class="badge bg-success" style="text-decoration: none;">
+                                        <i class="fa fa-check"></i> Sudah Upload (Lihat)
+                                    </a>
+                                @else
+                                    <span class="badge bg-warning text-dark"><i class="fa fa-times"></i> Belum Upload</span>
+                                @endif
+                            </td>
+                            <td>
+                                <input type="file" name="berkas_baru[{{ $i->id }}]" class="form-control pageku-4" accept="{{ $i->formatfile == '.pdf' ? 'application/pdf' : 'image/jpeg,image/png' }}">
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
                                 <div class="col-md-12 d-flex justify-content-center" style="margin-top: 10px;">
                                     <button type="button" id="btn-prev" class="btn btn-secondary btn-sm mr-2" style="display: none;">Prev</button>
                                     <button type="button" id="btn-next" class="btn btn-secondary btn-sm">Next</button>
@@ -691,47 +698,33 @@
                     }
                 }
 
-                let page4 = $('#berkasumum').prop('files')[0];
-                let jmlpage4 = 0
-                if (page4) {
-                    let fileType = page4.type;
-                    let fileSize = page4.size; // dalam byte
+                let fileInputs = $('.pageku-4');
+                let jmlpage4 = 0;
 
-                    // ✅ Validasi tipe file (harus PDF)
-                    if (fileType != 'application/pdf') {
-                        jmlpage4 = 2;
-                        // notifalert('Information','Hanya file PDF yang diperbolehkan!','warning');
-                        // $('#berkasumum').val(''); // reset input
-                        // return false;
-                    }
+                for (let j = 0; j < fileInputs.length; j++) {
+                    let fileField = fileInputs[j];
+                    if (fileField.files.length > 0) {
+                        let uploadedFile = fileField.files[0];
+                        let fileSize = uploadedFile.size; // dalam byte
 
-                    // ✅ Validasi ukuran file (maks 2 MB)
-                    if (fileSize > 2 * 1024 * 1024) { // 2 MB = 2 * 1024 * 1024 bytes
-                        jmlpage4 = 3;
-                        // notifalert('Information','Ukuran Berkas Umum maksimal 2 MB!','warning');
-                        // $('#berkasumum').val(''); // reset input
-                        // return false;
+                        // Validasi ukuran file (maks 2 MB)
+                        if (fileSize > 2 * 1024 * 1024) { 
+                            jmlpage4 = 3;
+                            break; // Stop looping jika ada 1 saja yang kebesaran
+                        }
                     }
-                }else{
-                    jmlpage4 = 1;
                 }
 
                 let notif = '';
 
-                if(jmlpage1>0){
+                if(jmlpage1 > 0){
                     notif = 'Data Diri Belum Lengkap ! Lengkapi Data Diri Pada Halaman 1 !';
-                }else if(jmlpage2>0){
+                }else if(jmlpage2 > 0){
                     notif = 'Data keluarga Belum Lengkap ! Lengkapi Data Keluarga Pada Halaman 2 !';
-                }else if(jmlpage3>0){
+                }else if(jmlpage3 > 0){
                     notif = 'Data Sekolah Belum Lengkap ! Lengkapi Data Sekolah Pada Halaman 3 !';
-                }
-                // else if(jmlpage4==1){
-                //     notif = 'Data Berkas Pendaftaran masih Kosong ! Lengkapi Data Berkas Pendaftaran Pada Halaman 4 !';
-                // }
-                else if(jmlpage4==2){
-                    notif = 'Hanya file PDF yang diperbolehkan ! Ganti format berkas pada halaman 4';
-                }else if(jmlpage4==3){
-                    notif = 'Ukuran Berkas Umum maksimal 2 MB! ! Ganti Ukuran berkas pada halaman 4';
+                }else if(jmlpage4 == 3){
+                    notif = 'Ada Berkas yang ukurannya melebihi 2 MB! Cek kembali halaman 4.';
                 }else{
                     notif = 'ok'
                 }

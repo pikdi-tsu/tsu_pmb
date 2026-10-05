@@ -108,16 +108,16 @@
                                 <th id="o-prodi2" class="o-detaildaftar"></th>
                             </tr>
                             <tr>
-                                <th>Tanggal Test</th>
-                                <th id="o-tgltest" class="o-detaildaftar"></th>
+                                <th>Program Studi Pilihan 3</th>
+                                <th id="o-prodi3" class="o-detaildaftar"></th>
                                 <th>Nilai Test</th>
                                 <th id="o-nilaitest" class="o-detaildaftar"></th>
                             </tr>
                             <tr>
                                 <th>Jurusan Diterima</th>
                                 <th id="o-jurusanditerima" class="o-detaildaftar"></th>
-                                <th></th>
-                                <th class="o-detaildaftar"></th>
+                                <th>Tanggal Test</th>
+                                <th id="o-tgltest" class="o-detaildaftar"></th>
                             </tr>
                         </thead>
                         <tbody id="detail-bayar">
@@ -212,7 +212,7 @@
                     scrollCollapse: true,
                     serverSide: true,
                     searchDelay: 500,
-                    responsive: true,
+                    responsive: false,
                     order: [],
                     ajax: {
                         url: '{!! route('admin.testpmb.tabel') !!}',
@@ -307,8 +307,9 @@
                                 $('#o-nama').html(': '+data.daftar.biodata.nama);
                                 $('#o-batch').html(': '+data.daftar.batch.nama_batch+' '+data.daftar.batch.tahun_akademik);
                                 $('#o-jalur').html(': '+data.daftar.jalur.jenis_pendaftaran);
-                                $('#o-prodi1').html(': '+data.daftar.prodi1.jenjang.jenjang+'-'+data.daftar.prodi1.jurusan);
-                                $('#o-prodi2').html(': '+data.daftar.prodi2.jenjang.jenjang+'-'+data.daftar.prodi2.jurusan);
+                                $('#o-prodi1').html(': ' + (data.daftar.prodi1 && data.daftar.prodi1.jenjang ? data.daftar.prodi1.jenjang.jenjang + '-' + data.daftar.prodi1.jurusan : (data.daftar.prodi1 ? data.daftar.prodi1.jurusan : '-')));
+                                $('#o-prodi2').html(': ' + (data.daftar.prodi2 && data.daftar.prodi2.jenjang ? data.daftar.prodi2.jenjang.jenjang + '-' + data.daftar.prodi2.jurusan : (data.daftar.prodi2 ? data.daftar.prodi2.jurusan : '-')));
+                                $('#o-prodi3').html(': ' + (data.daftar.prodi3 && data.daftar.prodi3.jenjang ? data.daftar.prodi3.jenjang.jenjang + '-' + data.daftar.prodi3.jurusan : (data.daftar.prodi3 ? data.daftar.prodi3.jurusan : '-')));
                                 $('#o-tgltest').html(': '+dateIndo(data.daftar.tgl_test));
                                 $('#o-nilaitest').html(': '+data.daftar.nilai_test);
                                 let diterima = data.daftar.jurusan_diterima ? data.daftar.jurusan_acc.jenjang.jenjang+'-'+data.daftar.jurusan_acc.jurusan : '-'

@@ -9,6 +9,7 @@ use App\Models\Admin\ModulModel;
 use App\Models\Admin\PegawaiModel;
 use App\Models\Admin\User;
 use App\Models\Admin\UserResetPasswordModel;
+use App\Models\Admin\LogAktivitas;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -108,12 +109,10 @@ class SettingController extends Controller
     //Edit Profile
     public function showEditProfile()
     {
-        // dd(session()->all());
         $data = array(
             'title' => 'Change Profile',
             'menu'  => 'Change Profile',
         );
-        // dd(session('session')->nip);
         return view('admin::setting.editprofile', $data);
     }
 
@@ -151,7 +150,6 @@ class SettingController extends Controller
             'menu'  => 'User Management',
             'mastergroup' => $master
         );
-
         return view('admin::setting.usermanagement', $data);
     }
 
@@ -160,11 +158,11 @@ class SettingController extends Controller
         $data = User::where('isactive',1)->selectRaw('id,nik,email,privilege_pmb')->get();
         return DataTables::of($data)
             ->addIndexColumn()
-            ->addColumn('nip', function ($d) {
+            ->addColumn('nik', function ($d) {
                 return $d->nik;
             })
             ->addColumn('nama', function ($d) {
-                $cek = PegawaiModel::where('nip',$d->nik)->where('email_kampus',$d->email)->select('nama')->first();
+                $cek = PegawaiModel::where('nik',$d->nik)->where('email',$d->email)->select('nama')->first();
                 $nama = $cek==null ? '-' : $cek->nama;
                 return $nama;
             })
@@ -194,9 +192,9 @@ class SettingController extends Controller
         // dd($query,$role);
 
         $data = PegawaiModel::where('nama', 'LIKE', "%{$query}%")
-        ->orWhere('nip','LIKE',"%{$query}%")
-        ->whereNotNull('email_kampus')
-        ->select('nip', 'nama')
+        ->orWhere('nik','LIKE',"%{$query}%")
+        ->whereNotNull('email')
+        ->select('nik', 'nama')
         ->limit(10)
         ->get();
 
@@ -228,8 +226,8 @@ class SettingController extends Controller
             return ['title' => 'Information','message' => 'User Sudah Terdaftar','status' => 'warning'];
         }
 
-        $cek1 = PegawaiModel::where('nip',$nik)->select('nip','email_kampus')->first();
-        $email = $cek1->email_kampus;
+        $cek1 = PegawaiModel::where('nik',$nik)->select('nik','email')->first();
+        $email = $cek1->email;
 
         // dd($email);
         if($cek1==null){
@@ -240,7 +238,7 @@ class SettingController extends Controller
             'nik' => $nik,
             'email' => $email,
             'privilege_pmb' => $role,
-            'password' => Hash::make('Password123'),
+            'password' => Hash::make(defaultpassword()),
             'created_at' => date('Y-m-d H:i:s'),
             'created_by' => session('session')->nip
         );
@@ -263,7 +261,7 @@ class SettingController extends Controller
         $cek = User::where('id',$id)->where('isactive',1)->selectRaw('id,nik,privilege_pmb')->first();
         // dd($cek);
 
-        $cek1 = PegawaiModel::where('nip',$cek->nik)->selectRaw('nip as nik, nama')->first();
+        $cek1 = PegawaiModel::where('nik',$cek->nik)->selectRaw('nik, nama')->first();
         $nama = $cek1->nama;
 
         $data['nik'] = $cek->nik;
@@ -338,7 +336,7 @@ class SettingController extends Controller
                 return $d->nik;
             })
             ->addColumn('nama', function ($d) {
-                $cek = PegawaiModel::where('nip',$d->nik)->where('email_kampus',$d->email)->select('nama')->first();
+                $cek = PegawaiModel::where('nik',$d->nik)->where('email',$d->email)->select('nama')->first();
                 $nama = $cek==null ? '-' : $cek->nama;
                 return $nama;
             })
@@ -351,7 +349,7 @@ class SettingController extends Controller
             })
             ->addColumn('action', function ($d) {
                 $id = encrypt($d->id);
-                $cek = PegawaiModel::where('nip',$d->nik)->where('email_kampus',$d->email)->select('nama')->first();
+                $cek = PegawaiModel::where('nik',$d->nik)->where('email',$d->email)->select('nama')->first();
                 $nama = $cek==null ? '-' : $cek->nama;
                 $edit = '<a href="'.route('admin.UserReset.ResetPassword',[$id]).'" class="btn_edit"><i title="Reset Password : '.$nama.'" class="fa fa-key text-orange actiona"></i></a>';
                 $delete = '<a href="'.route('admin.UserReset.ResetQA',[$id]).'" class="btn_delete"><i title="Reset Security Question : '.$nama.'" class="fa fa-question-circle text-blue actiona"></i></a>';
@@ -606,10 +604,11 @@ class SettingController extends Controller
             ->addColumn('action', function ($d) {
                 $id = encrypt($d->KodeGroupUser);
                 $url = '#';
-                $editpriv  = '<a href="'.route('admin.gruopuser.ShowPrivilege',[$id]).'" class="btn_delete"><i title="Edit Privilege of '.$d->NamaGroup.'" class="fa fa-eye text-green"></i></a>';
-                $editnama   = '<a href="#" data-id="'.$id.'" class="btn_edit"><i title="Edit '.$d->NamaGroup.' Data" class="fa fa-edit text-orange"></i></a>';
+                $editpriv  = '<a href="'.route('admin.gruopuser.ShowPrivilege',[$id]).'" class="btn_priv mr-2"><i title="Edit Privilege of '.$d->NamaGroup.'" class="fa fa-eye text-green"></i></a>';
+                $editnama   = '<a href="#" data-id="'.$id.'" class="btn_edit mr-2"><i title="Edit '.$d->NamaGroup.' Data" class="fa fa-edit text-orange"></i></a>';
+                $del       = '<a href="'.route('admin.gruopuser.DeleteGroupUser',[$id]).'" onclick="return confirm(\'Apakah Anda yakin ingin menghapus Group User '.$d->NamaGroup.'?\')" class="btn_del text-danger"><i title="Hapus '.$d->NamaGroup.'" class="fa fa-trash"></i></a>';
 
-                return $editpriv.'  '.$editnama;
+                return $editpriv.' '.$editnama.' '.$del;
             })
             ->rawColumns(['action'])
             ->make(true);
@@ -664,7 +663,6 @@ class SettingController extends Controller
     public function GetGroupUser($params)
     {
         $id = decrypt($params);
-        // dd($id);
         $check = MasterGroupModel::where('KodeGroupUser',$id)->first();
 
         if($check){
@@ -682,7 +680,29 @@ class SettingController extends Controller
     public function DeleteGroupUser($params)
     {
         $id = decrypt($params);
-        dd($id);
+
+        // Cek apakah group masih dipakai oleh user aktif
+        $cekUser = User::where('privilege_pmb', $id)->where('isactive', 1)->count();
+        if ($cekUser > 0) {
+            $alert = ['title' => 'Gagal', 'message' => 'Group masih digunakan oleh ' . $cekUser . ' user aktif! Tidak dapat dihapus.', 'status' => 'error'];
+            return redirect()->back()->with('alert', $alert);
+        }
+
+        // Soft-delete group user
+        $update = MasterGroupModel::where('KodeGroupUser', $id)->update([
+            'isactive'   => 0,
+            'updated_at' => date('Y-m-d H:i:s'),
+            'updated_by' => session('session')->nip
+        ]);
+
+        if ($update) {
+            LogAktivitas::catat('Group User', 'Hapus Group User', $id, 'Menghapus group user: ' . $id);
+            $alert = ['title' => 'Berhasil', 'message' => 'Group User Berhasil Dihapus', 'status' => 'success'];
+        } else {
+            $alert = ['title' => 'Gagal', 'message' => 'Group User Gagal Dihapus', 'status' => 'error'];
+        }
+
+        return redirect()->back()->with('alert', $alert);
     }
 
     public function ShowPrivilege($params)
@@ -740,7 +760,6 @@ class SettingController extends Controller
             $cari = $value->modul.$value->menu;
             // dd($cari);
             if(isset($request->menumod[$cari]) AND $request->actionmod[$cari]!=null){
-                echo $request->menumod[$cari].' vs '.$request->actionmod[$cari].'<br>';
                 $mod = explode("#", $request->menumod[$cari]);
 
                 $inn = array(

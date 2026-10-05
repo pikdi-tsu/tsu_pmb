@@ -4,26 +4,35 @@ namespace App\Models\User;
 
 use Illuminate\Database\Eloquent\Model;
 
-
 class Saudara extends Model
 {
-    // use HasApiTokens, HasFactory, Notifiable;
+    /**
+     * Tentukan nama tabel yang digunakan oleh model ini.
+     */
+    protected $table = 'pmb_data_saudara';
+    
+    /**
+     * Tentukan primary key tabel.
+     */
+    protected $primaryKey = 'id';
 
     /**
      * The attributes that are mass assignable.
+     * Tentukan kolom apa saja yang boleh diisi (sesuai screenshot database-mu).
      *
      * @var array<int, string>
      */
-    protected $table = 'pmb_data_saudara';
-    protected $primaryKey = 'id';
-    // protected $keyType = 'string';
     protected $fillable = [
-        'id',
-    //     'role_access',
-    //     'password',
-    //     'created_at',
-    //     'created_by',
-    //     'updated_at',
-    //     'updated_by',
+        'bio_id',
+        'nama',
+        'pekerjaan',
+        'status_hidup',
+        'status_kekerabatan'
     ];
+
+    /**
+     * Matikan fitur updated_at otomatis karena tabel tidak memiliki kolom tersebut.
+     * Laravel hanya akan mengisi kolom created_at saja secara otomatis.
+     */
+    const UPDATED_AT = null; 
 }

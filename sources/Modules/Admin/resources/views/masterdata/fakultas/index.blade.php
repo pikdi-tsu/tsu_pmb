@@ -5,30 +5,21 @@
 @endsection
 
 @section('content')
-    <!-- Content Header (Page header) -->
     <div class="content-header">
         <div class="container-fluid">
             <div class="row mb-2">
                 <div class="col-sm-6">
                     <h1>{{ $menu }}</h1>
-                </div><!-- /.col -->
-                <div class="col-sm-6">
+                </div><div class="col-sm-6">
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item active"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
                         <li class="breadcrumb-item active">Master Data</li>
                         <li class="breadcrumb-item active">{{ $menu }}</li>
                     </ol>
-                </div><!-- /.col -->
-            </div><!-- /.row -->
-        </div><!-- /.container-fluid -->
-    </div>
-    <!-- /.content-header -->
-
-    <!-- Main content -->
+                </div></div></div></div>
     <div class="content">
         <div class="container-fluid">
             <div class="row">
-                <!-- /.col-md-6 -->
                 <div class="col-md-12">
                     <div class="card card-primary card-outline">
                         <div class="card-header">
@@ -36,28 +27,28 @@
                         </div>
                         <div class="card-body">
                             <div class="row justify-content-center">
-                                <div class="col-md-6"> <!-- Ubah lebar form di sini -->
-                                    <form id="form-fakultas" method="POST" action="{{route('admin.fakultas.Store')}}">
+                                <div class="col-md-6"> <form id="form-fakultas" method="POST" action="{{route('admin.fakultas.Store')}}">
                                         @csrf
                                         <input type="hidden" id="IdFakultas" name="IdFakultas" value="">
-                                        <!-- Nama Fakultas -->
                                         <div class="form-group mb-3">
                                             <label for="kodefakultas">Kode Fakultas   <code>*Otomatis Generate</code></label>
                                             <input type="text" id="kdfakultas" name="kdfakultas" class="form-control" value="{{$kdfakultas}}" readonly required>
                                         </div>
-                                        <!-- Nama Fakultas -->
                                         <div class="form-group mb-3">
                                             <label for="namafakultas">Nama Fakultas</label>
                                             <input type="text" id="namafakultas" name="namafakultas" placeholder="Nama Fakultas" class="form-control" required>
                                         </div>
 
-                                        <!-- Singkatan Fakultas -->
                                         <div class="form-group mb-3">
                                             <label for="singkatanfakultas">Singkatan Fakultas</label>
                                             <input type="text" id="singkatanfakultas" name="singkatanfakultas" placeholder="Singkatan Fakultas" class="form-control" required>
                                         </div>
 
-                                        <!-- Buttons -->
+                                        <div class="form-group mb-3">
+                                            <label for="format_nim">Format NIM Fakultas</label>
+                                            <input type="text" id="format_nim" name="format_nim" placeholder="Contoh: A, B, dll (Max 5 Karakter)" class="form-control" maxlength="5">
+                                        </div>
+
                                         <div class="form-group">
                                             <button type="submit" class="btn btn-success float-right" style="margin-left:10px;"> <i class="fas fa-paper-plane"></i> Submit</button>
                                             <button id="btn-reset" class="btn btn-warning float-right">Reset</button>
@@ -73,7 +64,7 @@
                                             <th>Kode Fakultas</th>
                                             <th>Nama Fakultas</th>
                                             <th>Singkatan</th>
-                                            <th>Aktif</th>
+                                            <th>Format NIM</th> <th>Aktif</th>
                                             <th>Action</th>
                                         </tr>
                                     </thead>
@@ -86,13 +77,9 @@
                         </div>
                     </div>
                 </div>
-                <!-- /.col-md-6 -->
-            </div>
-            <!-- /.row -->
-        </div><!-- /.container-fluid -->
-    </div>
-    <!-- /.content -->
-@endsection
+                </div>
+            </div></div>
+    @endsection
 @section('script')
     <script>
         $(function() {
@@ -140,6 +127,10 @@
                         {
                             data: 'singkatan'
                         },
+                        // TAMBAHAN: Kolom Format NIM
+                        {
+                            data: 'format_nim'
+                        },
                         {
                             data: 'aktif'
                         },
@@ -185,6 +176,7 @@
                             $('#kdfakultas').val(null)
                             $('#namafakultas').val(null)
                             $('#singkatanfakultas').val(null)
+                            $('#format_nim').val(null) // Tambahan reset
                         },
                         success: function(data) {
                             $('#loading').hide()
@@ -195,6 +187,8 @@
                                 $('#kdfakultas').val(data.fakultas.KodeFakultas)
                                 $('#namafakultas').val(data.fakultas.namafakultas)
                                 $('#singkatanfakultas').val(data.fakultas.singkatan)
+                                // TAMBAHAN: Set nilai format NIM
+                                $('#format_nim').val(data.fakultas.format_nim)
                             }
                         }
                     });
@@ -209,6 +203,7 @@
                     $('#kdfakultas').val('{{$kdfakultas}}')
                     $('#namafakultas').val(null)
                     $('#singkatanfakultas').val(null)
+                    $('#format_nim').val(null) // Tambahan reset
                 });
             }
 
