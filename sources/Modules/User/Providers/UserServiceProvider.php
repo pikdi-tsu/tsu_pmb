@@ -22,10 +22,10 @@ class UserServiceProvider extends ServiceProvider
     public function boot(): void
     {
         // Register routing
-        $this->loadRoutesFrom(__DIR__.'/../Routes/web.php');
+        $this->loadRoutesFrom(__DIR__.'/../routes/web.php');
 
         // Register views
-        $this->loadViewsFrom(__DIR__.'/../Resources/views', 'user');
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'user');
         $this->registerCommands();
         $this->registerCommandSchedules();
         $this->registerTranslations();
