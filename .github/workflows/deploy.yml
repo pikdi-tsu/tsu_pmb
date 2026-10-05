@@ -254,3 +254,34 @@ jobs:
             chmod 600 storage/*.key 2>/dev/null || true
 
             echo ">>> DEPLOY SELESAI: $(date '+%Y-%m-%d %H:%M:%S')"
+
+      - name: Health Check Production
+        env:
+          APP_URL: ${{ secrets.APP_URL || 'https://pmb.tsu.ac.id' }}
+        run: |
+          BASE_URL=$(printf '%s' "$APP_URL" | tr -d '\r\n ' | sed 's|/*$||')
+          FAILED=0
+
+          # Cek halaman utama (render view + query DB), login admin, dan aset statis public
+          for path in "/" "/admin" "/public/assets/img/kampustsu.png"; do
+            url="${BASE_URL}${path}"
+            code=000
+            # Retry beberapa kali untuk memberi waktu cache/opcache server pulih
+            for attempt in 1 2 3 4 5; do
+              code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$url" || echo 000)
+              [ "$code" = "200" ] && break
+              sleep 5
+            done
+
+            if [ "$code" = "200" ]; then
+              echo "OK    [$code] $url"
+            else
+              echo "::error::Health check gagal [$code] $url"
+              FAILED=1
+            fi
+          done
+
+          if [ "$FAILED" = "1" ]; then
+            echo "::error::Deploy selesai tetapi situs tidak sehat. Cek storage/logs/laravel.log di server dan pertimbangkan revert commit terakhir."
+            exit 1
+          fi
