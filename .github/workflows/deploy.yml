@@ -80,6 +80,15 @@ jobs:
           PIKDI_EMERGENCY_SECRET: ${{ secrets.PIKDI_EMERGENCY_SECRET }}
           PIKDI_RESCUE_SECRET: ${{ secrets.PIKDI_RESCUE_SECRET }}
           PIKDI_SYNC_SECRET: ${{ secrets.PIKDI_SYNC_SECRET }}
+          # SMTP pengirim email (kosong = nilai di .env server tidak diubah)
+          MAIL_MAILER: ${{ secrets.MAIL_MAILER }}
+          MAIL_HOST: ${{ secrets.MAIL_HOST }}
+          MAIL_PORT: ${{ secrets.MAIL_PORT }}
+          MAIL_USERNAME: ${{ secrets.MAIL_USERNAME }}
+          MAIL_PASSWORD: ${{ secrets.MAIL_PASSWORD }}
+          MAIL_ENCRYPTION: ${{ secrets.MAIL_ENCRYPTION }}
+          MAIL_FROM_ADDRESS: ${{ secrets.MAIL_FROM_ADDRESS }}
+          MAIL_FROM_NAME: ${{ secrets.MAIL_FROM_NAME }}
         run: |
           if [ -z "$TARGET_DOMAIN" ] || [ -z "$APP_URL" ]; then
             echo "::error::Secret TARGET_DOMAIN dan APP_URL wajib diisi."
@@ -91,7 +100,8 @@ jobs:
           : > deploy.env
           for key in APP_NAME APP_URL ASSET_URL FRONTEND_URL DB_CONNECTION DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD \
                      HOMEBASE_URL TSU_SSO_CLIENT_ID TSU_SSO_CLIENT_SECRET TSU_SSO_REDIRECT_URI HOMEBASE_CLIENT_ID HOMEBASE_CLIENT_SECRET \
-                     PIKDI_EMERGENCY_SECRET PIKDI_RESCUE_SECRET PIKDI_SYNC_SECRET; do
+                     PIKDI_EMERGENCY_SECRET PIKDI_RESCUE_SECRET PIKDI_SYNC_SECRET \
+                     MAIL_MAILER MAIL_HOST MAIL_PORT MAIL_USERNAME MAIL_PASSWORD MAIL_ENCRYPTION MAIL_FROM_ADDRESS MAIL_FROM_NAME; do
             printf '%s=%s\n' "$key" "$(printf '%s' "${!key}" | base64 -w0)" >> deploy.env
           done
 
@@ -297,6 +307,13 @@ jobs:
             update_env "PIKDI_EMERGENCY_SECRET" "$(printf '%s' "$PIKDI_EMERGENCY_SECRET" | tr -d '\r\n')"
             update_env "PIKDI_RESCUE_SECRET" "$(printf '%s' "$PIKDI_RESCUE_SECRET" | tr -d '\r\n ')"
             update_env "PIKDI_SYNC_SECRET" "$(printf '%s' "$PIKDI_SYNC_SECRET" | tr -d '\r\n')"
+
+            # SMTP pengirim email (password app/SMTP bisa mengandung spasi & karakter khusus)
+            for mail_key in MAIL_MAILER MAIL_HOST MAIL_PORT MAIL_USERNAME MAIL_ENCRYPTION MAIL_FROM_ADDRESS; do
+                update_env "$mail_key" "$(eval "printf '%s' \"\$$mail_key\"" | tr -d '\r\n ')"
+            done
+            update_env "MAIL_PASSWORD" "$(printf '%s' "$MAIL_PASSWORD" | tr -d '\r\n')"
+            update_env "MAIL_FROM_NAME" "$(printf '%s' "$MAIL_FROM_NAME" | tr -d '\r\n')"
 
             # B4. Install vendor production
             export COMPOSER_ALLOW_SUPERUSER=1

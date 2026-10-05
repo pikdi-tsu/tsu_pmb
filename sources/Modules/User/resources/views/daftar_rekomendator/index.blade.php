@@ -32,10 +32,10 @@
                                             <div class="form-group mb-3">
                                                 <label for="kategori">Kategori</label>
                                                 <select class="form-control select2" id="kategori" name="kategori" required>
-                                                    <option value="" selected disabled>-- Pilih Kategori --
+                                                    <option value="" disabled @selected(!old('kategori'))>-- Pilih Kategori --
                                                     </option>
                                                     @foreach ($kategori as $kat)
-                                                        <option value="{{ $kat->kode_kategori }}">
+                                                        <option value="{{ $kat->kode_kategori }}" @selected(old('kategori') == $kat->kode_kategori)>
                                                             {{ $kat->kategori_rekomendator }}</option>
                                                     @endforeach
                                                 </select>
@@ -53,7 +53,7 @@
                                             </div>
                                             <div class="form-group">
                                                 <label for="alamat">Alamat</label>
-                                                <textarea id="alamat" name="alamat" rows="4" class="form-control" placeholder="Alamat Lengkap" autocomplete="off" value="{{ old('alamat') }}" required></textarea>
+                                                <textarea id="alamat" name="alamat" rows="4" class="form-control" placeholder="Alamat Lengkap" autocomplete="off" required>{{ old('alamat') }}</textarea>
                                                 @error('alamat')
                                                     <small class="text-danger">{{ $message }}</small>
                                                 @enderror
@@ -80,7 +80,7 @@
                                             <div class="form-group mb-3">
                                                 <label for="nama_bank">Nama Bank</label>
                                                 <input type="text" id="nama_bank" name="nama_bank"
-                                                    placeholder="Contoh: BCA, BRI" class="form-control" autocomplete="off" value="{{ old('nama_bank') }}"required>
+                                                    placeholder="Contoh: BCA, BRI" class="form-control" autocomplete="off" value="{{ old('nama_bank') }}" required>
                                                 @error('nama_bank')
                                                     <small class="text-danger">{{ $message }}</small>
                                                 @enderror
@@ -96,7 +96,7 @@
                                             <div class="form-group">
                                                 <label for="atasnama_rekening">Atas Nama Rekening</label>
                                                 <input type="text" id="atasnama_rekening" name="atasnama_rekening"
-                                                    placeholder="Atas Nama" class="form-control" autocomplete="off" value="{{ old('atasnana_rekening') }}" required>
+                                                    placeholder="Atas Nama" class="form-control" autocomplete="off" value="{{ old('atasnama_rekening') }}" required>
                                                 @error('atasnama_rekening')
                                                     <small class="text-danger">{{ $message }}</small>
                                                 @enderror
@@ -110,7 +110,7 @@
                                                 <small class="text-danger"> <code>*</code> Email harus aktif dikarenakan untuk mengirimkan Kode Rekomendator <code>*</code></small>
                                             </div>
                                             <div class="col-md-6">
-                                                <button type="submit" id="submit-rekomendator" class="btn btn-success float-right" style="margin-left:10px;"><i class="fas fa-paper-plane"></i> Submit</button>
+                                                <button type="submit" id="submit-rekomendator" class="btn btn-success float-right btn-submit-rekom" style="margin-left:10px;"><i class="fas fa-paper-plane"></i> Submit</button>
                                             </div>
                                         </div>
                                         {{-- <button id="btn-reset" class="btn btn-warning float-right">Reset</button> --}}
@@ -145,6 +145,13 @@
             function EventSubmit() {
                 $('#submit-rekomendator').click(function(e) {
                     e.preventDefault(); // cegah submit langsung
+
+                    // Validasi required HTML dulu (form.submit() via JS melewati validasi browser)
+                    const form = document.getElementById('form-rekomendator');
+                    if (!form.reportValidity()) {
+                        return;
+                    }
+
                     Swal.fire({
                         title: "Konfirmasi",
                         text: "Apakah Data Sudah Benar dan Tidak Ada yang Kosong ? Tekan Ya untuk menyimpan data",

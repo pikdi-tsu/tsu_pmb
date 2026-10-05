@@ -24,6 +24,21 @@ scratch. This page gets rid of all links and provides the needed markup only.
     <link rel="stylesheet" href="{{asset('public/assets/admin/plugins/select2/css/select2.min.css')}}">
     <link rel="stylesheet" href="{{asset('public/assets/admin/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css')}}">
     <link rel="stylesheet" href="{{ asset('public/assets/admin/dist/css/loading.css') }}">
+    <style>
+        /* Konten bisa di-scroll & tidak tertutup navbar/footer fixed (terutama di HP) */
+        .rekom-page {
+            min-height: 100vh;
+            padding: calc(57px + 1.5rem) 0 calc(57px + 1.5rem);
+            background: #e9ecef;
+        }
+        .rekom-page .card { max-width: 720px; margin: 0 auto; }
+        .navbar-brand .brand-text { white-space: normal; font-size: 1.1rem; }
+        @media (max-width: 575.98px) {
+            .rekom-page { padding-left: .5rem; padding-right: .5rem; }
+            .navbar-brand .brand-text { font-size: .95rem; }
+            .rekom-page .btn-submit-rekom { width: 100%; margin: 1rem 0 0 !important; }
+        }
+    </style>
     @yield('link_href')
 </head>
 
@@ -42,7 +57,7 @@ scratch. This page gets rid of all links and provides the needed markup only.
         <!-- /.navbar -->
 
         <!-- Main content -->
-        <div class="content login-page">
+        <div class="rekom-page">
             @yield('content')
         </div>
         @include('user::login/loading')
@@ -73,8 +88,21 @@ scratch. This page gets rid of all links and provides the needed markup only.
     <script src="{{ asset('public/assets/admin/plugins/select2/js/select2.full.min.js') }}"></script>
     <script>
         @if (Session::has('alert'))
-            Swal.fire('{{ session('alert')['title'] }}', '{{ session('alert')['message'] }}',
-                '{{ session('alert')['status'] }}')
+            Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                showCloseButton: true,
+                timer: {{ session('alert')['status'] === 'success' ? 5000 : 12000 }},
+                timerProgressBar: true,
+            }).fire({
+                icon: @json(session('alert')['status']),
+                title: @json(session('alert')['title']),
+                text: @json(session('alert')['message']),
+            });
+        @elseif ($errors->any())
+            Swal.mixin({ toast: true, position: 'top-end', showConfirmButton: false, showCloseButton: true, timer: 8000, timerProgressBar: true })
+                .fire({ icon: 'error', title: 'Data belum lengkap', text: 'Periksa kembali isian yang ditandai merah.' });
         @endif
 
         function notifalert(title,text,type) {
