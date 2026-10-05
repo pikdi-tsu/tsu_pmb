@@ -54,40 +54,64 @@ jobs:
           mv /tmp/core.tar.gz ./core.tar.gz
           mv /tmp/public.tar.gz ./public.tar.gz
 
-      - name: Upload archives to DirectAdmin via SCP
+      - name: Package env & upload archives to DirectAdmin via SCP
         env:
           SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SSH_USER: ${{ secrets.SSH_USERNAME }}
           SSH_HOST: ${{ secrets.SSH_HOST }}
-          TARGET_DOMAIN: ${{ secrets.TARGET_DOMAIN || 'pmb.tsu.ac.id' }}
-        run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_KEY" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          scp -P 22 -o StrictHostKeyChecking=no -o BatchMode=yes -i ~/.ssh/deploy_key core.tar.gz public.tar.gz ${SSH_USER}@${SSH_HOST}:~/domains/${TARGET_DOMAIN}/
-          rm -f ~/.ssh/deploy_key
-
-      - name: Deploy & Execute Server Commands via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        env:
-          TARGET_DOMAIN: ${{ secrets.TARGET_DOMAIN || 'pmb.tsu.ac.id' }}
-          CORE_DIR: ${{ secrets.CORE_DIR || 'tsu_pmb_core' }}
+          TARGET_DOMAIN: ${{ secrets.TARGET_DOMAIN }}
+          # Nilai untuk .env server (kosong = nilai di .env server tidak diubah)
           APP_NAME: ${{ secrets.APP_NAME || 'PMB TSU' }}
-          APP_URL: ${{ secrets.APP_URL || 'https://pmb.tsu.ac.id' }}
-          ASSET_URL: ${{ secrets.ASSET_URL || 'https://pmb.tsu.ac.id' }}
-          FRONTEND_URL: ${{ secrets.FRONTEND_URL || 'https://pmb.tsu.ac.id' }}
+          APP_URL: ${{ secrets.APP_URL }}
+          ASSET_URL: ${{ secrets.ASSET_URL }}
+          FRONTEND_URL: ${{ secrets.FRONTEND_URL }}
           DB_CONNECTION: ${{ secrets.DB_CONNECTION || 'mysql' }}
           DB_HOST: ${{ secrets.DB_HOST || 'localhost' }}
           DB_PORT: ${{ secrets.DB_PORT || '3306' }}
           DB_DATABASE: ${{ secrets.DB_DATABASE }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          HOMEBASE_URL: ${{ secrets.HOMEBASE_URL }}
+          TSU_SSO_CLIENT_ID: ${{ secrets.TSU_SSO_CLIENT_ID }}
+          TSU_SSO_CLIENT_SECRET: ${{ secrets.TSU_SSO_CLIENT_SECRET }}
+          TSU_SSO_REDIRECT_URI: ${{ secrets.TSU_SSO_REDIRECT_URI }}
+          HOMEBASE_CLIENT_ID: ${{ secrets.HOMEBASE_CLIENT_ID }}
+          HOMEBASE_CLIENT_SECRET: ${{ secrets.HOMEBASE_CLIENT_SECRET }}
+          PIKDI_EMERGENCY_SECRET: ${{ secrets.PIKDI_EMERGENCY_SECRET }}
+          PIKDI_RESCUE_SECRET: ${{ secrets.PIKDI_RESCUE_SECRET }}
+          PIKDI_SYNC_SECRET: ${{ secrets.PIKDI_SYNC_SECRET }}
+        run: |
+          if [ -z "$TARGET_DOMAIN" ] || [ -z "$APP_URL" ]; then
+            echo "::error::Secret TARGET_DOMAIN dan APP_URL wajib diisi."
+            exit 1
+          fi
+
+          # Kemas semua nilai .env dalam base64 agar karakter khusus ($ ' " & | \) tidak diolah shell server
+          umask 077
+          : > deploy.env
+          for key in APP_NAME APP_URL ASSET_URL FRONTEND_URL DB_CONNECTION DB_HOST DB_PORT DB_DATABASE DB_USERNAME DB_PASSWORD \
+                     HOMEBASE_URL TSU_SSO_CLIENT_ID TSU_SSO_CLIENT_SECRET TSU_SSO_REDIRECT_URI HOMEBASE_CLIENT_ID HOMEBASE_CLIENT_SECRET \
+                     PIKDI_EMERGENCY_SECRET PIKDI_RESCUE_SECRET PIKDI_SYNC_SECRET; do
+            printf '%s=%s\n' "$key" "$(printf '%s' "${!key}" | base64 -w0)" >> deploy.env
+          done
+
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          scp -P 22 -o StrictHostKeyChecking=no -o BatchMode=yes -i ~/.ssh/deploy_key core.tar.gz public.tar.gz deploy.env ${SSH_USER}@${SSH_HOST}:~/domains/${TARGET_DOMAIN}/
+          rm -f ~/.ssh/deploy_key deploy.env
+
+      - name: Deploy & Execute Server Commands via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        env:
+          TARGET_DOMAIN: ${{ secrets.TARGET_DOMAIN }}
+          CORE_DIR: ${{ secrets.CORE_DIR || 'tsu_pmb_core' }}
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
-          envs: TARGET_DOMAIN,CORE_DIR,APP_NAME,APP_URL,ASSET_URL,FRONTEND_URL,DB_CONNECTION,DB_HOST,DB_PORT,DB_DATABASE,DB_USERNAME,DB_PASSWORD
+          envs: TARGET_DOMAIN,CORE_DIR
           script: |
             set -e
 
@@ -96,12 +120,14 @@ jobs:
             PUBLIC_PATH="${DOMAIN_PATH}/public_html"
             STAGE_PATH="${DOMAIN_PATH}/.deploy_stage"
             COMPOSER="${DOMAIN_PATH}/composer.phar"
+            ENV_FILE="${DOMAIN_PATH}/deploy.env"
             WENT_DOWN=0
 
             # Selalu bersihkan staging & keluarkan situs dari maintenance, baik deploy sukses maupun gagal
             cleanup() {
                 rc=$?
                 rm -rf "$STAGE_PATH"
+                rm -f "$ENV_FILE"
                 if [ "$WENT_DOWN" = "1" ]; then
                     (cd "$CORE_PATH" && php artisan up) || true
                 fi
@@ -113,6 +139,20 @@ jobs:
             trap cleanup EXIT
 
             command -v rsync >/dev/null 2>&1 || { echo "rsync tidak tersedia di server."; exit 1; }
+
+            # Muat nilai .env dari paket base64 hasil upload, lalu hapus filenya
+            [ -f "$ENV_FILE" ] || { echo "deploy.env tidak ditemukan di server."; exit 1; }
+            while IFS= read -r env_line || [ -n "$env_line" ]; do
+                [ -z "$env_line" ] && continue
+                env_key="${env_line%%=*}"
+                env_val="$(printf '%s' "${env_line#*=}" | base64 -d)"
+                export "$env_key=$env_val"
+            done < "$ENV_FILE"
+            rm -f "$ENV_FILE"
+
+            # ASSET_URL & FRONTEND_URL mengikuti APP_URL jika tidak diisi
+            [ -n "$ASSET_URL" ] || ASSET_URL="$APP_URL"
+            [ -n "$FRONTEND_URL" ] || FRONTEND_URL="$APP_URL"
 
             # ===============================================================
             # TAHAP A: PERSIAPAN (situs belum disentuh, aman jika gagal)
@@ -226,6 +266,25 @@ jobs:
             update_env "FORCE_HTTPS" "true"
             update_env "SESSION_SECURE_COOKIE" "true"
 
+            # SSO TSU Homebase
+            # Redirect URI otomatis mengikuti APP_URL jika secret TSU_SSO_REDIRECT_URI tidak diisi
+            TSU_SSO_REDIRECT_URI=$(printf '%s' "$TSU_SSO_REDIRECT_URI" | tr -d '\r\n ')
+            if [ -z "$TSU_SSO_REDIRECT_URI" ] && [ -n "$APP_URL" ]; then
+                TSU_SSO_REDIRECT_URI="${APP_URL%/}/login/sso/callback"
+            fi
+            update_env "TSU_SSO_REDIRECT_URI" "$TSU_SSO_REDIRECT_URI"
+            update_env "HOMEBASE_URL" "$(printf '%s' "$HOMEBASE_URL" | tr -d '\r\n ')"
+            update_env "TSU_SSO_URL" "$(printf '%s' "$HOMEBASE_URL" | tr -d '\r\n ')"
+            update_env "TSU_SSO_CLIENT_ID" "$(printf '%s' "$TSU_SSO_CLIENT_ID" | tr -d '\r\n ')"
+            update_env "TSU_SSO_CLIENT_SECRET" "$(printf '%s' "$TSU_SSO_CLIENT_SECRET" | tr -d '\r\n ')"
+            update_env "HOMEBASE_CLIENT_ID" "$(printf '%s' "$HOMEBASE_CLIENT_ID" | tr -d '\r\n ')"
+            update_env "HOMEBASE_CLIENT_SECRET" "$(printf '%s' "$HOMEBASE_CLIENT_SECRET" | tr -d '\r\n ')"
+
+            # Akses darurat PIKDI (PIKDI_RESCUE_SECRET berupa hash bcrypt, mengandung karakter $)
+            update_env "PIKDI_EMERGENCY_SECRET" "$(printf '%s' "$PIKDI_EMERGENCY_SECRET" | tr -d '\r\n')"
+            update_env "PIKDI_RESCUE_SECRET" "$(printf '%s' "$PIKDI_RESCUE_SECRET" | tr -d '\r\n ')"
+            update_env "PIKDI_SYNC_SECRET" "$(printf '%s' "$PIKDI_SYNC_SECRET" | tr -d '\r\n')"
+
             # B4. Install vendor production
             export COMPOSER_ALLOW_SUPERUSER=1
             php "$COMPOSER" install --no-dev --optimize-autoloader --no-interaction
@@ -257,7 +316,7 @@ jobs:
 
       - name: Health Check Production
         env:
-          APP_URL: ${{ secrets.APP_URL || 'https://pmb.tsu.ac.id' }}
+          APP_URL: ${{ secrets.APP_URL }}
         run: |
           BASE_URL=$(printf '%s' "$APP_URL" | tr -d '\r\n ' | sed 's|/*$||')
           FAILED=0
