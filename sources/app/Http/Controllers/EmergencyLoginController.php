@@ -3,11 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Helpers\AdminSessionHelper;
-use App\Models\Admin\PegawaiModel;
 use App\Models\Admin\User;
 use App\Services\UserSyncService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
@@ -47,6 +47,14 @@ class EmergencyLoginController extends Controller
         $maxAge = (int) config('app.pikdi.emergency_expiry', 900);
         $age = now()->timestamp - $numericTimestamp;
 
+        if ($age < -60) {
+            return response()->view('errors.tsu-error', [
+                'title'   => 'Link Tidak Valid!',
+                'message' => 'Timestamp Link Login Darurat tidak valid. Silakan generate ulang dari TSU Homebase Vault.',
+                'code'    => 403
+            ], 403);
+        }
+
         if ($age > $maxAge) {
             $ageMinutes = max(1, round($age / 60));
             return response()->view('errors.tsu-error', [
@@ -75,6 +83,15 @@ class EmergencyLoginController extends Controller
             ], 403);
         }
 
+        // Anti Replay: satu link hanya boleh dipakai sekali selama masa berlakunya
+        if (!Cache::add('emergency-login:' . hash('sha256', (string) $token), true, $maxAge + 60)) {
+            return response()->view('errors.tsu-error', [
+                'title'   => 'Link Sudah Digunakan!',
+                'message' => 'Link Login Darurat ini sudah pernah dipakai. Silakan generate ulang dari TSU Homebase Vault.',
+                'code'    => 403
+            ], 403);
+        }
+
         $jsonPayload = base64_decode($payloadBase64);
         try {
             $userData = json_decode($jsonPayload, true, 512, JSON_THROW_ON_ERROR);
@@ -91,7 +108,12 @@ class EmergencyLoginController extends Controller
             $result = $syncer->handle($userData, null);
             $user = $result['user'];
 
+            if (!$user->isactive) {
+                throw new \Exception('[TSU_DENIED_ACCESS] Login Ditolak! Akun Anda sedang dinonaktifkan.');
+            }
+
             Auth::login($user);
+            $request->session()->regenerate();
 
             // Inisialisasi Sesi Admin PMB
             AdminSessionHelper::setupSession($user);
@@ -201,37 +223,24 @@ class EmergencyLoginController extends Controller
      */
     private function performRescueLogin(string $username)
     {
-        $user = User::query()->where('username', $username)
-            ->orWhere('nik', $username)
-            ->orWhere('email', $username)
-            ->first();
-
-        // Jika user belum ada di tabel users, coba cari di data_karyawan
-        if (!$user) {
-            $pegawai = PegawaiModel::query()->where('nik', $username)
-                ->orWhere('email_kampus', $username)
-                ->first();
-
-            if ($pegawai) {
-                $user = User::query()->create([
-                    'nik'           => $pegawai->nik,
-                    'username'      => $pegawai->nik,
-                    'name'          => $pegawai->nama ?? $pegawai->NAMA ?? $username,
-                    'email'         => $pegawai->email_kampus ?? $pegawai->email_pribadi ?? ($username . '@tsu.ac.id'),
-                    'privilege_pmb' => 'G003',
-                    'isactive'      => 1,
-                ]);
-            }
-        }
+        $user = User::query()->where('username', $username)->first();
 
         if (!$user) {
             return back()
-                ->with('error', '<b>User Tidak Ditemukan!</b> Akun NIK/Username tersebut belum terdaftar.')
+                ->with('error', '<b>User Tidak Ditemukan!</b> Akun tersebut belum ada di database lokal.')
                 ->withErrors(['username' => 'User Tidak Ditemukan!'])
                 ->withInput(request()->only('username'));
         }
 
+        if (!$user->isactive) {
+            return back()
+                ->with('error', '<b>Akses Ditolak!</b> Akun Anda telah dinonaktifkan.')
+                ->withErrors(['username' => 'Akun Dinonaktifkan'])
+                ->withInput(request()->only('username'));
+        }
+
         Auth::login($user);
+        request()->session()->regenerate();
         $user->update(['last_login_at' => now()]);
 
         // Inisialisasi Sesi Admin PMB

@@ -15,7 +15,6 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             PmbMenuSidebarSeeder::class,
-            PikdiUserSeeder::class,
         ]);
     }
 }

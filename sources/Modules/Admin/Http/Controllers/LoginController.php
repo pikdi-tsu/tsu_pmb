@@ -106,15 +106,16 @@ class LoginController extends Controller
         if ($isEmail) {
             $user = User::where('email', $identity)->where('isactive', 1)->first();
         } else {
-            $user = User::where('username', $identity)
-                ->orWhere('nik', $identity)
+            $user = User::where(function ($q) use ($identity) {
+                    $q->where('username', $identity)->orWhere('nik', $identity);
+                })
                 ->where('isactive', 1)
                 ->first();
         }
 
         if ($user && $user->password && Hash::check($post->password, $user->password)) {
-            $post->session()->regenerate();
             Auth::login($user);
+            $post->session()->regenerate();
 
             // Bersihkan limiter
             \Illuminate\Support\Facades\RateLimiter::clear($throttleKey);

@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 
 class SsoController extends Controller
 {
@@ -31,11 +32,16 @@ class SsoController extends Controller
 
         RateLimiter::hit($throttleKey, 60);
 
+        // State anti login CSRF, dicocokkan kembali saat callback
+        $state = Str::random(40);
+        session()->put('sso_state', $state);
+
         $query = http_build_query([
             'client_id'     => config('app.oauth.authorization.id'),
             'redirect_uri'  => config('app.oauth.authorization.redirect'),
             'response_type' => 'code',
             'scope'         => '',
+            'state'         => $state,
         ]);
 
         $homebaseUrl = rtrim(config('app.tsu_homebase.url'), '/');
@@ -47,6 +53,13 @@ class SsoController extends Controller
      */
     public function callback(Request $request, UserSyncService $syncer)
     {
+        // Validasi State (sekali pakai)
+        $expectedState = $request->session()->pull('sso_state');
+        if (!$expectedState || !is_string($request->state) || !hash_equals($expectedState, $request->state)) {
+            return redirect()->route('loginadmin')
+                ->with('error', '[TSU_SSO_STATE] Sesi login SSO tidak valid atau kadaluarsa. Silakan coba login ulang.');
+        }
+
         // Cek error dari Homebase
         if ($request->has('error')) {
             if ($request->error === 'access_denied') {
@@ -67,7 +80,8 @@ class SsoController extends Controller
 
         try {
             // Tukar Code jadi Token
-            $response = Http::withoutVerifying()
+            // Verifikasi TLS hanya dilewati di luar production (lokal / nip.io)
+            $response = Http::when(!app()->isProduction(), fn ($http) => $http->withoutVerifying())
                 ->withHeaders(['X-Sync-Secret' => config('app.pikdi.key.sync')])
                 ->asForm()
                 ->post($homebaseUrl . '/oauth/token', [
@@ -90,7 +104,7 @@ class SsoController extends Controller
             }
 
             // Ambil Data Profil User dari Homebase
-            $userResponse = Http::withoutVerifying()
+            $userResponse = Http::when(!app()->isProduction(), fn ($http) => $http->withoutVerifying())
                 ->withHeaders(['X-Sync-Secret' => config('app.pikdi.key.sync')])
                 ->withToken($accessToken)
                 ->acceptJson()
@@ -109,11 +123,16 @@ class SsoController extends Controller
                 $result = $syncer->handle($userData, $accessToken);
                 $user = $result['user'];
 
-                // Simpan token di session
-                session(['homebase_access_token' => $accessToken]);
+                if (!$user->isactive) {
+                    throw new \Exception('[TSU_DENIED_ACCESS] Login Ditolak! Akun Anda sedang dinonaktifkan.');
+                }
 
                 // Login Auth Laravel
                 Auth::login($user);
+                $request->session()->regenerate();
+
+                // Simpan token di session
+                session(['homebase_access_token' => $accessToken]);
 
                 // Setup Sesi Lengkap Admin PMB
                 AdminSessionHelper::setupSession($user);
@@ -162,7 +181,7 @@ class SsoController extends Controller
 
             return response()->view('errors.tsu-error', [
                 'title'   => 'Terjadi Kesalahan Login',
-                'message' => '[TSU_SSO_CRITICAL] Terjadi kesalahan teknis saat memproses login: ' . $e->getMessage(),
+                'message' => '[TSU_SSO_CRITICAL] Terjadi kesalahan teknis saat memproses login.',
                 'code'    => 500
             ], 500);
         }
