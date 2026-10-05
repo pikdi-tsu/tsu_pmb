@@ -196,7 +196,7 @@ use Illuminate\Support\Facades\Route;
                     Route::get('/DetailTestOnlinePMB/{params}', [TestAssesmentController::class, 'showDetailTest'])->name('admin.testassesment.showdetail');
                     Route::get('/ShowJurusanDiterima/{params}', [TestAssesmentController::class, 'show_jurusan']);
                     Route::post('/SavehasilTestOnline', [TestAssesmentController::class, 'hasil_test'])->name('admin.testassesment.save');
-                    Route::get('/PrintDISC/{attempt_id}', [MonitoringAssesmentController::class, 'printDisc'])->name('admin.monitoringassesment.printdisc');
+                    Route::get('/PrintDISC/{attempt_id}', [MonitoringAssesmentController::class, 'printDisc'])->name('admin.testassesment.printdisc');
                     Route::post('/Reset', [TestAssesmentController::class, 'reset_test'])->name('admin.testassesment.reset');
                 });
 
