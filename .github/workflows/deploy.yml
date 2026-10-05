@@ -6,6 +6,11 @@ on:
       - main
   workflow_dispatch:
 
+# Cegah dua deploy berjalan bersamaan (deploy berikutnya menunggu, tidak membatalkan yang sedang jalan)
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
 jobs:
   web-deploy:
     name: Fast Deploy to DirectAdmin via SCP
@@ -14,22 +19,6 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 2
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Install NPM dependencies and build
-        run: |
-          if [ -f sources/package.json ]; then
-            cd sources
-            npm install
-            npm run build --if-present
-            cd ..
-          fi
 
       - name: Archive Core and Public files
         run: |
@@ -60,15 +49,6 @@ jobs:
           # 2. Arsipkan Public Web Files (index.php, .htaccess, dan folder public)
           tar -czf /tmp/public.tar.gz \
             --warning=no-file-changed \
-            --exclude='./sources' \
-            --exclude='./.git' \
-            --exclude='./.github' \
-            --exclude='./.idea' \
-            --exclude='./.vscode' \
-            --exclude='./*.tar.gz' \
-            --exclude='./*.zip' \
-            --exclude='./*.rar' \
-            --exclude='./*.sql' \
             index.php .htaccess public
 
           mv /tmp/core.tar.gz ./core.tar.gz
@@ -107,32 +87,78 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
-          debug: true
           envs: TARGET_DOMAIN,CORE_DIR,APP_NAME,APP_URL,ASSET_URL,FRONTEND_URL,DB_CONNECTION,DB_HOST,DB_PORT,DB_DATABASE,DB_USERNAME,DB_PASSWORD
           script: |
             set -e
 
-            DOMAIN_PATH=~/domains/${TARGET_DOMAIN}
-            CORE_PATH=${DOMAIN_PATH}/${CORE_DIR}
-            PUBLIC_PATH=${DOMAIN_PATH}/public_html
+            DOMAIN_PATH="$HOME/domains/${TARGET_DOMAIN}"
+            CORE_PATH="${DOMAIN_PATH}/${CORE_DIR}"
+            PUBLIC_PATH="${DOMAIN_PATH}/public_html"
+            STAGE_PATH="${DOMAIN_PATH}/.deploy_stage"
+            COMPOSER="${DOMAIN_PATH}/composer.phar"
+            WENT_DOWN=0
 
-            # 0. Buat direktori core & public_html jika belum ada
-            mkdir -p ${CORE_PATH}
-            mkdir -p ${PUBLIC_PATH}
+            # Selalu bersihkan staging & keluarkan situs dari maintenance, baik deploy sukses maupun gagal
+            cleanup() {
+                rc=$?
+                rm -rf "$STAGE_PATH"
+                if [ "$WENT_DOWN" = "1" ]; then
+                    (cd "$CORE_PATH" && php artisan up) || true
+                fi
+                if [ "$rc" != "0" ]; then
+                    echo "!!! DEPLOY GAGAL (exit $rc). Cek log di atas."
+                fi
+                exit $rc
+            }
+            trap cleanup EXIT
 
-            # 1. Ekstrak arsip rilis ke direktori core dan public_html
-            if [ -f ${DOMAIN_PATH}/core.tar.gz ]; then
-                tar -xzf ${DOMAIN_PATH}/core.tar.gz -C ${CORE_PATH}/
-                rm -f ${DOMAIN_PATH}/core.tar.gz
+            command -v rsync >/dev/null 2>&1 || { echo "rsync tidak tersedia di server."; exit 1; }
+
+            # ===============================================================
+            # TAHAP A: PERSIAPAN (situs belum disentuh, aman jika gagal)
+            # ===============================================================
+
+            # A1. Ekstrak rilis ke folder staging
+            rm -rf "$STAGE_PATH"
+            mkdir -p "$STAGE_PATH/core" "$STAGE_PATH/public" "$CORE_PATH" "$PUBLIC_PATH"
+            tar -xzf "${DOMAIN_PATH}/core.tar.gz" -C "$STAGE_PATH/core/"
+            tar -xzf "${DOMAIN_PATH}/public.tar.gz" -C "$STAGE_PATH/public/"
+            rm -f "${DOMAIN_PATH}/core.tar.gz" "${DOMAIN_PATH}/public.tar.gz"
+
+            # A2. Pastikan PHP server memenuhi kebutuhan composer.lock sebelum situs diubah
+            wget -q -O "$COMPOSER" https://getcomposer.org/download/latest-stable/composer.phar
+            (cd "$STAGE_PATH/core" && php "$COMPOSER" check-platform-reqs --no-dev --lock)
+
+            # ===============================================================
+            # TAHAP B: RILIS (situs masuk maintenance mode)
+            # ===============================================================
+
+            if [ -f "$CORE_PATH/artisan" ] && [ -d "$CORE_PATH/vendor" ]; then
+                (cd "$CORE_PATH" && php artisan down --retry=60) && WENT_DOWN=1
             fi
 
-            if [ -f ${DOMAIN_PATH}/public.tar.gz ]; then
-                tar -xzf ${DOMAIN_PATH}/public.tar.gz -C ${PUBLIC_PATH}/
-                rm -f ${DOMAIN_PATH}/public.tar.gz
-            fi
+            # B1. Sinkronisasi kode core (file yang dihapus di repo ikut terhapus di server)
+            #     Data server (.env, storage upload, vendor, cache) tidak disentuh
+            rsync -a --delete \
+                --exclude='/.env' \
+                --exclude='/.env.backup' \
+                --exclude='/.env.production' \
+                --exclude='/storage/' \
+                --exclude='/vendor/' \
+                --exclude='/bootstrap/cache/' \
+                --exclude='/public' \
+                --exclude='/node_modules/' \
+                "$STAGE_PATH/core/" "$CORE_PATH/"
 
-            # 2. Sesuaikan path autoloader index.php di public_html agar mengarah ke folder core
-            cd ${PUBLIC_PATH}
+            # B2. Sinkronisasi public_html
+            #     index.php & .htaccess ditimpa, folder public/ disinkronkan penuh (kecuali symlink storage)
+            #     File lain di public_html (.well-known, dsb.) tidak disentuh
+            cp -f "$STAGE_PATH/public/index.php" "$STAGE_PATH/public/.htaccess" "$PUBLIC_PATH/"
+            mkdir -p "$PUBLIC_PATH/public"
+            rsync -a --delete --exclude='/storage' "$STAGE_PATH/public/public/" "$PUBLIC_PATH/public/"
+
+            # Sesuaikan path autoloader index.php di public_html agar mengarah ke folder core
+            cd "$PUBLIC_PATH"
             sed -i "s|__DIR__.'/sources/|__DIR__.'/../${CORE_DIR}/|g" index.php
 
             # Buat symlink akses aset jika dipanggil langsung via /assets/ maupun /public/assets/
@@ -140,40 +166,47 @@ jobs:
                 ln -sfn public/assets assets
             fi
 
-            # 3. Masuk ke core untuk inisialisasi folder, dependensi & environment
-            cd ${CORE_PATH}
-            mkdir -p storage/framework/{sessions,views,cache}
+            # B3. Masuk ke core untuk inisialisasi folder, dependensi & environment
+            cd "$CORE_PATH"
+            mkdir -p storage/app/public storage/framework/{sessions,views,cache/data,testing} storage/logs
             mkdir -p bootstrap/cache
 
             # Pastikan folder public di core menunjuk ke public_html agar helper Laravel konsisten
-            rm -rf public
-            ln -sfn ../public_html public
+            if [ ! -L public ]; then
+                rm -rf public
+                ln -sfn ../public_html public
+            fi
 
             if [ ! -f .env ]; then cp .env.example .env; fi
 
             # Bersihkan variabel Secrets dari karakter enter/CRLF
-            APP_NAME=$(echo "$APP_NAME" | tr -d '\r\n')
-            APP_URL=$(echo "$APP_URL" | tr -d '\r\n ')
-            ASSET_URL=$(echo "$ASSET_URL" | tr -d '\r\n ')
-            FRONTEND_URL=$(echo "$FRONTEND_URL" | tr -d '\r\n ')
-            DB_CONNECTION=$(echo "$DB_CONNECTION" | tr -d '\r\n ')
-            DB_HOST=$(echo "$DB_HOST" | tr -d '\r\n ')
-            DB_PORT=$(echo "$DB_PORT" | tr -d '\r\n ')
-            DB_DATABASE=$(echo "$DB_DATABASE" | tr -d '\r\n ')
-            DB_USERNAME=$(echo "$DB_USERNAME" | tr -d '\r\n ')
-            DB_PASSWORD=$(echo "$DB_PASSWORD" | tr -d '\r\n')
+            APP_NAME=$(printf '%s' "$APP_NAME" | tr -d '\r\n')
+            APP_URL=$(printf '%s' "$APP_URL" | tr -d '\r\n ')
+            ASSET_URL=$(printf '%s' "$ASSET_URL" | tr -d '\r\n ')
+            FRONTEND_URL=$(printf '%s' "$FRONTEND_URL" | tr -d '\r\n ')
+            DB_CONNECTION=$(printf '%s' "$DB_CONNECTION" | tr -d '\r\n ')
+            DB_HOST=$(printf '%s' "$DB_HOST" | tr -d '\r\n ')
+            DB_PORT=$(printf '%s' "$DB_PORT" | tr -d '\r\n ')
+            DB_DATABASE=$(printf '%s' "$DB_DATABASE" | tr -d '\r\n ')
+            DB_USERNAME=$(printf '%s' "$DB_USERNAME" | tr -d '\r\n ')
+            DB_PASSWORD=$(printf '%s' "$DB_PASSWORD" | tr -d '\r\n')
 
-            # Helper fungsi untuk update/tambah key di .env
+            # Helper update/tambah key di .env
+            # Aman untuk karakter khusus (& | \ $ " ') karena tidak memakai sed replacement
             update_env() {
-                local key=$1
-                local val=$2
-                if [ -n "$val" ]; then
-                    local escaped_val=$(echo "$val" | sed 's/"/\\"/g')
-                    if grep -q "^${key}=" .env; then
-                        sed -i "s|^${key}=.*|${key}=\"${escaped_val}\"|" .env
-                    else
-                        echo "${key}=\"${escaped_val}\"" >> .env
-                    fi
+                key="$1"
+                val="$2"
+                [ -z "$val" ] && return 0
+                case "$val" in
+                    *"'"*) line="${key}=\"$(printf '%s' "$val" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g')\"" ;;
+                    *)     line="${key}='${val}'" ;;
+                esac
+                if grep -q "^${key}=" .env; then
+                    K="${key}=" L="$line" awk 'index($0, ENVIRON["K"]) == 1 { print ENVIRON["L"]; next } { print }' .env > .env.tmp
+                    cat .env.tmp > .env
+                    rm -f .env.tmp
+                else
+                    printf '%s\n' "$line" >> .env
                 fi
             }
 
@@ -193,32 +226,31 @@ jobs:
             update_env "FORCE_HTTPS" "true"
             update_env "SESSION_SECURE_COOKIE" "true"
 
-            # 4. Install vendor production menggunakan composer.phar mandiri
-            wget -O composer.phar https://getcomposer.org/download/latest-stable/composer.phar
+            # B4. Install vendor production
             export COMPOSER_ALLOW_SUPERUSER=1
-            php composer.phar install --ignore-platform-reqs --no-dev --optimize-autoloader
+            php "$COMPOSER" install --no-dev --optimize-autoloader --no-interaction
 
-            # Bersihkan config cache agar key:generate membaca config terbaru
+            # Bersihkan config cache agar key:generate & migrate membaca config terbaru
             php artisan config:clear
 
-            if ! grep -q "^APP_KEY=base64:" .env; then
+            if ! grep -q "^APP_KEY=.\?base64:" .env; then
                 php artisan key:generate --force
             fi
 
-            # 5. Jalankan migrasi database SEBELUM optimize:clear (Mencegah Table 'cache' doesn't exist)
+            # B5. Jalankan migrasi database SEBELUM optimize (Mencegah Table 'cache' doesn't exist)
             php artisan migrate --force
 
-            # 6. Symlink storage publik ke public_html
-            ln -sfn $(pwd)/storage/app/public ${PUBLIC_PATH}/storage
-            if [ -d ${PUBLIC_PATH}/public ]; then
-                ln -sfn $(pwd)/storage/app/public ${PUBLIC_PATH}/public/storage
-            fi
+            # B6. Symlink storage publik ke public_html
+            ln -sfn "$CORE_PATH/storage/app/public" "$PUBLIC_PATH/storage"
+            ln -sfn "$CORE_PATH/storage/app/public" "$PUBLIC_PATH/public/storage"
 
-            # 7. Bersihkan dan optimasi framework cache
+            # B7. Bersihkan dan optimasi framework cache
             php artisan optimize:clear
             php artisan optimize
             php artisan view:cache
 
-            # 8. Hak akses aman standar LiteSpeed / DirectAdmin suPHP
+            # B8. Hak akses aman standar LiteSpeed / DirectAdmin suPHP
             chmod -R 755 storage bootstrap/cache
             chmod 600 storage/*.key 2>/dev/null || true
+
+            echo ">>> DEPLOY SELESAI: $(date '+%Y-%m-%d %H:%M:%S')"
