@@ -37,8 +37,23 @@
         @if (Session::has('alert'))
             // sweetalert.js dimuat di bagian bawah halaman, tunggu sampai siap
             document.addEventListener('DOMContentLoaded', function () {
-                Swal.fire(@json(session('alert')['title']), @json(session('alert')['message']),
-                    @json(session('alert')['status']));
+                @if (!empty(session('alert')['toast']))
+                    Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        showCloseButton: true,
+                        timer: {{ session('alert')['status'] === 'success' ? 6000 : 15000 }},
+                        timerProgressBar: true,
+                    }).fire({
+                        icon: @json(session('alert')['status']),
+                        title: @json(session('alert')['title']),
+                        text: @json(session('alert')['message']),
+                    });
+                @else
+                    Swal.fire(@json(session('alert')['title']), @json(session('alert')['message']),
+                        @json(session('alert')['status']));
+                @endif
             });
         @endif
         // Swal.fire('halo', 'test alert',
