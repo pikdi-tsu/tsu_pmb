@@ -25,25 +25,24 @@
                             class="bi bi-chevron-down toggle-dropdown"></i></a>
                     <ul>
                         <li><a href="{{ route('program_studi') }}">Program Studi</a></li>
-                        <li><a href="{{ route('gelombangukt') }}">Gelombang & UKT</a></li>
-                        <li class="dropdown">
+                        {{-- <li><a href="{{ route('gelombangukt') }}">Gelombang & UKT</a></li> --}}
+                        {{-- <li class="dropdown">
                             <a href="#"><span>Alur Pendaftaran</span> <i class="bi bi-chevron-down toggle-dropdown"></i></a>
                             <ul>
                                 <li><a href="{{ route('alurpendaftaranbeasiswa') }}">Beasiswa</a></li>
                                 <li><a href="{{ route('pendaftaranreguler') }}">Reguler</a></li>
                             </ul>
-                        </li>
+                        </li> --}}
                         <li><a href="{{ route('kontakkami') }}">Kontak Kami</a></li>
-                        <li><a href="{{ route('downloadbrowsur') }}">Download</a></li>
+                        {{-- <li><a href="{{ route('downloadbrowsur') }}">Download</a></li> --}}
                         {{-- <li><a href="{{ route('pengumuman') }}">Pengumuman</a></li> --}}
                         {{-- <li><a href="{{ route('informasi_pendaftaran') }}">Informasi Pendaftaran</a></li> --}}
                         <li><a href="{{ route('daftarrekomendator.index') }}">Daftar Rekomendator</a></li>
                     </ul>
                 </li>
-                <li>
-                    {{-- <a href="{{route('LoginPMB')}}" class="btn btn-outline-success px-2 text-white" style="display:inline-block;">Masuk | Daftar</a> --}}
+                {{-- <li>
                     <a href="{{route('LoginPMB')}}">Masuk | Daftar</a>
-                </li>
+                </li> --}}
             </ul>
             <i class="mobile-nav-toggle d-xl-none bi bi-list"></i>
         </nav>
