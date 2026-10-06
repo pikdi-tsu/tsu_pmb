@@ -62,7 +62,9 @@ return [
     'providers' => [
         'users' => [
             'driver' => 'eloquent',
-            'model' => env('AUTH_MODEL', App\Models\User::class),
+            // Harus sama dengan model yang dipakai saat assign role (UserSyncService, AdminSessionHelper),
+            // karena Spatie menyimpan model_type di pmb_model_has_roles. App\Models\User tidak punya role.
+            'model' => env('AUTH_MODEL', App\Models\Admin\User::class),
         ],
 
         // 'users' => [
