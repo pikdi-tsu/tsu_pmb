@@ -1,6 +1,7 @@
 @php
     $user = auth()->user();
-    $isSuperAdmin = $user && ($user->hasRole(['super admin', 'super admin pmb', 'admin', 'admin pmb']) || session('namagroup') == 'Super Admin');
+    // Hanya super admin yang melihat semua menu; role lain mengikuti permission masing-masing
+    $isSuperAdmin = $user && ($user->hasRole(['super admin', 'super admin pmb']) || session('namagroup') == 'Super Admin');
 
     // Cek Permission
     if (!$isSuperAdmin && $menu->permission_name && (!$user || !$user->can($menu->permission_name))) {

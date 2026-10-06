@@ -22,7 +22,9 @@ class AppServiceProvider extends ServiceProvider
     {
         $superAdminModule = 'super admin ' . config('app.module.name', 'pmb');
         Gate::before(static function ($user, $ability) use ($superAdminModule) {
-            return ($user->hasRole(['super admin', $superAdminModule, 'admin pmb', 'admin']) || session('namagroup') === 'Super Admin') ? true : null;
+            // Hanya super admin yang melewati semua permission. Role lain (termasuk admin pmb)
+            // mengikuti permission yang dicentang di menu Role.
+            return ($user->hasRole(['super admin', $superAdminModule]) || session('namagroup') === 'Super Admin') ? true : null;
         });
     }
 }
