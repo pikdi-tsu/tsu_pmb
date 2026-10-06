@@ -118,6 +118,49 @@
                                 </div>
                             </div>
 
+                            {{-- Filter tabel --}}
+                            <div class="card card-outline card-secondary mt-4 mb-0">
+                                <div class="card-header py-2">
+                                    <h6 class="m-0"><i class="fas fa-filter mr-1"></i> Filter Data Rekomendator</h6>
+                                </div>
+                                <div class="card-body pb-1">
+                                    <div class="row">
+                                        <div class="col-md-3 col-sm-6 form-group">
+                                            <label for="filter_kategori" class="mb-1">Kategori</label>
+                                            <select id="filter_kategori" class="form-control filter-rekom">
+                                                <option value="">Semua Kategori</option>
+                                                @foreach ($kategori as $kat)
+                                                    <option value="{{ $kat->kode_kategori }}">{{ $kat->kategori_rekomendator }}</option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="col-md-2 col-sm-6 form-group">
+                                            <label for="filter_status" class="mb-1">Status</label>
+                                            <select id="filter_status" class="form-control filter-rekom">
+                                                <option value="">Semua Status</option>
+                                                <option value="1">Aktif</option>
+                                                <option value="0">Tidak Aktif</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-5 col-sm-12 form-group">
+                                            <label class="mb-1">Tanggal Daftar</label>
+                                            <div class="input-group">
+                                                <input type="date" id="filter_tanggal_dari" class="form-control filter-rekom" title="Dari tanggal">
+                                                <div class="input-group-prepend input-group-append">
+                                                    <span class="input-group-text">s/d</span>
+                                                </div>
+                                                <input type="date" id="filter_tanggal_sampai" class="form-control filter-rekom" title="Sampai tanggal">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-2 col-sm-12 form-group d-flex align-items-end">
+                                            <button type="button" id="btn-reset-filter" class="btn btn-outline-secondary btn-block">
+                                                <i class="fas fa-undo mr-1"></i> Reset Filter
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="row">
                                 <div class="col-md-12">
                                     <div class="table-responsive" style="margin-top: 20px;">
@@ -134,6 +177,7 @@
                                                     <th>No Rekening</th>
                                                     <th>Bank</th>
                                                     <th>Email</th>
+                                                    <th>Tanggal Daftar</th>
                                                     <th>Status</th>
                                                     <th>Action</th>
                                                 </tr>
@@ -211,9 +255,21 @@
 
             function loadEvent() {
                 tabelRekomendator();
+                filterRekomendator();
                 submitRekomendator();
                 btn_reset();
                 importExcel();
+            }
+
+            function filterRekomendator() {
+                $('.filter-rekom').on('change', function() {
+                    $('#tabel-rekomendator').DataTable().ajax.reload();
+                });
+
+                $('#btn-reset-filter').on('click', function() {
+                    $('.filter-rekom').val('');
+                    $('#tabel-rekomendator').DataTable().ajax.reload();
+                });
             }
 
             function cekKategoriManual() {
@@ -258,6 +314,12 @@
                     ajax: {
                         url: '{!! route('admin.Rekomendator.Tabel') !!}',
                         type: 'GET',
+                        data: function(d) {
+                            d.filter_kategori = $('#filter_kategori').val();
+                            d.filter_status = $('#filter_status').val();
+                            d.filter_tanggal_dari = $('#filter_tanggal_dari').val();
+                            d.filter_tanggal_sampai = $('#filter_tanggal_sampai').val();
+                        }
                     },
                     columns: [{
                             data: 'DT_RowIndex',
@@ -291,6 +353,10 @@
                         },
                         {
                             data: 'email'
+                        },
+                        {
+                            data: 'created_at',
+                            className: 'text-nowrap'
                         },
                         {
                             data: 'aktif'

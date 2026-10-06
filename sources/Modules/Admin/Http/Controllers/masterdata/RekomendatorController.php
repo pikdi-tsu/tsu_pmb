@@ -29,15 +29,34 @@ class RekomendatorController extends Controller
         return view('admin::masterdata.rekomendator.index', $data);
     }
 
-    public function TabelRekomendator()
+    public function TabelRekomendator(Request $request)
     {
         // PERBAIKAN: Join menggunakan kode_kategori
-        $data = Master_Rekomendator::leftJoin('pmb_master_kategori_rekomendator', 'pmb_master_rekomendator.kategori', '=', 'pmb_master_kategori_rekomendator.kode_kategori')
+        $query = Master_Rekomendator::leftJoin('pmb_master_kategori_rekomendator', 'pmb_master_rekomendator.kategori', '=', 'pmb_master_kategori_rekomendator.kode_kategori')
             ->select('pmb_master_rekomendator.*', 'pmb_master_kategori_rekomendator.kategori_rekomendator as nama_kategori')
-            ->orderBy('pmb_master_rekomendator.id', 'desc')
-            ->get();
+            ->orderBy('pmb_master_rekomendator.id', 'desc');
+
+        // Filter dari atas tabel
+        if ($request->filled('filter_kategori')) {
+            $query->where('pmb_master_rekomendator.kategori', $request->filter_kategori);
+        }
+        if (in_array($request->filter_status, ['0', '1'], true)) {
+            $query->where('pmb_master_rekomendator.isactive', $request->filter_status);
+        }
+        if ($request->filled('filter_tanggal_dari')) {
+            $query->whereDate('pmb_master_rekomendator.created_at', '>=', $request->filter_tanggal_dari);
+        }
+        if ($request->filled('filter_tanggal_sampai')) {
+            $query->whereDate('pmb_master_rekomendator.created_at', '<=', $request->filter_tanggal_sampai);
+        }
+
+        $data = $query->get();
         return DataTables::of($data)
             ->addIndexColumn()
+            // Format Y-m-d agar pengurutan kolom (string) tetap kronologis
+            ->editColumn('created_at', function ($d) {
+                return $d->created_at ? date('Y-m-d H:i', strtotime($d->created_at)) : '-';
+            })
             // TAMBAHAN: Kolom baru khusus untuk menampilkan Nama Kategori di tabel
             ->addColumn('nama_kategori', function ($d) {
                 // Jika data join ditemukan tampilkan namanya, jika tidak tampilkan data mentahnya
