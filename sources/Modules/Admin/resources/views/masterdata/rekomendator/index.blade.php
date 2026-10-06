@@ -158,6 +158,14 @@
                                             </button>
                                         </div>
                                     </div>
+                                    <div class="row">
+                                        <div class="col-12 form-group text-right">
+                                            <small class="text-muted mr-2">Export mengikuti filter &amp; pencarian yang sedang aktif</small>
+                                            <a href="#" id="btn-export-excel" class="btn btn-success">
+                                                <i class="fas fa-file-excel mr-1"></i> Export Excel
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -268,7 +276,20 @@
 
                 $('#btn-reset-filter').on('click', function() {
                     $('.filter-rekom').val('');
-                    $('#tabel-rekomendator').DataTable().ajax.reload();
+                    $('#tabel-rekomendator').DataTable().search('').ajax.reload();
+                });
+
+                // Export Excel dengan filter & kata kunci pencarian yang sedang aktif
+                $('#btn-export-excel').on('click', function(e) {
+                    e.preventDefault();
+                    const params = $.param({
+                        filter_kategori: $('#filter_kategori').val() || '',
+                        filter_status: $('#filter_status').val() || '',
+                        filter_tanggal_dari: $('#filter_tanggal_dari').val() || '',
+                        filter_tanggal_sampai: $('#filter_tanggal_sampai').val() || '',
+                        search: $('#tabel-rekomendator').DataTable().search() || ''
+                    });
+                    window.location.href = '{!! route('admin.Rekomendator.ExportExcel') !!}?' + params;
                 });
             }
 

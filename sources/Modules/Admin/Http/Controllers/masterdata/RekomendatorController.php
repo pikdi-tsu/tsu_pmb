@@ -13,6 +13,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use Modules\Admin\resources\views\masterdata\rekomendator\RekomendatorImport;
 use Modules\Admin\resources\views\masterdata\rekomendator\RekomendatorTemplateExport;
 use Modules\Admin\resources\views\masterdata\rekomendator\RekomendatorMigrationExport;
+use Modules\Admin\resources\views\masterdata\rekomendator\RekomendatorDataExport;
 
 class RekomendatorController extends Controller
 {
@@ -29,14 +30,16 @@ class RekomendatorController extends Controller
         return view('admin::masterdata.rekomendator.index', $data);
     }
 
-    public function TabelRekomendator(Request $request)
+    /**
+     * Query rekomendator + filter atas tabel (dipakai bersama oleh tabel & export Excel)
+     */
+    private function filteredRekomendatorQuery(Request $request)
     {
         // PERBAIKAN: Join menggunakan kode_kategori
         $query = Master_Rekomendator::leftJoin('pmb_master_kategori_rekomendator', 'pmb_master_rekomendator.kategori', '=', 'pmb_master_kategori_rekomendator.kode_kategori')
             ->select('pmb_master_rekomendator.*', 'pmb_master_kategori_rekomendator.kategori_rekomendator as nama_kategori')
             ->orderBy('pmb_master_rekomendator.id', 'desc');
 
-        // Filter dari atas tabel
         if ($request->filled('filter_kategori')) {
             $query->where('pmb_master_rekomendator.kategori', $request->filter_kategori);
         }
@@ -50,7 +53,12 @@ class RekomendatorController extends Controller
             $query->whereDate('pmb_master_rekomendator.created_at', '<=', $request->filter_tanggal_sampai);
         }
 
-        $data = $query->get();
+        return $query;
+    }
+
+    public function TabelRekomendator(Request $request)
+    {
+        $data = $this->filteredRekomendatorQuery($request)->get();
         return DataTables::of($data)
             ->addIndexColumn()
             // Format Y-m-d agar pengurutan kolom (string) tetap kronologis
@@ -387,6 +395,33 @@ class RekomendatorController extends Controller
     public function downloadMigrationTemplate()
     {
         return Excel::download(new RekomendatorMigrationExport, 'Template_Migrasi_Rekomendator.xlsx');
+    }
+
+    /**
+     * Export data rekomendator ke Excel sesuai filter & kata kunci pencarian yang sedang aktif di tabel
+     */
+    public function exportExcel(Request $request)
+    {
+        $query = $this->filteredRekomendatorQuery($request);
+
+        $keyword = trim((string) $request->query('search', ''));
+        if ($keyword !== '') {
+            $query->where(function ($q) use ($keyword) {
+                foreach ([
+                    'pmb_master_rekomendator.kode_rekomendator', 'pmb_master_rekomendator.nama_rekomendator',
+                    'pmb_master_kategori_rekomendator.kategori_rekomendator', 'pmb_master_rekomendator.pekerjaan',
+                    'pmb_master_rekomendator.no_hp', 'pmb_master_rekomendator.no_rekening',
+                    'pmb_master_rekomendator.nama_bank', 'pmb_master_rekomendator.email',
+                ] as $column) {
+                    $q->orWhere($column, 'like', '%' . $keyword . '%');
+                }
+            });
+        }
+
+        return Excel::download(
+            new RekomendatorDataExport($query->get()),
+            'Data_Rekomendator_' . date('Ymd_His') . '.xlsx'
+        );
     }
 
     public static function sendEmail($email, $nama, $kode, $subject)
