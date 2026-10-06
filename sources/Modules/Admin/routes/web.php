@@ -262,7 +262,8 @@ use Illuminate\Support\Facades\Route;
                         Route::get('/', [ProvinsiController::class, 'index'])->name('admin.Provinsi.show');
                         Route::get('/TabelProvinsi', [ProvinsiController::class, 'TabelProvinsi'])->name('admin.Provinsi.Tabel');
                     });
-                    Route::prefix('Rekomendator')->group(function () {
+                    // Semua aksi (lihat, tabel, simpan, edit, status, hapus, import, email) butuh izin modul rekomendator
+                    Route::prefix('Rekomendator')->middleware('permission:pmb:masterdata:rekomendator')->group(function () {
                         Route::get('/', [RekomendatorController::class, 'index'])->name('admin.Rekomendator.show');
                         Route::get('/TabelRekomendator', [RekomendatorController::class, 'TabelRekomendator'])->name('admin.Rekomendator.Tabel');
                         Route::post('/Store', [RekomendatorController::class, 'StoreRekomendator'])->name('admin.Rekomendator.Store');
